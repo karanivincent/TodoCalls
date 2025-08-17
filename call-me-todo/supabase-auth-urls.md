@@ -13,13 +13,13 @@ You need to update your Supabase project's authentication settings to use the pr
 
 ### Site URL:
 ```
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app
+https://call-me-todo.vercel.app
 ```
 
 ### Redirect URLs (add all of these):
 ```
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/dashboard
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/auth/callback
+https://call-me-todo.vercel.app/dashboard
+https://call-me-todo.vercel.app/auth/callback
 http://localhost:5173/dashboard
 http://localhost:5173/auth/callback
 ```

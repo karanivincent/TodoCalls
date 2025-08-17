@@ -1,9 +1,0 @@
-{
-  "name": "todocalls-root",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "cd call-me-todo && npm run build",
-    "vercel-build": "echo 'Starting Vercel build...' && cd call-me-todo && npm install && npm run build && echo 'Build complete!' && ls -la .vercel/output/"
-  }
-}

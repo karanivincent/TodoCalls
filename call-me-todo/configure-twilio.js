@@ -17,7 +17,7 @@ if (!accountSid || !authToken || !phoneNumber) {
 const client = twilio(accountSid, authToken);
 
 // Your deployed Vercel URL
-const VERCEL_URL = 'https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app';
+const VERCEL_URL = 'https://call-me-todo.vercel.app';
 
 async function configureTwilioPhoneNumber() {
   try {

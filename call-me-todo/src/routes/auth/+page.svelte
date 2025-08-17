@@ -13,10 +13,10 @@
 		
 		const supabase = createSupabaseClient();
 		
-		// Use production URL when deployed, otherwise use current origin
+		// Always use the correct production URL for email redirects
 		const redirectUrl = window.location.hostname === 'localhost' 
 			? `${window.location.origin}/dashboard`
-			: 'https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/dashboard';
+			: 'https://call-me-todo.vercel.app/dashboard';
 		
 		const { error: signInError } = await supabase.auth.signInWithOtp({
 			email,

@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Determine the base URL - use VERCEL_URL in production
 		const baseUrl = process.env.VERCEL_URL 
 			? `https://${process.env.VERCEL_URL}`
-			: 'https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app';
+			: 'https://call-me-todo.vercel.app';
 		
 		// Determine the endpoint based on whether it's a test call or task reminder
 		let url = `${baseUrl}/api/voice/`;

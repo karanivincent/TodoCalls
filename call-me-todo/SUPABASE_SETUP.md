@@ -15,14 +15,14 @@ Set these values:
 
 **Site URL:**
 ```
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app
+https://call-me-todo.vercel.app
 ```
 
 **Redirect URLs** (add ALL of these):
 ```
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/**
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/dashboard
-https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app/auth/callback
+https://call-me-todo.vercel.app/**
+https://call-me-todo.vercel.app/dashboard
+https://call-me-todo.vercel.app/auth/callback
 http://localhost:5173/**
 http://localhost:5173/dashboard
 http://localhost:5173/auth/callback
