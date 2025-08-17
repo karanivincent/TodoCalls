@@ -13,14 +13,19 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Phone number is required' }, { status: 400 });
 		}
 
-		// Determine the URL based on whether it's a test call or task reminder
-		let url = `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/`;
+		// Determine the base URL - use VERCEL_URL in production
+		const baseUrl = process.env.VERCEL_URL 
+			? `https://${process.env.VERCEL_URL}`
+			: process.env.WEBHOOK_BASE_URL || 'http://localhost:5173';
+		
+		// Determine the endpoint based on whether it's a test call or task reminder
+		let url = `${baseUrl}/api/voice/`;
 		if (isTestCall) {
 			url += 'test-call';
 		} else if (taskId) {
-			url += `outbound-call?taskId=${taskId}`;
+			url += `outbound?taskId=${taskId}`;
 		} else {
-			url += 'outbound-call';
+			url += 'incoming';
 		}
 
 		// Create the call
