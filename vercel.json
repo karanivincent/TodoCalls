@@ -1,5 +1,5 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "call-me-todo/.svelte-kit",
+  "outputDirectory": "call-me-todo/.vercel/output",
   "installCommand": "npm run install"
 }
