@@ -202,11 +202,11 @@
 						type="tel"
 						bind:value={userPhone}
 						placeholder="+1234567890"
-						class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 					/>
 					<button
 						on:click={savePhoneNumber}
-						class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+						class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
 					>
 						Save
 					</button>
@@ -227,7 +227,7 @@
 				<h2 class="text-2xl font-bold text-gray-900">Your Tasks</h2>
 				<button
 					on:click={() => showNewTaskForm = true}
-					class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+					class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
 				>
 					New Task
 				</button>
@@ -246,7 +246,7 @@
 								type="text"
 								bind:value={newTask.title}
 								required
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 								placeholder="e.g., Doctor appointment"
 							/>
 						</div>
@@ -261,7 +261,7 @@
 								bind:value={newTask.phone_number}
 								required
 								pattern="[+]?[0-9]{10,15}"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 								placeholder="+1234567890"
 							/>
 							<p class="mt-1 text-sm text-gray-500">Include country code (e.g., +1 for US)</p>
@@ -277,7 +277,7 @@
 								bind:value={newTask.scheduled_at}
 								required
 								min={getMinDateTime()}
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 							/>
 						</div>
 						
@@ -285,7 +285,7 @@
 							<button
 								type="submit"
 								disabled={saving}
-								class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+								class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors"
 							>
 								{saving ? 'Creating...' : 'Create Task'}
 							</button>

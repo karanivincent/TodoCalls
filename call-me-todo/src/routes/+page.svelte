@@ -12,7 +12,7 @@
 					<div class="rounded-md shadow">
 						<a
 							href="/auth"
-							class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+							class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors md:py-4 md:text-lg md:px-10"
 						>
 							Get Started
 						</a>
@@ -24,7 +24,7 @@
 				<h2 class="text-center text-3xl font-bold text-gray-900">How it works</h2>
 				<div class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
 					<div class="text-center">
-						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white mx-auto">
+						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white mx-auto">
 							1
 						</div>
 						<h3 class="mt-4 text-lg font-medium text-gray-900">Create a Task</h3>
@@ -33,7 +33,7 @@
 						</p>
 					</div>
 					<div class="text-center">
-						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white mx-auto">
+						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white mx-auto">
 							2
 						</div>
 						<h3 class="mt-4 text-lg font-medium text-gray-900">Get a Call</h3>
@@ -42,7 +42,7 @@
 						</p>
 					</div>
 					<div class="text-center">
-						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white mx-auto">
+						<div class="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white mx-auto">
 							3
 						</div>
 						<h3 class="mt-4 text-lg font-medium text-gray-900">Complete or Snooze</h3>
