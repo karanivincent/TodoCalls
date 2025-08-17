@@ -7,17 +7,27 @@ const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
-		const { phoneNumber, taskId } = await request.json();
+		const { phoneNumber, taskId, isTestCall } = await request.json();
 		
 		if (!phoneNumber) {
 			return json({ error: 'Phone number is required' }, { status: 400 });
+		}
+
+		// Determine the URL based on whether it's a test call or task reminder
+		let url = `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/`;
+		if (isTestCall) {
+			url += 'test-call';
+		} else if (taskId) {
+			url += `outbound-call?taskId=${taskId}`;
+		} else {
+			url += 'outbound-call';
 		}
 
 		// Create the call
 		const call = await client.calls.create({
 			to: phoneNumber,
 			from: TWILIO_PHONE_NUMBER,
-			url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call`,
+			url: url,
 			method: 'POST',
 			statusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/call-status`,
 			statusCallbackMethod: 'POST',
@@ -27,11 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			machineDetection: 'Enable',
 			asyncAmd: 'true',
 			asyncAmdStatusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/amd-status`,
-			asyncAmdStatusCallbackMethod: 'POST',
-			sendDigits: '',
-			...(taskId && {
-				url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call?taskId=${taskId}`
-			})
+			asyncAmdStatusCallbackMethod: 'POST'
 		});
 
 		return json({

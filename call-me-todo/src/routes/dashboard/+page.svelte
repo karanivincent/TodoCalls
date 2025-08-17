@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { createSupabaseClient } from '$lib/supabase';
 	import type { Database } from '$lib/database.types';
+	import PhoneInput from '$lib/components/PhoneInput.svelte';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
@@ -151,7 +152,8 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					phoneNumber: userPhone
+					phoneNumber: userPhone,
+					isTestCall: true
 				})
 			});
 			
@@ -197,29 +199,30 @@
 			<!-- Phone Number Setup -->
 			<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
 				<h3 class="text-lg font-medium mb-2">Your Phone Number</h3>
-				<div class="flex space-x-3">
-					<input
-						type="tel"
+				<div class="flex flex-col sm:flex-row gap-3">
+					<PhoneInput
 						bind:value={userPhone}
-						placeholder="+1234567890"
-						class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+						placeholder="Enter your phone number"
+						className="flex-1"
 					/>
-					<button
-						on:click={savePhoneNumber}
-						class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
-					>
-						Save
-					</button>
-					<button
-						on:click={testCall}
-						disabled={testingCall || !userPhone}
-						class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-					>
-						{testingCall ? 'Calling...' : 'Test Call'}
-					</button>
+					<div class="flex gap-2">
+						<button
+							on:click={savePhoneNumber}
+							class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+						>
+							Save
+						</button>
+						<button
+							on:click={testCall}
+							disabled={testingCall || !userPhone}
+							class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
+						>
+							{testingCall ? 'Calling...' : 'Test AI Call'}
+						</button>
+					</div>
 				</div>
 				<p class="mt-2 text-sm text-gray-600">
-					Set your phone number to receive AI-powered call reminders. Include country code (e.g., +1 for US).
+					Test call will demonstrate the AI assistant powered by OpenAI. Select your country and enter your phone number.
 				</p>
 			</div>
 
@@ -252,19 +255,16 @@
 						</div>
 						
 						<div>
-							<label for="phone" class="block text-sm font-medium text-gray-700">
+							<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
 								Phone Number
 							</label>
-							<input
+							<PhoneInput
 								id="phone"
-								type="tel"
 								bind:value={newTask.phone_number}
 								required
-								pattern="[+]?[0-9]{10,15}"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-								placeholder="+1234567890"
+								placeholder="Enter phone number"
 							/>
-							<p class="mt-1 text-sm text-gray-500">Include country code (e.g., +1 for US)</p>
+							<p class="mt-1 text-sm text-gray-500">Select country code and enter phone number</p>
 						</div>
 						
 						<div>

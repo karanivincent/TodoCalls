@@ -57,6 +57,25 @@ app.post('/incoming-call', (req, res) => {
   res.send(twiml.toString());
 });
 
+// Handle test calls
+app.post('/test-call', (req, res) => {
+  const twiml = new twilio.twiml.VoiceResponse();
+  
+  twiml.say({
+    voice: 'alice'
+  }, 'Hello! This is your Call Me Todo AI assistant powered by OpenAI. Let me show you what I can do.');
+  
+  twiml.connect().stream({
+    url: `wss://${req.headers.host}/media-stream`,
+    parameters: {
+      isTestCall: 'true'
+    }
+  });
+
+  res.type('text/xml');
+  res.send(twiml.toString());
+});
+
 // Handle outbound calls for scheduled reminders
 app.post('/outbound-call', async (req, res) => {
   const { taskId } = req.body;
@@ -107,6 +126,9 @@ wss.on('connection', (ws) => {
       case 'start':
         streamSid = message.start.streamSid;
         phoneNumber = message.start.customParameters?.from || 'unknown';
+        
+        // Check if this is a test call
+        const isTestCall = message.start.customParameters?.isTestCall === 'true';
         
         // Check if this is a reminder call
         if (message.start.customParameters?.isReminder === 'true') {
@@ -201,8 +223,27 @@ wss.on('connection', (ws) => {
             }
           }));
 
+          // If this is a test call, provide a demo context
+          if (isTestCall) {
+            openaiWs.send(JSON.stringify({
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'system',
+                content: [{
+                  type: 'text',
+                  text: `This is a test call to demonstrate the Call-Me Todo AI assistant. Introduce yourself and demonstrate your capabilities. You can:
+1. Help create new tasks (ask for task name and when to remind them)
+2. List their upcoming tasks
+3. Mark tasks as complete
+4. Snooze tasks for later
+Be friendly and show how natural conversation works with the system. After demonstrating, ask if they'd like to try creating a real task.`
+                }]
+              }
+            }));
+          }
           // If this is a reminder call, provide context
-          if (taskContext) {
+          else if (taskContext) {
             openaiWs.send(JSON.stringify({
               type: 'conversation.item.create',
               item: {
