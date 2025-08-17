@@ -1,0 +1,9 @@
+{
+  "name": "todocalls-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd call-me-todo && npm install && npm run build",
+    "install": "cd call-me-todo && npm install"
+  }
+}
