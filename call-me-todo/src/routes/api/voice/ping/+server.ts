@@ -1,38 +1,22 @@
 import type { RequestHandler } from './$types';
 
-// Simple ping endpoint to test webhook accessibility
-export const GET: RequestHandler = async () => {
+// Handle all request methods using fallback to bypass CSRF
+export const fallback: RequestHandler = async ({ request }) => {
+  console.log(`Ping ${request.method} request received`);
+  
+  // For POST requests, consume the body
+  if (request.method === 'POST') {
+    try {
+      const body = await request.text();
+      console.log('Ping body:', body);
+    } catch {}
+  }
+  
   return new Response('pong', {
     status: 200,
     headers: {
       'Content-Type': 'text/plain',
-      'Cache-Control': 'no-cache'
-    }
-  });
-};
-
-// Handle POST without triggering CSRF
-export const POST: RequestHandler = async ({ request, setHeaders }) => {
-  console.log('Ping POST endpoint hit');
-  
-  // Set headers immediately
-  setHeaders({
-    'Content-Type': 'text/plain',
-    'Cache-Control': 'no-cache'
-  });
-  
-  // Read body to consume it
-  const body = await request.text();
-  console.log('Ping POST received:', body);
-  
-  return new Response('pong');
-};
-
-// Handle OPTIONS
-export const OPTIONS: RequestHandler = async () => {
-  return new Response(null, {
-    status: 204,
-    headers: {
+      'Cache-Control': 'no-cache',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': '*'
