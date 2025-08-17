@@ -18,10 +18,10 @@
 	let showNewTaskForm = false;
 	let newTask = {
 		title: '',
-		phone_number: '',
 		scheduled_at: ''
 	};
 	let saving = false;
+	let savingPhone = false;
 	
 	onMount(async () => {
 		// Check if user is authenticated
@@ -63,6 +63,11 @@
 	}
 	
 	async function createTask() {
+		if (!userPhone) {
+			alert('Please save your phone number first');
+			return;
+		}
+		
 		saving = true;
 		
 		const { error } = await supabase
@@ -70,15 +75,17 @@
 			.insert({
 				user_id: user.id,
 				title: newTask.title,
-				phone_number: newTask.phone_number,
+				phone_number: userPhone,
 				scheduled_at: newTask.scheduled_at,
 				status: 'pending'
 			});
 		
 		if (!error) {
-			newTask = { title: '', phone_number: '', scheduled_at: '' };
+			newTask = { title: '', scheduled_at: '' };
 			showNewTaskForm = false;
 			await loadTasks();
+		} else {
+			alert('Error creating task: ' + error.message);
 		}
 		
 		saving = false;
@@ -123,18 +130,28 @@
 	}
 	
 	async function savePhoneNumber() {
-		if (!userPhone) return;
+		if (!userPhone) {
+			alert('Please enter a phone number');
+			return;
+		}
+		
+		savingPhone = true;
 		
 		const { error } = await supabase
 			.from('user_profiles')
 			.upsert({
 				id: user.id,
-				phone_number: userPhone
+				phone_number: userPhone,
+				updated_at: new Date().toISOString()
 			});
 		
 		if (!error) {
-			alert('Phone number saved!');
+			alert('Phone number saved successfully!');
+		} else {
+			alert('Error saving phone number: ' + error.message);
 		}
+		
+		savingPhone = false;
 	}
 	
 	async function testCall() {
@@ -208,9 +225,10 @@
 					<div class="flex gap-2">
 						<button
 							on:click={savePhoneNumber}
-							class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+							disabled={savingPhone || !userPhone}
+							class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors"
 						>
-							Save
+							{savingPhone ? 'Saving...' : 'Save'}
 						</button>
 						<button
 							on:click={testCall}
@@ -252,19 +270,6 @@
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 								placeholder="e.g., Doctor appointment"
 							/>
-						</div>
-						
-						<div>
-							<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
-								Phone Number
-							</label>
-							<PhoneInput
-								id="phone"
-								bind:value={newTask.phone_number}
-								required
-								placeholder="Enter phone number"
-							/>
-							<p class="mt-1 text-sm text-gray-500">Select country code and enter phone number</p>
 						</div>
 						
 						<div>
@@ -318,7 +323,6 @@
 									<div class="flex-1">
 										<h3 class="text-lg font-medium text-gray-900">{task.title}</h3>
 										<div class="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-											<span>📞 {task.phone_number}</span>
 											<span>📅 {formatDate(task.scheduled_at)}</span>
 											<span class="px-2 py-1 text-xs rounded-full
 												{task.status === 'completed' ? 'bg-green-100 text-green-800' : ''}
