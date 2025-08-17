@@ -12,17 +12,11 @@ export interface Toast {
 function createToastStore() {
 	const { subscribe, update } = writable<Toast[]>([]);
 	
-	function addToast(message: string, type: ToastType = 'info', duration = 3000) {
+	function addToast(message: string, type: ToastType = 'info', duration = 5000) {
 		const id = Math.random().toString(36).substr(2, 9);
 		const toast: Toast = { id, message, type, duration };
 		
 		update(toasts => [...toasts, toast]);
-		
-		if (duration > 0) {
-			setTimeout(() => {
-				removeToast(id);
-			}, duration);
-		}
 		
 		return id;
 	}

@@ -4,7 +4,7 @@
 	
 	export let message = '';
 	export let type: 'success' | 'error' | 'info' = 'info';
-	export let duration = 3000;
+	export let duration = 5000;
 	export let onClose: () => void = () => {};
 	
 	let visible = true;
@@ -42,7 +42,7 @@
 	<div
 		in:fly={{ y: -20, duration: 300 }}
 		out:fade={{ duration: 300 }}
-		class="fixed top-4 right-4 z-50 max-w-md"
+		class="fixed top-4 right-4 z-[9999] max-w-md"
 	>
 		<div class="flex items-start gap-3 p-4 rounded-lg border shadow-lg {colors[type]} bg-opacity-95 backdrop-blur">
 			<span class="text-xl font-bold">{icons[type]}</span>
