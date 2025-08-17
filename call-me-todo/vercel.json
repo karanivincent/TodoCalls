@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "src/routes/api/voice/test-call/+server.ts": {
+      "maxDuration": 10
+    },
+    "src/routes/api/voice/status/+server.ts": {
+      "maxDuration": 10
+    },
+    "src/routes/api/voice/webhook-test/+server.ts": {
+      "maxDuration": 10
+    }
+  },
   "headers": [
     {
       "source": "/api/voice/(.*)",
@@ -13,7 +24,11 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
+          "value": "Content-Type, X-Twilio-Signature"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }

@@ -2,6 +2,18 @@ import type { RequestHandler } from './$types';
 
 // This endpoint must be publicly accessible for Twilio
 
+// Handle OPTIONS requests (CORS preflight)
+export const OPTIONS: RequestHandler = async () => {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Twilio-Signature'
+    }
+  });
+};
+
 // Handle GET requests (Twilio validation)
 export const GET: RequestHandler = async () => {
   console.log('Status webhook GET request received');
