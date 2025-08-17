@@ -12,6 +12,9 @@ export type Database = {
           completed_at: string | null;
           created_at: string;
           updated_at: string;
+          notify_by_phone?: boolean;
+          notify_by_text?: boolean;
+          notify_by_email?: boolean;
         };
         Insert: {
           id?: string;
@@ -23,6 +26,9 @@ export type Database = {
           completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          notify_by_phone?: boolean;
+          notify_by_text?: boolean;
+          notify_by_email?: boolean;
         };
         Update: {
           id?: string;
@@ -34,6 +40,9 @@ export type Database = {
           completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          notify_by_phone?: boolean;
+          notify_by_text?: boolean;
+          notify_by_email?: boolean;
         };
       };
     };

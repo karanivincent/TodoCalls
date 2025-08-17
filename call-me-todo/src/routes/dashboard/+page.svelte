@@ -39,7 +39,10 @@
 	let showNewTaskForm = false;
 	let newTask = {
 		title: '',
-		scheduled_at: ''
+		scheduled_at: '',
+		notify_by_phone: true,
+		notify_by_text: false,
+		notify_by_email: false
 	};
 	let saving = false;
 	
@@ -177,7 +180,14 @@
 	}
 	
 	async function createTask() {
-		if (!primaryPhone) {
+		// Check if at least one notification method is selected
+		if (!newTask.notify_by_phone && !newTask.notify_by_text && !newTask.notify_by_email) {
+			toast.error('Please select at least one notification method');
+			return;
+		}
+		
+		// Check if phone number is required
+		if ((newTask.notify_by_phone || newTask.notify_by_text) && !primaryPhone) {
 			toast.error('Please add and set a primary phone number first');
 			return;
 		}
@@ -191,11 +201,20 @@
 				title: newTask.title,
 				phone_number: primaryPhone,
 				scheduled_at: newTask.scheduled_at,
-				status: 'pending'
+				status: 'pending',
+				notify_by_phone: newTask.notify_by_phone,
+				notify_by_text: newTask.notify_by_text,
+				notify_by_email: newTask.notify_by_email
 			});
 		
 		if (!error) {
-			newTask = { title: '', scheduled_at: '' };
+			newTask = { 
+				title: '', 
+				scheduled_at: '',
+				notify_by_phone: true,
+				notify_by_text: false,
+				notify_by_email: false
+			};
 			showNewTaskForm = false;
 			await loadTasks();
 			toast.success('Task created successfully!');
@@ -466,9 +485,47 @@
 							/>
 						</div>
 						
-						{#if primaryPhone}
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">
+								Notification Methods
+							</label>
+							<div class="space-y-2">
+								<label class="flex items-center">
+									<input
+										type="checkbox"
+										bind:checked={newTask.notify_by_phone}
+										class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+									/>
+									<span class="ml-2 text-sm text-gray-700">📞 Phone Call</span>
+								</label>
+								<label class="flex items-center">
+									<input
+										type="checkbox"
+										bind:checked={newTask.notify_by_text}
+										class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+									/>
+									<span class="ml-2 text-sm text-gray-700">💬 Text Message (SMS)</span>
+								</label>
+								<label class="flex items-center">
+									<input
+										type="checkbox"
+										bind:checked={newTask.notify_by_email}
+										class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+									/>
+									<span class="ml-2 text-sm text-gray-700">📧 Email</span>
+								</label>
+							</div>
+						</div>
+						
+						{#if (newTask.notify_by_phone || newTask.notify_by_text) && primaryPhone}
 							<div class="text-sm text-gray-600">
-								Call will be made to: <span class="font-medium">{primaryPhone}</span>
+								Phone/SMS will be sent to: <span class="font-medium">{primaryPhone}</span>
+							</div>
+						{/if}
+						
+						{#if newTask.notify_by_email && user}
+							<div class="text-sm text-gray-600">
+								Email will be sent to: <span class="font-medium">{user.email}</span>
 							</div>
 						{/if}
 						
@@ -517,6 +574,23 @@
 											">
 												{task.status}
 											</span>
+										</div>
+										<div class="mt-2 flex items-center space-x-3 text-xs text-gray-400">
+											{#if task.notify_by_phone}
+												<span class="flex items-center">
+													<span class="mr-1">📞</span> Phone
+												</span>
+											{/if}
+											{#if task.notify_by_text}
+												<span class="flex items-center">
+													<span class="mr-1">💬</span> SMS
+												</span>
+											{/if}
+											{#if task.notify_by_email}
+												<span class="flex items-center">
+													<span class="mr-1">📧</span> Email
+												</span>
+											{/if}
 										</div>
 									</div>
 									<div class="flex items-center space-x-2">
