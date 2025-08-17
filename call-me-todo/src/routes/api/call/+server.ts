@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Determine the base URL - use VERCEL_URL in production
 		const baseUrl = process.env.VERCEL_URL 
 			? `https://${process.env.VERCEL_URL}`
-			: process.env.WEBHOOK_BASE_URL || 'http://localhost:5173';
+			: 'https://call-me-todo-aucskr4i6-karanivincents-projects.vercel.app';
 		
 		// Determine the endpoint based on whether it's a test call or task reminder
 		let url = `${baseUrl}/api/voice/`;
@@ -34,15 +34,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			from: TWILIO_PHONE_NUMBER,
 			url: url,
 			method: 'POST',
-			statusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/call-status`,
+			statusCallback: `${baseUrl}/api/voice/status`,
 			statusCallbackMethod: 'POST',
 			statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
 			timeout: 60,
-			record: false,
-			machineDetection: 'Enable',
-			asyncAmd: 'true',
-			asyncAmdStatusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/amd-status`,
-			asyncAmdStatusCallbackMethod: 'POST'
+			record: false
 		});
 
 		return json({
