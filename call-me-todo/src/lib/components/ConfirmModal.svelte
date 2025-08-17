@@ -42,7 +42,7 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<!-- Backdrop -->
-		<div class="absolute inset-0 bg-black bg-opacity-50" />
+		<div class="absolute inset-0 bg-black bg-opacity-30" />
 		
 		<!-- Modal -->
 		<div
