@@ -3,6 +3,22 @@ import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 
 // Allow public access for Twilio webhooks
+// Twilio may use GET for validation
+export const GET: RequestHandler = async () => {
+  const twiml = new twilio.twiml.VoiceResponse();
+  twiml.say({
+    voice: 'alice',
+    language: 'en-US'
+  }, 'Test call endpoint is active.');
+  
+  return text(twiml.toString(), {
+    headers: {
+      'Content-Type': 'text/xml',
+      'Cache-Control': 'no-cache'
+    }
+  });
+};
+
 export const POST: RequestHandler = async ({ request, url }) => {
   try {
   const twiml = new twilio.twiml.VoiceResponse();

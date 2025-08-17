@@ -13,10 +13,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Phone number is required' }, { status: 400 });
 		}
 
-		// Determine the base URL - use VERCEL_URL in production
-		const baseUrl = process.env.VERCEL_URL 
-			? `https://${process.env.VERCEL_URL}`
-			: 'https://call-me-todo.vercel.app';
+		// Always use the production URL for consistency
+		const baseUrl = 'https://call-me-todo.vercel.app';
 		
 		// Determine the endpoint based on whether it's a test call or task reminder
 		let url = `${baseUrl}/api/voice/`;

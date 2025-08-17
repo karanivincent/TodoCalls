@@ -2,6 +2,17 @@ import { text } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 // Allow public access for Twilio webhooks - no auth required
+// Twilio may use GET for validation
+export const GET: RequestHandler = async () => {
+	return text('OK', { 
+		status: 200,
+		headers: {
+			'Content-Type': 'text/plain',
+			'Cache-Control': 'no-cache'
+		}
+	});
+};
+
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const formData = await request.formData();
