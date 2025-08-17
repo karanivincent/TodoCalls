@@ -5,6 +5,7 @@
 	import type { Database } from '$lib/database.types';
 	import PhoneInput from '$lib/components/PhoneInput.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import { toast } from '$lib/stores/toast';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
@@ -34,6 +35,15 @@
 	};
 	let savingPhone = false;
 	let deletingPhoneId: string | null = null;
+	
+	// Confirmation modal
+	let confirmModal = {
+		isOpen: false,
+		title: '',
+		message: '',
+		onConfirm: () => {},
+		danger: false
+	};
 	
 	// New task form
 	let showNewTaskForm = false;
@@ -158,25 +168,30 @@
 	}
 	
 	async function deletePhoneNumber(phoneId: string) {
-		if (!confirm('Are you sure you want to delete this phone number?')) {
-			return;
-		}
-		
-		deletingPhoneId = phoneId;
-		
-		const { error } = await supabase
-			.from('phone_numbers')
-			.delete()
-			.eq('id', phoneId);
-		
-		if (!error) {
-			toast.success('Phone number removed');
-			await loadPhoneNumbers();
-		} else {
-			toast.error('Failed to delete phone number');
-		}
-		
-		deletingPhoneId = null;
+		const phone = phoneNumbers.find(p => p.id === phoneId);
+		confirmModal = {
+			isOpen: true,
+			title: 'Delete Phone Number',
+			message: `Are you sure you want to delete ${phone?.phone_number}? This action cannot be undone.`,
+			danger: true,
+			onConfirm: async () => {
+				deletingPhoneId = phoneId;
+				
+				const { error } = await supabase
+					.from('phone_numbers')
+					.delete()
+					.eq('id', phoneId);
+				
+				if (!error) {
+					toast.success('Phone number removed');
+					await loadPhoneNumbers();
+				} else {
+					toast.error('Failed to delete phone number');
+				}
+				
+				deletingPhoneId = null;
+			}
+		};
 	}
 	
 	async function createTask() {
@@ -238,19 +253,26 @@
 	}
 	
 	async function deleteTask(taskId: string) {
-		if (confirm('Are you sure you want to delete this task?')) {
-			const { error } = await supabase
-				.from('tasks')
-				.delete()
-				.eq('id', taskId);
-			
-			if (!error) {
-				toast.success('Task deleted');
-				await loadTasks();
-			} else {
-				toast.error('Failed to delete task');
+		const task = tasks.find(t => t.id === taskId);
+		confirmModal = {
+			isOpen: true,
+			title: 'Delete Task',
+			message: `Are you sure you want to delete "${task?.title}"? This action cannot be undone.`,
+			danger: true,
+			onConfirm: async () => {
+				const { error } = await supabase
+					.from('tasks')
+					.delete()
+					.eq('id', taskId);
+				
+				if (!error) {
+					toast.success('Task deleted');
+					await loadTasks();
+				} else {
+					toast.error('Failed to delete task');
+				}
 			}
-		}
+		};
 	}
 	
 	async function signOut() {
@@ -618,3 +640,13 @@
 		</div>
 	</main>
 </div>
+
+<ConfirmModal
+	bind:isOpen={confirmModal.isOpen}
+	title={confirmModal.title}
+	message={confirmModal.message}
+	danger={confirmModal.danger}
+	onConfirm={confirmModal.onConfirm}
+	confirmText="Delete"
+	cancelText="Cancel"
+/>
