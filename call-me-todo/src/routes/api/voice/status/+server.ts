@@ -1,23 +1,30 @@
 import type { RequestHandler } from './$types';
-import { text } from '@sveltejs/kit';
 
 // Handle GET requests (Twilio validation)
 export const GET: RequestHandler = async () => {
   console.log('Status webhook GET request received');
   
-  return text('OK', {
+  return new Response('OK', { 
+    status: 200,
     headers: {
+      'Content-Type': 'text/plain',
       'Cache-Control': 'no-cache, no-store, must-revalidate'
     }
   });
 };
 
-// Handle POST requests (status updates) - Bypass CSRF by using text() helper
-export const POST: RequestHandler = async ({ request }) => {
+// Handle POST requests (status updates)
+export const POST: RequestHandler = async ({ request, setHeaders }) => {
   console.log('Status webhook POST request received');
   
+  // Set headers immediately
+  setHeaders({
+    'Content-Type': 'text/plain',
+    'Cache-Control': 'no-cache, no-store, must-revalidate'
+  });
+  
   try {
-    // Read the body as text first to bypass CSRF
+    // Read the body as text
     const body = await request.text();
     console.log('Raw body:', body);
     
@@ -40,19 +47,11 @@ export const POST: RequestHandler = async ({ request }) => {
     });
     
     // Always return 200 OK to acknowledge receipt
-    return text('OK', {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+    return new Response('OK');
   } catch (error: any) {
     console.error('Status webhook error:', error);
     // Always return 200 to prevent Twilio retries
-    return text('OK', {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+    return new Response('OK');
   }
 };
 
@@ -68,5 +67,7 @@ export const OPTIONS: RequestHandler = async () => {
   });
 };
 
-// Bypass CSRF protection for this endpoint
-export const csrf = false;
+// Allow external requests
+export const config = {
+  runtime: 'nodejs'
+};

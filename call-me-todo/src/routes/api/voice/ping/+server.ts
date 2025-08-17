@@ -11,20 +11,21 @@ export const GET: RequestHandler = async () => {
   });
 };
 
-// Try to bypass CSRF by immediately returning a Response
-export const POST: RequestHandler = async ({ request, url }) => {
+// Handle POST without triggering CSRF
+export const POST: RequestHandler = async ({ request, setHeaders }) => {
   console.log('Ping POST endpoint hit');
-  console.log('URL:', url.toString());
-  console.log('Headers:', Object.fromEntries(request.headers));
   
-  // Don't await or read the body - just return immediately
-  return new Response('pong', {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain',
-      'Cache-Control': 'no-cache'
-    }
+  // Set headers immediately
+  setHeaders({
+    'Content-Type': 'text/plain',
+    'Cache-Control': 'no-cache'
   });
+  
+  // Read body to consume it
+  const body = await request.text();
+  console.log('Ping POST received:', body);
+  
+  return new Response('pong');
 };
 
 // Handle OPTIONS
@@ -38,6 +39,3 @@ export const OPTIONS: RequestHandler = async () => {
     }
   });
 };
-
-// This is the correct way to disable CSRF in SvelteKit
-export const csrf = false;

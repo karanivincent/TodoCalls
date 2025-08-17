@@ -1,8 +1,5 @@
 import type { RequestHandler } from './$types';
 
-// Disable CSRF protection for Twilio webhooks
-export const csrf = false;
-
 // Simple webhook test endpoint that always returns success
 
 export const GET: RequestHandler = async ({ url }) => {

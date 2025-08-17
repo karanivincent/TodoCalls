@@ -1,5 +1,4 @@
 import type { RequestHandler } from './$types';
-import { text } from '@sveltejs/kit';
 
 // Helper function to generate TwiML without the Twilio library
 function generateTwiML(messages: string[]): string {
@@ -18,7 +17,8 @@ export const GET: RequestHandler = async () => {
   
   const twiml = generateTwiML(['Test call endpoint is active.']);
   
-  return text(twiml, {
+  return new Response(twiml, {
+    status: 200,
     headers: {
       'Content-Type': 'text/xml',
       'Cache-Control': 'no-cache, no-store, must-revalidate'
@@ -26,15 +26,17 @@ export const GET: RequestHandler = async () => {
   });
 };
 
-// Handle POST requests (actual calls) - Bypass CSRF by using text() helper
-export const POST: RequestHandler = async ({ request }) => {
+// Handle POST requests (actual calls)
+export const POST: RequestHandler = async ({ request, setHeaders }) => {
   console.log('Test call POST request received');
   
+  // Set headers to prevent CSRF check
+  setHeaders({
+    'Content-Type': 'text/xml',
+    'Cache-Control': 'no-cache, no-store, must-revalidate'
+  });
+  
   try {
-    // Read the body to prevent CSRF check
-    const body = await request.text();
-    console.log('Request body:', body);
-    
     const messages = [
       'Hello! This is your Call Me Todo AI assistant test call.',
       'I can help you manage your tasks through natural conversation. You can ask me to create new tasks, list your upcoming reminders, or mark tasks as complete.',
@@ -46,24 +48,14 @@ export const POST: RequestHandler = async ({ request }) => {
     
     console.log('Generated TwiML:', twiml);
 
-    return text(twiml, {
-      headers: {
-        'Content-Type': 'text/xml',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+    return new Response(twiml);
   } catch (error: any) {
     console.error('Test call error:', error);
     
     // Return error TwiML
     const errorTwiml = generateTwiML(['Sorry, an error occurred. Please try again later.']);
     
-    return text(errorTwiml, {
-      headers: {
-        'Content-Type': 'text/xml',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+    return new Response(errorTwiml);
   }
 };
 
@@ -79,5 +71,7 @@ export const OPTIONS: RequestHandler = async () => {
   });
 };
 
-// Bypass CSRF protection for this endpoint
-export const csrf = false;
+// Allow external requests
+export const config = {
+  runtime: 'nodejs'
+};
