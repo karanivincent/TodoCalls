@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "call-me-todo/.vercel/output",
-  "installCommand": "npm run install"
-}
