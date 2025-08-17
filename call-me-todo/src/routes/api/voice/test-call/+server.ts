@@ -2,7 +2,9 @@ import { text } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 
+// Allow public access for Twilio webhooks
 export const POST: RequestHandler = async ({ request, url }) => {
+  try {
   const twiml = new twilio.twiml.VoiceResponse();
   
   twiml.say({
@@ -31,9 +33,25 @@ export const POST: RequestHandler = async ({ request, url }) => {
     language: 'en-US'
   }, 'Goodbye!');
 
-  return text(twiml.toString(), {
-    headers: {
-      'Content-Type': 'text/xml'
-    }
-  });
+    return text(twiml.toString(), {
+      headers: {
+        'Content-Type': 'text/xml'
+      }
+    });
+  } catch (error: any) {
+    console.error('Test call error:', error);
+    
+    // Return a simple TwiML response even on error
+    const errorTwiml = new twilio.twiml.VoiceResponse();
+    errorTwiml.say({
+      voice: 'alice',
+      language: 'en-US'
+    }, 'We apologize, but there was an error processing your request. Please try again later.');
+    
+    return text(errorTwiml.toString(), {
+      headers: {
+        'Content-Type': 'text/xml'
+      }
+    });
+  }
 };

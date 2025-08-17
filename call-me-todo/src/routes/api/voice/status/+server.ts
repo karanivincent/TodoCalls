@@ -1,8 +1,10 @@
 import { text } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
+// Allow public access for Twilio webhooks - no auth required
 export const POST: RequestHandler = async ({ request }) => {
-	const formData = await request.formData();
+	try {
+		const formData = await request.formData();
 	
 	// Log call status updates for debugging
 	const callSid = formData.get('CallSid');
@@ -19,6 +21,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		duration
 	});
 	
-	// Return 200 OK to acknowledge receipt
-	return text('OK', { status: 200 });
+		// Return 200 OK to acknowledge receipt
+		return text('OK', { status: 200 });
+	} catch (error: any) {
+		console.error('Status webhook error:', error);
+		// Always return 200 to prevent Twilio retries
+		return text('OK', { status: 200 });
+	}
 };

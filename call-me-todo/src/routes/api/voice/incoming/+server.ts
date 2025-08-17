@@ -2,7 +2,9 @@ import { text } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 
+// Allow public access for Twilio webhooks
 export const POST: RequestHandler = async ({ request }) => {
+  try {
   const twiml = new twilio.twiml.VoiceResponse();
   
   twiml.say({
@@ -21,9 +23,24 @@ export const POST: RequestHandler = async ({ request }) => {
     voice: 'alice'
   }, 'Please note that the full AI integration is being set up. For now, this is a demo message.');
 
-  return text(twiml.toString(), {
-    headers: {
-      'Content-Type': 'text/xml'
-    }
-  });
+    return text(twiml.toString(), {
+      headers: {
+        'Content-Type': 'text/xml'
+      }
+    });
+  } catch (error: any) {
+    console.error('Incoming call error:', error);
+    
+    // Return error TwiML
+    const errorTwiml = new twilio.twiml.VoiceResponse();
+    errorTwiml.say({
+      voice: 'alice'
+    }, 'Sorry, an error occurred. Please try again later.');
+    
+    return text(errorTwiml.toString(), {
+      headers: {
+        'Content-Type': 'text/xml'
+      }
+    });
+  }
 };
