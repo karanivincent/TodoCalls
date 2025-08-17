@@ -1,5 +1,10 @@
 import type { RequestHandler } from './$types';
 
+// Disable CSRF protection for Twilio webhooks
+export const config = {
+  csrf: false
+};
+
 // This endpoint must be publicly accessible for Twilio
 
 // Handle OPTIONS requests (CORS preflight)

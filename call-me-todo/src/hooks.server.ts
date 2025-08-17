@@ -1,27 +1,27 @@
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Allow Twilio webhooks to bypass all authentication
-	// These endpoints must be publicly accessible for Twilio
 	const pathname = event.url.pathname;
 	
-	// Check if this is a Twilio webhook endpoint
+	// Allow Twilio webhooks to bypass all security checks
+	// These endpoints must be publicly accessible for Twilio
 	if (pathname.startsWith('/api/voice/')) {
 		// Log webhook requests for debugging
 		console.log(`[Twilio Webhook] ${event.request.method} ${pathname}`);
+		console.log('Headers:', Object.fromEntries(event.request.headers));
 		
-		// Set headers to ensure public access
+		// Mark as public endpoint
 		event.locals.skipAuth = true;
+		event.locals.publicEndpoint = true;
 		
-		// Process the request without any authentication
-		const response = await resolve(event, {
-			transformPageChunk: ({ html }) => html
-		});
+		// Process the request
+		const response = await resolve(event);
 		
 		// Add CORS headers for public access
 		response.headers.set('Access-Control-Allow-Origin', '*');
 		response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-		response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+		response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Twilio-Signature');
+		response.headers.set('X-Robots-Tag', 'noindex');
 		
 		return response;
 	}
