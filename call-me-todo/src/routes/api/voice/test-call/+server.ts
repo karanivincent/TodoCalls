@@ -80,6 +80,4 @@ export const OPTIONS: RequestHandler = async () => {
 };
 
 // Bypass CSRF protection for this endpoint
-export const config = {
-  csrf: false
-};
+export const csrf = false;
