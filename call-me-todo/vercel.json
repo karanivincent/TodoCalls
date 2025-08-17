@@ -1,4 +1,23 @@
 {
+  "functions": {
+    "api/voice/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/voice/test-call",
+      "destination": "/api/voice/test-call.js"
+    },
+    {
+      "source": "/api/voice/status", 
+      "destination": "/api/voice/status.js"
+    },
+    {
+      "source": "/api/voice/ping",
+      "destination": "/api/voice/ping.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/voice/(.*)",
