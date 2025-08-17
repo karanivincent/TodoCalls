@@ -9,12 +9,31 @@
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
+	interface PhoneNumber {
+		id: string;
+		phone_number: string;
+		label?: string;
+		is_primary: boolean;
+		is_verified: boolean;
+		created_at: string;
+	}
+	
 	let supabase = createSupabaseClient();
 	let user: any = null;
-	let userPhone = '';
+	let phoneNumbers: PhoneNumber[] = [];
+	let primaryPhone = '';
 	let tasks: Task[] = [];
 	let loading = true;
 	let testingCall = false;
+	
+	// Phone management
+	let showAddPhoneForm = false;
+	let newPhone = {
+		number: '',
+		label: ''
+	};
+	let savingPhone = false;
+	let deletingPhoneId: string | null = null;
 	
 	// New task form
 	let showNewTaskForm = false;
@@ -23,7 +42,6 @@
 		scheduled_at: ''
 	};
 	let saving = false;
-	let savingPhone = false;
 	
 	onMount(async () => {
 		// Check if user is authenticated
@@ -36,19 +54,40 @@
 		
 		user = currentUser;
 		
-		// Load user profile to get phone number
-		const { data: profile } = await supabase
-			.from('user_profiles')
-			.select('phone_number')
-			.eq('id', user.id)
-			.single();
-		
-		if (profile?.phone_number) {
-			userPhone = profile.phone_number;
-		}
-		
+		await loadPhoneNumbers();
 		await loadTasks();
 	});
+	
+	async function loadPhoneNumbers() {
+		const { data, error } = await supabase
+			.from('phone_numbers')
+			.select('*')
+			.eq('user_id', user.id)
+			.order('is_primary', { ascending: false })
+			.order('created_at', { ascending: true });
+		
+		if (data) {
+			phoneNumbers = data;
+			const primary = phoneNumbers.find(p => p.is_primary);
+			if (primary) {
+				primaryPhone = primary.phone_number;
+			}
+		}
+		
+		// If no phone numbers exist, check legacy user_profiles
+		if (!phoneNumbers.length) {
+			const { data: profile } = await supabase
+				.from('user_profiles')
+				.select('phone_number')
+				.eq('id', user.id)
+				.single();
+			
+			if (profile?.phone_number) {
+				// Migrate to new system
+				await addPhoneNumber(profile.phone_number, 'Primary', true);
+			}
+		}
+	}
 	
 	async function loadTasks() {
 		loading = true;
@@ -64,9 +103,82 @@
 		loading = false;
 	}
 	
+	async function addPhoneNumber(number?: string, label?: string, setPrimary?: boolean) {
+		const phoneToAdd = number || newPhone.number;
+		const phoneLabel = label || newPhone.label;
+		
+		if (!phoneToAdd) {
+			toast.error('Please enter a phone number');
+			return;
+		}
+		
+		savingPhone = true;
+		
+		const { error } = await supabase
+			.from('phone_numbers')
+			.insert({
+				user_id: user.id,
+				phone_number: phoneToAdd,
+				label: phoneLabel || null,
+				is_primary: setPrimary || phoneNumbers.length === 0,
+				is_verified: false
+			});
+		
+		if (!error) {
+			toast.success('Phone number added successfully!');
+			newPhone = { number: '', label: '' };
+			showAddPhoneForm = false;
+			await loadPhoneNumbers();
+		} else {
+			if (error.message.includes('duplicate')) {
+				toast.error('This phone number is already added');
+			} else {
+				toast.error(`Error adding phone number: ${error.message}`);
+			}
+		}
+		
+		savingPhone = false;
+	}
+	
+	async function setPrimaryPhone(phoneId: string) {
+		const { error } = await supabase
+			.from('phone_numbers')
+			.update({ is_primary: true })
+			.eq('id', phoneId);
+		
+		if (!error) {
+			toast.success('Primary phone number updated');
+			await loadPhoneNumbers();
+		} else {
+			toast.error('Failed to update primary phone');
+		}
+	}
+	
+	async function deletePhoneNumber(phoneId: string) {
+		if (!confirm('Are you sure you want to delete this phone number?')) {
+			return;
+		}
+		
+		deletingPhoneId = phoneId;
+		
+		const { error } = await supabase
+			.from('phone_numbers')
+			.delete()
+			.eq('id', phoneId);
+		
+		if (!error) {
+			toast.success('Phone number removed');
+			await loadPhoneNumbers();
+		} else {
+			toast.error('Failed to delete phone number');
+		}
+		
+		deletingPhoneId = null;
+	}
+	
 	async function createTask() {
-		if (!userPhone) {
-			toast.error('Please save your phone number first');
+		if (!primaryPhone) {
+			toast.error('Please add and set a primary phone number first');
 			return;
 		}
 		
@@ -77,7 +189,7 @@
 			.insert({
 				user_id: user.id,
 				title: newTask.title,
-				phone_number: userPhone,
+				phone_number: primaryPhone,
 				scheduled_at: newTask.scheduled_at,
 				status: 'pending'
 			});
@@ -137,37 +249,7 @@
 		return now.toISOString().slice(0, 16);
 	}
 	
-	async function savePhoneNumber() {
-		if (!userPhone) {
-			toast.error('Please enter a phone number');
-			return;
-		}
-		
-		savingPhone = true;
-		
-		const { error } = await supabase
-			.from('user_profiles')
-			.upsert({
-				id: user.id,
-				phone_number: userPhone,
-				updated_at: new Date().toISOString()
-			});
-		
-		if (!error) {
-			toast.success('Phone number saved successfully!');
-		} else {
-			toast.error(`Could not save phone number: ${error.message}`);
-		}
-		
-		savingPhone = false;
-	}
-	
-	async function testCall() {
-		if (!userPhone) {
-			toast.error('Please set your phone number first');
-			return;
-		}
-		
+	async function testCall(phoneNumber: string) {
 		testingCall = true;
 		toast.info('Initiating test call...');
 		
@@ -178,7 +260,7 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					phoneNumber: userPhone,
+					phoneNumber: phoneNumber,
 					isTestCall: true
 				})
 			});
@@ -231,42 +313,122 @@
 
 	<main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
 		<div class="px-4 py-6 sm:px-0">
-			<!-- Phone Number Setup -->
-			<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-				<h3 class="text-lg font-medium mb-2">Your Phone Number</h3>
-				<div class="flex flex-col sm:flex-row gap-3">
-					<PhoneInput
-						bind:value={userPhone}
-						placeholder="Enter your phone number"
-						className="flex-1"
-					/>
-					<div class="flex gap-2">
-						<button
-							on:click={savePhoneNumber}
-							disabled={savingPhone || !userPhone}
-							class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors"
-						>
-							{savingPhone ? 'Saving...' : 'Save'}
-						</button>
-						<button
-							on:click={testCall}
-							disabled={testingCall || !userPhone}
-							class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
-						>
-							{testingCall ? 'Calling...' : 'Test AI Call'}
-						</button>
-					</div>
+			<!-- Phone Numbers Section -->
+			<div class="bg-white rounded-lg shadow p-6 mb-6">
+				<div class="flex justify-between items-center mb-4">
+					<h3 class="text-lg font-medium">Your Phone Numbers</h3>
+					<button
+						on:click={() => showAddPhoneForm = true}
+						class="px-3 py-1 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700 transition-colors"
+					>
+						Add Number
+					</button>
 				</div>
-				<p class="mt-2 text-sm text-gray-600">
-					Test call will demonstrate the AI assistant powered by OpenAI. Select your country and enter your phone number.
-				</p>
+				
+				{#if phoneNumbers.length > 0}
+					<div class="space-y-3">
+						{#each phoneNumbers as phone}
+							<div class="flex items-center justify-between p-3 border rounded-lg {phone.is_primary ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}">
+								<div class="flex-1">
+									<div class="flex items-center gap-3">
+										<span class="font-medium">{phone.phone_number}</span>
+										{#if phone.label}
+											<span class="text-sm text-gray-500">({phone.label})</span>
+										{/if}
+										{#if phone.is_primary}
+											<span class="px-2 py-1 text-xs bg-orange-600 text-white rounded-full">Primary</span>
+										{/if}
+										{#if phone.is_verified}
+											<span class="text-green-600">✓ Verified</span>
+										{/if}
+									</div>
+									<div class="text-xs text-gray-500 mt-1">
+										Added {new Date(phone.created_at).toLocaleDateString()}
+									</div>
+								</div>
+								<div class="flex items-center gap-2">
+									{#if !phone.is_primary}
+										<button
+											on:click={() => setPrimaryPhone(phone.id)}
+											class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+										>
+											Set Primary
+										</button>
+									{/if}
+									<button
+										on:click={() => testCall(phone.phone_number)}
+										disabled={testingCall}
+										class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+									>
+										Test Call
+									</button>
+									<button
+										on:click={() => deletePhoneNumber(phone.id)}
+										disabled={deletingPhoneId === phone.id || (phone.is_primary && phoneNumbers.length === 1)}
+										class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+									>
+										Delete
+									</button>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-gray-500 text-center py-4">No phone numbers added yet.</p>
+				{/if}
+				
+				{#if showAddPhoneForm}
+					<div class="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg">
+						<h4 class="font-medium mb-3">Add New Phone Number</h4>
+						<div class="space-y-3">
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-1">
+									Phone Number
+								</label>
+								<PhoneInput
+									bind:value={newPhone.number}
+									placeholder="Enter phone number"
+								/>
+							</div>
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-1">
+									Label (optional)
+								</label>
+								<input
+									type="text"
+									bind:value={newPhone.label}
+									placeholder="e.g., Mobile, Work, Home"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+								/>
+							</div>
+							<div class="flex gap-2">
+								<button
+									on:click={() => addPhoneNumber()}
+									disabled={savingPhone}
+									class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+								>
+									{savingPhone ? 'Adding...' : 'Add Number'}
+								</button>
+								<button
+									on:click={() => {showAddPhoneForm = false; newPhone = {number: '', label: ''}}}
+									class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+								>
+									Cancel
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 
+			<!-- Tasks Section -->
 			<div class="flex justify-between items-center mb-6">
 				<h2 class="text-2xl font-bold text-gray-900">Your Tasks</h2>
 				<button
 					on:click={() => showNewTaskForm = true}
-					class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+					disabled={!primaryPhone}
+					class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors"
+					title={!primaryPhone ? 'Add a phone number first' : ''}
 				>
 					New Task
 				</button>
@@ -303,6 +465,12 @@
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
 							/>
 						</div>
+						
+						{#if primaryPhone}
+							<div class="text-sm text-gray-600">
+								Call will be made to: <span class="font-medium">{primaryPhone}</span>
+							</div>
+						{/if}
 						
 						<div class="flex space-x-3">
 							<button

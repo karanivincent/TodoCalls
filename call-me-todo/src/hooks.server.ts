@@ -1,27 +1,29 @@
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Allow Twilio webhooks to bypass authentication
-	// These endpoints need to be publicly accessible for Twilio to call them
-	const publicPaths = [
-		'/api/voice/incoming',
-		'/api/voice/outbound',
-		'/api/voice/test-call',
-		'/api/voice/handle-response',
-		'/api/voice/status',
-		'/api/voice/fallback'
-	];
+	// Allow Twilio webhooks to bypass all authentication
+	// These endpoints must be publicly accessible for Twilio
+	const pathname = event.url.pathname;
 	
-	// Check if the request is to a public webhook endpoint
-	const isPublicWebhook = publicPaths.some(path => event.url.pathname.startsWith(path));
-	
-	if (isPublicWebhook) {
+	// Check if this is a Twilio webhook endpoint
+	if (pathname.startsWith('/api/voice/')) {
 		// Log webhook requests for debugging
-		console.log(`Webhook request: ${event.request.method} ${event.url.pathname}`);
+		console.log(`[Twilio Webhook] ${event.request.method} ${pathname}`);
 		
-		// For Twilio webhooks, we need to handle both POST and GET
-		// and return appropriate responses without authentication
-		return await resolve(event);
+		// Set headers to ensure public access
+		event.locals.skipAuth = true;
+		
+		// Process the request without any authentication
+		const response = await resolve(event, {
+			transformPageChunk: ({ html }) => html
+		});
+		
+		// Add CORS headers for public access
+		response.headers.set('Access-Control-Allow-Origin', '*');
+		response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+		response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+		
+		return response;
 	}
 	
 	// For all other requests, proceed normally
