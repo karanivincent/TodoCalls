@@ -1,15 +1,5 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 60
-    }
-  },
-  "env": {
-    "PUBLIC_SUPABASE_URL": "@supabase_url",
-    "PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "TWILIO_ACCOUNT_SID": "@twilio_account_sid",
-    "TWILIO_AUTH_TOKEN": "@twilio_auth_token",
-    "TWILIO_PHONE_NUMBER": "@twilio_phone_number",
-    "OPENAI_API_KEY": "@openai_api_key"
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": ".svelte-kit",
+  "installCommand": "npm install"
 }
