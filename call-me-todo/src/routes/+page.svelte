@@ -68,9 +68,8 @@
 		<nav class="hidden sm:flex items-center gap-6 text-sm">
 			<a href="#how" class="hover:text-orange-700">How it works</a>
 			<a href="#use-cases" class="hover:text-orange-700">Use cases</a>
-			<a href="#pricing" class="hover:text-orange-700">Pricing</a>
 			<a href="#faq" class="hover:text-orange-700">FAQ</a>
-			<a href="/auth" class="rounded-lg bg-orange-600 px-3 py-1.5 text-white hover:bg-orange-700">Try free</a>
+			<a href="/auth" class="rounded-lg bg-orange-600 px-3 py-1.5 text-white hover:bg-orange-700">Try Free</a>
 		</nav>
 	</div>
 </header>
@@ -92,7 +91,7 @@
 				</li>
 				<li class="flex items-start gap-2">
 					<span class="mt-1 h-2 w-2 rounded-full bg-orange-600"></span>
-					<span>Free tier to get started; upgrade when you need more.</span>
+					<span>Free forever with no credit card required.</span>
 				</li>
 				<li class="flex items-start gap-2">
 					<span class="mt-1 h-2 w-2 rounded-full bg-orange-600"></span>
@@ -170,7 +169,7 @@
 						disabled={loading}
 						class="w-full rounded-lg bg-orange-600 px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{loading ? 'Submitting...' : 'Get started'}
+						{loading ? 'Submitting...' : 'Try Free'}
 					</button>
 					
 					<p class="text-xs text-gray-500">
@@ -232,35 +231,6 @@
 	</div>
 </section>
 
-<!-- Pricing -->
-<section id="pricing" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
-	<h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Pricing</h2>
-	<div class="mt-6 grid gap-6 sm:grid-cols-2">
-		<div class="rounded-2xl border border-gray-200 p-6">
-			<div class="text-sm font-semibold text-orange-700">Free</div>
-			<div class="mt-1 text-3xl font-bold">$0</div>
-			<ul class="mt-4 space-y-2 text-gray-700 text-sm">
-				<li>• 5 call reminders / month</li>
-				<li>• SMS follow-ups</li>
-				<li>• Basic scheduling</li>
-			</ul>
-			<a href="/auth" class="mt-6 inline-flex rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700">Start free</a>
-		</div>
-		<div class="rounded-2xl border border-gray-200 p-6">
-			<div class="text-sm font-semibold text-orange-700">
-				Pro <span class="ml-2 rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-800 ring-1 ring-orange-300">Coming soon</span>
-			</div>
-			<div class="mt-1 text-3xl font-bold">$9<span class="text-base font-semibold text-gray-500">/mo</span></div>
-			<ul class="mt-4 space-y-2 text-gray-700 text-sm">
-				<li>• 100+ call reminders / month</li>
-				<li>• International calling</li>
-				<li>• Advanced schedules & quiet hours</li>
-				<li>• Priority retries</li>
-			</ul>
-			<a href="/auth" class="mt-6 inline-flex rounded-lg border border-orange-600 px-4 py-2 text-orange-700 hover:bg-orange-50">Join waitlist</a>
-		</div>
-	</div>
-</section>
 
 <!-- FAQ -->
 <section id="faq" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
@@ -276,7 +246,7 @@
 		</div>
 		<div class="rounded-2xl border border-gray-200 p-6">
 			<div class="font-semibold">Do you call outside my region?</div>
-			<p class="mt-1 text-gray-700">Free tier may be limited to select countries. Pro will include broader coverage.</p>
+			<p class="mt-1 text-gray-700">We support calls to most countries worldwide. Check our docs for specific coverage.</p>
 		</div>
 		<div class="rounded-2xl border border-gray-200 p-6">
 			<div class="font-semibold">Is there an app?</div>
