@@ -4,6 +4,8 @@
 	import { createSupabaseClient } from '$lib/supabase';
 	import type { Database } from '$lib/database.types';
 	import PhoneInput from '$lib/components/PhoneInput.svelte';
+	import Toast from '$lib/components/Toast.svelte';
+	import { toast } from '$lib/stores/toast';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
@@ -64,7 +66,7 @@
 	
 	async function createTask() {
 		if (!userPhone) {
-			alert('Please save your phone number first');
+			toast.error('Please save your phone number first');
 			return;
 		}
 		
@@ -84,8 +86,9 @@
 			newTask = { title: '', scheduled_at: '' };
 			showNewTaskForm = false;
 			await loadTasks();
+			toast.success('Task created successfully!');
 		} else {
-			alert('Error creating task: ' + error.message);
+			toast.error('Error creating task: ' + error.message);
 		}
 		
 		saving = false;
@@ -105,12 +108,17 @@
 	
 	async function deleteTask(taskId: string) {
 		if (confirm('Are you sure you want to delete this task?')) {
-			await supabase
+			const { error } = await supabase
 				.from('tasks')
 				.delete()
 				.eq('id', taskId);
 			
-			await loadTasks();
+			if (!error) {
+				toast.success('Task deleted');
+				await loadTasks();
+			} else {
+				toast.error('Failed to delete task');
+			}
 		}
 	}
 	
@@ -131,7 +139,7 @@
 	
 	async function savePhoneNumber() {
 		if (!userPhone) {
-			alert('Please enter a phone number');
+			toast.error('Please enter a phone number');
 			return;
 		}
 		
@@ -146,9 +154,9 @@
 			});
 		
 		if (!error) {
-			alert('Phone number saved successfully!');
+			toast.success('Phone number saved successfully!');
 		} else {
-			alert('Error saving phone number: ' + error.message);
+			toast.error(`Could not save phone number: ${error.message}`);
 		}
 		
 		savingPhone = false;
@@ -156,11 +164,12 @@
 	
 	async function testCall() {
 		if (!userPhone) {
-			alert('Please set your phone number first');
+			toast.error('Please set your phone number first');
 			return;
 		}
 		
 		testingCall = true;
+		toast.info('Initiating test call...');
 		
 		try {
 			const response = await fetch('/api/call', {
@@ -177,17 +186,26 @@
 			const result = await response.json();
 			
 			if (result.success) {
-				alert('Call initiated! You should receive a call shortly.');
+				toast.success('Call initiated! You should receive a call shortly.');
 			} else {
-				alert('Failed to initiate call: ' + result.error);
+				toast.error('Failed to initiate call: ' + result.error);
 			}
-		} catch (error) {
-			alert('Error making call: ' + error.message);
+		} catch (error: any) {
+			toast.error('Error making call: ' + error.message);
 		} finally {
 			testingCall = false;
 		}
 	}
 </script>
+
+{#each $toast as notification (notification.id)}
+	<Toast
+		message={notification.message}
+		type={notification.type}
+		duration={notification.duration}
+		onClose={() => toast.remove(notification.id)}
+	/>
+{/each}
 
 <div class="min-h-screen bg-gray-50">
 	<nav class="bg-white shadow">
