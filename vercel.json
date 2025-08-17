@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd call-me-todo && npm install && npm run build",
-  "outputDirectory": "call-me-todo/.svelte-kit",
-  "installCommand": "echo 'Skipping root install'",
-  "framework": null
-}
