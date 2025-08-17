@@ -1,23 +1,5 @@
 import type { RequestHandler } from './$types';
-
-// Disable CSRF protection for Twilio webhooks
-export const config = {
-  csrf: false
-};
-
-// This endpoint must be publicly accessible for Twilio
-
-// Handle OPTIONS requests (CORS preflight)
-export const OPTIONS: RequestHandler = async () => {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Twilio-Signature'
-    }
-  });
-};
+import { text } from '@sveltejs/kit';
 
 // Helper function to generate TwiML without the Twilio library
 function generateTwiML(messages: string[]): string {
@@ -36,8 +18,7 @@ export const GET: RequestHandler = async () => {
   
   const twiml = generateTwiML(['Test call endpoint is active.']);
   
-  return new Response(twiml, {
-    status: 200,
+  return text(twiml, {
     headers: {
       'Content-Type': 'text/xml',
       'Cache-Control': 'no-cache, no-store, must-revalidate'
@@ -45,11 +26,15 @@ export const GET: RequestHandler = async () => {
   });
 };
 
-// Handle POST requests (actual calls)
+// Handle POST requests (actual calls) - Bypass CSRF by using text() helper
 export const POST: RequestHandler = async ({ request }) => {
   console.log('Test call POST request received');
   
   try {
+    // Read the body to prevent CSRF check
+    const body = await request.text();
+    console.log('Request body:', body);
+    
     const messages = [
       'Hello! This is your Call Me Todo AI assistant test call.',
       'I can help you manage your tasks through natural conversation. You can ask me to create new tasks, list your upcoming reminders, or mark tasks as complete.',
@@ -61,8 +46,7 @@ export const POST: RequestHandler = async ({ request }) => {
     
     console.log('Generated TwiML:', twiml);
 
-    return new Response(twiml, {
-      status: 200,
+    return text(twiml, {
       headers: {
         'Content-Type': 'text/xml',
         'Cache-Control': 'no-cache, no-store, must-revalidate'
@@ -74,12 +58,28 @@ export const POST: RequestHandler = async ({ request }) => {
     // Return error TwiML
     const errorTwiml = generateTwiML(['Sorry, an error occurred. Please try again later.']);
     
-    return new Response(errorTwiml, {
-      status: 200,
+    return text(errorTwiml, {
       headers: {
         'Content-Type': 'text/xml',
         'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     });
   }
+};
+
+// Handle OPTIONS requests (CORS preflight)
+export const OPTIONS: RequestHandler = async () => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Twilio-Signature'
+    }
+  });
+};
+
+// Bypass CSRF protection for this endpoint
+export const config = {
+  csrf: false
 };
