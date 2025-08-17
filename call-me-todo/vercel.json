@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "src/routes/api/voice/*.ts": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
       "source": "/api/voice/(.*)",
