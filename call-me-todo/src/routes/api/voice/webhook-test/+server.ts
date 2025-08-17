@@ -1,9 +1,6 @@
 import type { RequestHandler } from './$types';
 
 // Simple webhook test endpoint that always returns success
-export const config = {
-  runtime: 'edge'
-};
 
 export const GET: RequestHandler = async ({ url }) => {
   console.log('Webhook test GET:', url.toString());

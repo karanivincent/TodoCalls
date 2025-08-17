@@ -40,13 +40,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				const call = await twilioClient.calls.create({
 					to: task.phone_number,
 					from: TWILIO_PHONE_NUMBER,
-					url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call`,
+					// Pass task context as query parameters
+					url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call?taskId=${task.id}&userId=${task.user_id}`,
 					method: 'POST',
 					statusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/call-status`,
 					statusCallbackMethod: 'POST',
-					statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
-					// Pass task context as query parameters
-					url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call?taskId=${task.id}&userId=${task.user_id}`
+					statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
 				});
 
 				// Update task status to indicate call was initiated

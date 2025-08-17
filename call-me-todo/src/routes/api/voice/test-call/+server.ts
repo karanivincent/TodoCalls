@@ -3,9 +3,6 @@ import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 
 // This endpoint must be publicly accessible for Twilio
-export const config = {
-  runtime: 'edge'
-};
 
 // Handle GET requests (Twilio validation)
 export const GET: RequestHandler = async () => {
