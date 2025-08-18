@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createSupabaseClient } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import NavBar from '$lib/components/NavBar.svelte';
 	
 	let name = '';
 	let email = '';
@@ -109,6 +110,9 @@
 		message = '';
 	}
 </script>
+
+<!-- Navigation -->
+<NavBar currentPage="/auth" />
 
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white py-12 px-4 sm:px-6 lg:px-8">
 	<div class="max-w-md w-full">

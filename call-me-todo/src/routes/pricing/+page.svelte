@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import NavBar from '$lib/components/NavBar.svelte';
 	
 	let selectedPlan = 'pro'; // Default to pro
 	let billingCycle: 'monthly' | 'yearly' = 'monthly';
@@ -105,8 +106,11 @@
 	<meta name="description" content="Simple, transparent pricing for phone call reminders. Start free, upgrade anytime." />
 </svelte:head>
 
+<!-- Navigation -->
+<NavBar currentPage="/pricing" />
+
 <div class="min-h-screen bg-gradient-to-b from-white to-gray-50">
-	<!-- Header -->
+	<!-- Pricing Content -->
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-8">
 		<div class="text-center">
 			<h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
