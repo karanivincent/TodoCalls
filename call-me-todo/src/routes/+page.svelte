@@ -69,6 +69,7 @@
 			<a href="#how" class="hover:text-orange-700">How it works</a>
 			<a href="#use-cases" class="hover:text-orange-700">Use cases</a>
 			<a href="#faq" class="hover:text-orange-700">FAQ</a>
+			<a href="#contact" class="hover:text-orange-700">Contact</a>
 			<a href="/auth" class="rounded-lg bg-orange-600 px-3 py-1.5 text-white hover:bg-orange-700">Try Free</a>
 		</nav>
 	</div>
@@ -265,7 +266,7 @@
 		<div class="flex flex-wrap gap-x-6 gap-y-2">
 			<a href="/privacy" class="hover:text-orange-700">Privacy</a>
 			<a href="/terms" class="hover:text-orange-700">Terms</a>
-			<a href="/contact" class="hover:text-orange-700">Contact</a>
+			<a href="#contact" class="hover:text-orange-700">Contact</a>
 		</div>
 	</div>
 </footer>
