@@ -13,6 +13,7 @@
 		const hashParams = new URLSearchParams($page.url.hash.substring(1));
 		const errorParam = hashParams.get('error');
 		const errorDescription = hashParams.get('error_description');
+		const type = hashParams.get('type');
 		
 		if (errorParam) {
 			error = errorDescription || errorParam;
@@ -28,16 +29,14 @@
 		}
 		
 		if (session) {
-			// Check if this is likely an email confirmation (new user) or regular sign-in
-			// Email confirmations typically happen for new users who haven't completed profile setup
-			const { data: { user } } = await supabase.auth.getUser();
-			const isNewUser = user && !user.user_metadata?.profile_completed;
+			// Check if this is an email confirmation (signup or recovery)
+			const isEmailConfirmation = type === 'signup' || type === 'recovery';
 			
-			if (isNewUser) {
-				// For new email confirmations, redirect to auth page with success message
+			if (isEmailConfirmation) {
+				// For email confirmations, redirect to auth page with success message
 				goto('/auth?verified=true');
 			} else {
-				// For returning users (OAuth or magic link sign-ins), redirect to dashboard
+				// For OAuth or magic link sign-ins, redirect to dashboard
 				goto('/dashboard');
 			}
 		} else {
