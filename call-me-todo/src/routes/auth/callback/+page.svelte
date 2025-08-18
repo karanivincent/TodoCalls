@@ -28,8 +28,18 @@
 		}
 		
 		if (session) {
-			// Successfully authenticated, redirect to dashboard
-			goto('/dashboard');
+			// Check if this is likely an email confirmation (new user) or regular sign-in
+			// Email confirmations typically happen for new users who haven't completed profile setup
+			const { data: { user } } = await supabase.auth.getUser();
+			const isNewUser = user && !user.user_metadata?.profile_completed;
+			
+			if (isNewUser) {
+				// For new email confirmations, redirect to auth page with success message
+				goto('/auth?verified=true');
+			} else {
+				// For returning users (OAuth or magic link sign-ins), redirect to dashboard
+				goto('/dashboard');
+			}
 		} else {
 			// No session, redirect to auth page
 			goto('/auth');

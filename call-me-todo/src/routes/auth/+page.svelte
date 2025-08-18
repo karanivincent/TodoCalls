@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createSupabaseClient } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import NavBar from '$lib/components/NavBar.svelte';
 	
 	let name = '';
@@ -14,6 +16,15 @@
 	let useMagicLink = false;
 	let termsAccepted = false;
 	let marketingConsent = false;
+	
+	// Check for verification success on mount
+	onMount(() => {
+		if ($page.url.searchParams.get('verified') === 'true') {
+			message = 'Email verified successfully! You can now sign in.';
+			step = 'signin';
+			isNewUser = false;
+		}
+	});
 	
 	async function handleAuth() {
 		loading = true;
@@ -68,7 +79,7 @@
 			const { error: otpError } = await supabase.auth.signInWithOtp({
 				email,
 				options: {
-					emailRedirectTo: `${window.location.origin}/auth/callback`
+					emailRedirectTo: `${window.location.origin}/auth`
 				}
 			});
 			
