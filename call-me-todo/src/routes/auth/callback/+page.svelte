@@ -13,6 +13,7 @@
 		const hashParams = new URLSearchParams($page.url.hash.substring(1));
 		const errorParam = hashParams.get('error');
 		const errorDescription = hashParams.get('error_description');
+		const type = hashParams.get('type');
 		
 		if (errorParam) {
 			error = errorDescription || errorParam;
@@ -28,8 +29,16 @@
 		}
 		
 		if (session) {
-			// Successfully authenticated, redirect to dashboard
-			goto('/dashboard');
+			// Check if this is an email confirmation (signup or recovery)
+			const isEmailConfirmation = type === 'signup' || type === 'recovery';
+			
+			if (isEmailConfirmation) {
+				// For email confirmations, redirect to auth page with success message
+				goto('/auth?verified=true');
+			} else {
+				// For OAuth or magic link sign-ins, redirect to dashboard
+				goto('/dashboard');
+			}
 		} else {
 			// No session, redirect to auth page
 			goto('/auth');

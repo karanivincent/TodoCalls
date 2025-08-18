@@ -5,12 +5,6 @@
 	import { quintOut } from 'svelte/easing';
 	import NavBar from '$lib/components/NavBar.svelte';
 	
-	let phone = '';
-	let time = '';
-	let consent = false;
-	let loading = false;
-	let error = '';
-	let success = false;
 	
 	// Animation states
 	let mounted = false;
@@ -25,6 +19,17 @@
 	
 	onMount(() => {
 		mounted = true;
+		
+		// Check if this is an email confirmation redirect
+		const urlParams = new URLSearchParams(window.location.search);
+		const hashParams = new URLSearchParams(window.location.hash.substring(1));
+		
+		// Check for Supabase auth confirmation parameters
+		if (hashParams.get('access_token') || hashParams.get('type') === 'signup' || hashParams.get('type') === 'recovery') {
+			// This is an email confirmation, redirect to callback handler
+			goto('/auth/callback' + window.location.hash);
+			return;
+		}
 		
 		// Animate stats when visible
 		const observer = new IntersectionObserver(
@@ -141,45 +146,7 @@
 	let contactError = '';
 	let contactSuccess = false;
 	
-	function isValidPhone(value: string): boolean {
-		const v = value.trim();
-		const e164 = /^\+?[1-9]\d{7,14}$/;
-		const localish = /^[0-9 ()+-]{8,}$/;
-		return e164.test(v) || localish.test(v);
-	}
 	
-	async function handleSubmit(event: Event) {
-		event.preventDefault();
-		error = '';
-		success = false;
-		
-		if (!isValidPhone(phone)) {
-			error = 'Please enter a valid phone number (you can include +country code).';
-			return;
-		}
-		
-		if (!time) {
-			error = 'Please choose your preferred reminder time.';
-			return;
-		}
-		
-		if (!consent) {
-			error = 'Please accept the consent to proceed.';
-			return;
-		}
-		
-		loading = true;
-		
-		try {
-			// For now, just redirect to auth page
-			// Later we can implement the actual signup API
-			goto('/auth');
-		} catch (e) {
-			error = 'Something went wrong. Please try again later.';
-		} finally {
-			loading = false;
-		}
-	}
 	
 	async function handleContactSubmit(event: Event) {
 		event.preventDefault();
@@ -338,93 +305,24 @@
 			{/if}
 		</div>
 
-		<!-- Lead Form Card -->
+		<!-- CTA Section -->
 		<div class="lg:justify-self-end w-full max-w-md">
 			{#if mounted}
-				<div in:scale={{ duration: 500, delay: 400, start: 0.95 }} class="relative">
-					<!-- Floating badge -->
-					<div class="absolute -top-3 left-6 z-10 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-						<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-						</svg>
-						NO CREDIT CARD REQUIRED
+				<div in:scale={{ duration: 500, delay: 400, start: 0.95 }} class="text-center">
+					<div class="space-y-4">
+						<a
+							href="/auth"
+							class="inline-flex items-center justify-center w-full rounded-lg bg-orange-600 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
+						>
+							Get Started Free
+							<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+							</svg>
+						</a>
+						<p class="text-sm text-gray-600">
+							No credit card required • 5 free calls/month
+						</p>
 					</div>
-					
-					{#if success}
-						<div class="rounded-2xl border border-orange-200 bg-orange-50 p-6 shadow-xl" in:fade={{ duration: 300 }}>
-							<h2 class="text-xl font-semibold text-orange-800">You're in! 🎉</h2>
-							<p class="mt-2 text-orange-900">Thanks for signing up. We'll send a confirmation SMS shortly. Check your email for next steps.</p>
-							<a href="#how" class="mt-4 inline-flex text-sm text-orange-800 underline">See how it works</a>
-						</div>
-					{:else}
-					<form on:submit={handleSubmit} class="rounded-2xl bg-white p-6 shadow-xl border border-gray-100 space-y-4 hover:shadow-2xl transition-shadow duration-300" novalidate>
-					<div class="flex items-start gap-3">
-						<div class="shrink-0">
-							<span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 ring-1 ring-orange-300">
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 fill-orange-800">
-									<path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.1.36 2.28.55 3.5.55a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C11.3 21 3 12.7 3 2a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.22.19 2.4.55 3.5a1 1 0 0 1-.25 1.01z"/>
-								</svg>
-							</span>
-						</div>
-						<div>
-							<h2 class="text-xl font-semibold">Try it free</h2>
-							<p class="text-sm text-gray-600">Enter your number and a preferred call time. We'll set up your first reminder.</p>
-						</div>
-					</div>
-					
-					<label class="block">
-						<span class="block text-sm font-medium">Phone number</span>
-						<input
-							bind:value={phone}
-							name="phone"
-							type="tel"
-							inputmode="tel"
-							placeholder="e.g., +254712345678"
-							required
-							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-						/>
-					</label>
-					
-					<label class="block">
-						<span class="block text-sm font-medium">Preferred call time</span>
-						<input
-							bind:value={time}
-							name="time"
-							type="time"
-							required
-							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-						/>
-					</label>
-					
-					<label class="flex items-start gap-2 text-sm">
-						<input
-							bind:checked={consent}
-							name="consent"
-							type="checkbox"
-							class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-						/>
-						<span>I agree to receive automated calls & SMS for reminders and onboarding. <a href="/privacy" class="underline">Privacy</a></span>
-					</label>
-					
-					{#if error}
-						<div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-							{error}
-						</div>
-					{/if}
-					
-					<button
-						type="submit"
-						disabled={loading}
-						class="w-full rounded-lg bg-orange-600 px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{loading ? 'Submitting...' : 'Try Free'}
-					</button>
-					
-					<p class="text-xs text-gray-500">
-						By continuing you agree to our <a href="/terms" class="underline">Terms</a>. Standard carrier rates may apply.
-					</p>
-				</form>
-					{/if}
 				</div>
 			{/if}
 		</div>
@@ -857,10 +755,10 @@
 		class="fixed bottom-6 right-6 z-50"
 	>
 		<a
-			href="#signup"
+			href="/auth"
 			class="group flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
 		>
-			<span class="font-semibold">Try it free</span>
+			<span class="font-semibold">Get Started</span>
 			<svg
 				class="w-5 h-5 group-hover:translate-x-1 transition-transform"
 				fill="none"
