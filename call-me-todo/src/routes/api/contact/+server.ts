@@ -2,50 +2,64 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createSupabaseClient } from '$lib/supabase';
 
-// Simple email notification using fetch (works with many email services)
+// Email notification using Resend (free tier: 100 emails/day)
 async function sendEmailNotification(data: {
   name: string;
   email: string;
   message: string;
 }) {
-  // Option 1: If you have SendGrid, Mailgun, or other email service
-  // Option 2: Use a webhook to trigger an email (Zapier, Make, etc.)
-  // Option 3: Just store in database and check manually
+  // Using Resend API - sign up at https://resend.com for free API key
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
   
-  // For now, we'll just log it and store in database
-  console.log('New contact form submission:', data);
+  if (!RESEND_API_KEY) {
+    console.log('RESEND_API_KEY not configured, skipping email notification');
+    console.log('New contact form submission:', data);
+    return;
+  }
   
-  // If you want to send via an external service, uncomment and configure:
-  /*
   try {
-    await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        personalizations: [{
-          to: [{ email: 'support@telitask.com' }]
-        }],
-        from: { email: 'noreply@telitask.com' },
-        subject: `New Contact Form: ${data.name}`,
-        content: [{
-          type: 'text/html',
-          value: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Message:</strong></p>
-            <p>${data.message}</p>
-          `
-        }]
+        from: 'TeliTask <noreply@telitask.com>', // Your verified domain
+        to: 'support@telitask.com', // Will forward to your Gmail via Cloudflare
+        subject: `Contact Form: ${data.name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #ea580c;">New Contact Form Submission</h2>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 10px 0;"><strong>Name:</strong> ${data.name}</p>
+              <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
+              <p style="margin: 10px 0;"><strong>Message:</strong></p>
+              <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #ea580c;">
+                <p style="white-space: pre-wrap; margin: 0;">${data.message}</p>
+              </div>
+            </div>
+            <p style="color: #6b7280; font-size: 14px;">
+              You can reply directly to this email or view it in your 
+              <a href="https://telitask.com/dashboard/contacts" style="color: #ea580c;">admin dashboard</a>.
+            </p>
+          </div>
+        `,
+        reply_to: data.email // So you can reply directly to the sender
       })
     });
+    
+    const responseText = await response.text();
+    
+    if (!response.ok) {
+      console.error('Resend API error:', response.status, responseText);
+    } else {
+      console.log('Email notification sent successfully:', responseText);
+    }
   } catch (error) {
     console.error('Failed to send email notification:', error);
+    // Don't throw - we still want to save to database even if email fails
   }
-  */
 }
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -85,14 +99,25 @@ export const POST: RequestHandler = async ({ request }) => {
     
     if (dbError) {
       console.error('Database error:', dbError);
+      console.error('Error code:', dbError.code);
+      console.error('Error details:', dbError.details);
+      console.error('Error hint:', dbError.hint);
+      console.error('Error message:', dbError.message);
       return json(
-        { error: 'Failed to send message. Please try again.' },
+        { 
+          error: 'Failed to send message. Please try again.',
+          debug: {
+            code: dbError.code,
+            message: dbError.message,
+            details: dbError.details
+          }
+        },
         { status: 500 }
       );
     }
     
-    // Send email notification (async, don't wait)
-    sendEmailNotification({ name, email, message });
+    // Send email notification and wait for it
+    await sendEmailNotification({ name, email, message });
     
     return json({
       success: true,
