@@ -4,6 +4,7 @@ import path from 'path';
 
 const routes = [
   { name: 'home', path: '/', description: 'Landing page' },
+  { name: 'home-contact', path: '/#contact', description: 'Landing page - Contact section', scroll: true },
   { name: 'auth', path: '/auth', description: 'Authentication page' },
   { name: 'dashboard', path: '/dashboard', description: 'Dashboard (requires auth)' }
 ];
@@ -56,6 +57,17 @@ async function takeScreenshots() {
 
       // Wait a bit for any animations or lazy loading
       await page.waitForTimeout(2000);
+      
+      // If this route needs scrolling (like contact section)
+      if (route.scroll) {
+        await page.evaluate(() => {
+          const element = document.querySelector('#contact');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+        await page.waitForTimeout(1000); // Wait for scroll animation
+      }
 
       // Take full page screenshot
       await page.screenshot({

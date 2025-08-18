@@ -361,6 +361,9 @@
 				</div>
 				<div class="flex items-center space-x-4">
 					{#if user}
+						<a href="/dashboard/contacts" class="text-sm text-orange-600 hover:text-orange-700">
+							📬 Contact Messages
+						</a>
 						<span class="text-sm font-medium text-gray-700">Hi, {userName}!</span>
 						<span class="text-sm text-gray-500">{user.email}</span>
 						<button

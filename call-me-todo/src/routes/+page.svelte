@@ -8,6 +8,14 @@
 	let error = '';
 	let success = false;
 	
+	// Contact form state
+	let contactName = '';
+	let contactEmail = '';
+	let contactMessage = '';
+	let contactLoading = false;
+	let contactError = '';
+	let contactSuccess = false;
+	
 	function isValidPhone(value: string): boolean {
 		const v = value.trim();
 		const e164 = /^\+?[1-9]\d{7,14}$/;
@@ -45,6 +53,64 @@
 			error = 'Something went wrong. Please try again later.';
 		} finally {
 			loading = false;
+		}
+	}
+	
+	async function handleContactSubmit(event: Event) {
+		event.preventDefault();
+		contactError = '';
+		contactSuccess = false;
+		
+		if (!contactName.trim()) {
+			contactError = 'Please enter your name';
+			return;
+		}
+		
+		if (!contactEmail.trim() || !contactEmail.includes('@')) {
+			contactError = 'Please enter a valid email address';
+			return;
+		}
+		
+		if (!contactMessage.trim()) {
+			contactError = 'Please enter a message';
+			return;
+		}
+		
+		contactLoading = true;
+		
+		try {
+			// Send to API endpoint
+			const response = await fetch('/api/contact', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					name: contactName,
+					email: contactEmail,
+					message: contactMessage
+				})
+			});
+			
+			const result = await response.json();
+			
+			if (response.ok && result.success) {
+				contactSuccess = true;
+				contactName = '';
+				contactEmail = '';
+				contactMessage = '';
+				
+				// Hide success message after 5 seconds
+				setTimeout(() => {
+					contactSuccess = false;
+				}, 5000);
+			} else {
+				contactError = result.error || 'Failed to send message. Please try again.';
+			}
+		} catch (e) {
+			contactError = 'Network error. Please check your connection or email us directly.';
+		} finally {
+			contactLoading = false;
 		}
 	}
 </script>
@@ -252,6 +318,144 @@
 		<div class="rounded-2xl border border-gray-200 p-6">
 			<div class="font-semibold">Is there an app?</div>
 			<p class="mt-1 text-gray-700">No app required. Everything works over calls & SMS. A PWA is in the works.</p>
+		</div>
+	</div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
+	<h2 class="text-2xl font-bold text-gray-900 text-center">Get in Touch</h2>
+	<p class="mt-2 text-center text-gray-600">Have questions? We'd love to hear from you.</p>
+	
+	<div class="mt-8 grid gap-8 lg:grid-cols-2">
+		<!-- Contact Form -->
+		<div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Send us a message</h3>
+			
+			<form on:submit={handleContactSubmit} class="space-y-4">
+				<div>
+					<label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">
+						Your Name
+					</label>
+					<input
+						id="contact-name"
+						type="text"
+						bind:value={contactName}
+						disabled={contactLoading}
+						class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50"
+						placeholder="John Doe"
+					/>
+				</div>
+				
+				<div>
+					<label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">
+						Email Address
+					</label>
+					<input
+						id="contact-email"
+						type="email"
+						bind:value={contactEmail}
+						disabled={contactLoading}
+						class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50"
+						placeholder="john@example.com"
+					/>
+				</div>
+				
+				<div>
+					<label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
+						Message
+					</label>
+					<textarea
+						id="contact-message"
+						bind:value={contactMessage}
+						disabled={contactLoading}
+						rows="4"
+						class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 resize-none"
+						placeholder="Tell us how we can help you..."
+					></textarea>
+				</div>
+				
+				{#if contactError}
+					<div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+						{contactError}
+					</div>
+				{/if}
+				
+				{#if contactSuccess}
+					<div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+						✓ Thank you for your message! We'll get back to you within 24 hours.
+					</div>
+				{/if}
+				
+				<button
+					type="submit"
+					disabled={contactLoading}
+					class="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-medium text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+				>
+					{contactLoading ? 'Sending...' : 'Send Message'}
+				</button>
+			</form>
+		</div>
+		
+		<!-- Contact Info Cards -->
+		<div class="space-y-6">
+			<!-- Email Card -->
+			<div class="rounded-2xl border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6">
+				<div class="flex items-start gap-4">
+					<div class="rounded-lg bg-orange-500 p-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-white">
+							<path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+							<path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+						</svg>
+					</div>
+					<div>
+						<h4 class="font-semibold text-gray-900">Email Support</h4>
+						<p class="mt-1 text-sm text-gray-600">Get help with your account or tasks</p>
+						<a href="mailto:support@telitask.com" class="mt-2 inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700">
+							support@telitask.com
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-1 h-4 w-4">
+								<path fill-rule="evenodd" d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z" clip-rule="evenodd" />
+							</svg>
+						</a>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Response Time Card -->
+			<div class="rounded-2xl border border-gray-200 bg-white p-6">
+				<div class="flex items-start gap-4">
+					<div class="rounded-lg bg-gray-100 p-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-700">
+							<path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div>
+						<h4 class="font-semibold text-gray-900">Quick Response</h4>
+						<p class="mt-1 text-sm text-gray-600">We typically respond within 24 hours</p>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Business Inquiries Card -->
+			<div class="rounded-2xl border border-gray-200 bg-white p-6">
+				<div class="flex items-start gap-4">
+					<div class="rounded-lg bg-gray-100 p-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-700">
+							<path fill-rule="evenodd" d="M4.5 2.25a.75.75 0 000 1.5v16.5h-.75a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5h-.75V3.75a.75.75 0 000-1.5h-15zM9 6a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H9zm-.75 3.75A.75.75 0 019 9h1.5a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM9 12a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H9zm3.75-5.25A.75.75 0 0113.5 6H15a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM13.5 9a.75.75 0 000 1.5H15A.75.75 0 0015 9h-1.5zm-.75 3.75a.75.75 0 01.75-.75H15a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM9 19.5v-2.25a.75.75 0 01.75-.75h4.5a.75.75 0 01.75.75v2.25a.75.75 0 01-.75.75h-4.5A.75.75 0 019 19.5z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div>
+						<h4 class="font-semibold text-gray-900">Business Inquiries</h4>
+						<p class="mt-1 text-sm text-gray-600">For partnerships and enterprise solutions</p>
+						<a href="mailto:hello@telitask.com" class="mt-2 inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700">
+							hello@telitask.com
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-1 h-4 w-4">
+								<path fill-rule="evenodd" d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z" clip-rule="evenodd" />
+							</svg>
+						</a>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </section>
