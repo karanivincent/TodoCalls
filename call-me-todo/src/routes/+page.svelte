@@ -50,8 +50,8 @@
 </script>
 
 <svelte:head>
-	<title>Call-Me Todo — Task reminders that actually reach you</title>
-	<meta name="description" content="Call-Me Todo calls your phone to remind you about tasks. Stop missing notifications. Try the free tier in minutes." />
+	<title>TeliTask — Task reminders that actually reach you</title>
+	<meta name="description" content="TeliTask calls your phone to remind you about tasks. Stop missing notifications. Try the free tier in minutes." />
 </svelte:head>
 
 <!-- Header -->
@@ -63,7 +63,7 @@
 					<path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.1.36 2.28.55 3.5.55a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C11.3 21 3 12.7 3 2a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.22.19 2.4.55 3.5a1 1 0 0 1-.25 1.01z"/>
 				</svg>
 			</span>
-			<span class="font-semibold tracking-tight">Call-Me Todo</span>
+			<span class="font-semibold tracking-tight">TeliTask</span>
 		</a>
 		<nav class="hidden sm:flex items-center gap-6 text-sm">
 			<a href="#how" class="hover:text-orange-700">How it works</a>
@@ -82,7 +82,7 @@
 				Task reminders that <span class="bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">call your phone</span>.
 			</h1>
 			<p class="mt-4 text-lg text-gray-700">
-				Skip the ignored push alerts. Call-Me Todo rings you at the time you choose—so important tasks never slip.
+				Skip the ignored push alerts. TeliTask rings you at the time you choose—so important tasks never slip.
 			</p>
 			<ul class="mt-6 space-y-2 text-gray-700">
 				<li class="flex items-start gap-2">
@@ -259,7 +259,7 @@
 <footer class="border-t border-gray-100">
 	<div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 text-sm text-gray-600 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-semibold text-gray-800">Call-Me Todo</span>
+			<span class="font-semibold text-gray-800">TeliTask</span>
 			<span>© {new Date().getFullYear()}</span>
 		</div>
 		<div class="flex flex-wrap gap-x-6 gap-y-2">

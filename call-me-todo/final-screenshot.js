@@ -7,8 +7,8 @@ async function takeScreenshot() {
   // Set viewport for better screenshot
   await page.setViewportSize({ width: 1440, height: 900 });
   
-  console.log('Navigating to https://call-me-todo.vercel.app/');
-  await page.goto('https://call-me-todo.vercel.app/', { waitUntil: 'networkidle' });
+  console.log('Navigating to https://telitask.com/');
+  await page.goto('https://telitask.com/', { waitUntil: 'networkidle' });
   
   // Wait a bit for any animations
   await page.waitForTimeout(2000);
@@ -18,7 +18,7 @@ async function takeScreenshot() {
   console.log('✅ Screenshot saved as deployment-success.png');
   
   // Also check the auth page
-  await page.goto('https://call-me-todo.vercel.app/auth', { waitUntil: 'networkidle' });
+  await page.goto('https://telitask.com/auth', { waitUntil: 'networkidle' });
   await page.screenshot({ path: 'auth-page.png', fullPage: true });
   console.log('✅ Auth page screenshot saved as auth-page.png');
   

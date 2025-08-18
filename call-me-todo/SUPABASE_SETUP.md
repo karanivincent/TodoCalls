@@ -15,14 +15,14 @@ Set these values:
 
 **Site URL:**
 ```
-https://call-me-todo.vercel.app
+https://telitask.com
 ```
 
 **Redirect URLs** (add ALL of these):
 ```
-https://call-me-todo.vercel.app/**
-https://call-me-todo.vercel.app/dashboard
-https://call-me-todo.vercel.app/auth/callback
+https://telitask.com/**
+https://telitask.com/dashboard
+https://telitask.com/auth/callback
 http://localhost:5173/**
 http://localhost:5173/dashboard
 http://localhost:5173/auth/callback

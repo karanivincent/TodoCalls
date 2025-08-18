@@ -27,7 +27,7 @@ tasks table created
 ```
 
 ### 5. Test Your App
-Go back to https://call-me-todo.vercel.app/dashboard and try saving your phone number again.
+Go back to https://telitask.com/dashboard and try saving your phone number again.
 
 ## Troubleshooting
 

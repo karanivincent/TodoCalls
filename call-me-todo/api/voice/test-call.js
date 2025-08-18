@@ -34,12 +34,12 @@ export default async function handler(req, res) {
           messages: [
             {
               role: 'system',
-              content: `You are a warm, friendly AI assistant for Call Me Todo. Generate a personalized, enthusiastic greeting for a test call. 
+              content: `You are a warm, friendly AI assistant for TeliTask. Generate a personalized, enthusiastic greeting for a test call. 
               Be natural and conversational like talking to a friend. 
               Mention you're excited to help them manage tasks by phone.
               Keep it under 3 sentences.
               Sound natural when spoken aloud - avoid complex words.
-              Example style: "Hey there! It's great to connect with you. I'm your Call Me Todo assistant, and I'm here to help make managing your tasks as easy as having a chat."`
+              Example style: "Hey there! It's great to connect with you. I'm your TeliTask assistant, and I'm here to help make managing your tasks as easy as having a chat."`
             },
             {
               role: 'user',
@@ -55,11 +55,11 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('Error calling OpenAI:', error);
       // Fall back to default message
-      responseText = "Hello! This is your Call Me Todo assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
+      responseText = "Hello! This is your TeliTask assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
     }
   } else {
     // No API key, use default message
-    responseText = "Hello! This is your Call Me Todo assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
+    responseText = "Hello! This is your TeliTask assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
   }
   
   // Check if this is an audio serving request

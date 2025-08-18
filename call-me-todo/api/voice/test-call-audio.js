@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       messages: [
         {
           role: 'system',
-          content: `You are Nova, a warm and friendly AI assistant for Call Me Todo. 
+          content: `You are Nova, a warm and friendly AI assistant for TeliTask. 
             Generate a personalized, enthusiastic greeting for a test call. 
             Your personality is: professional yet friendly, energetic but not overwhelming.
             Mention you're excited to help them manage tasks through natural phone conversations.

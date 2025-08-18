@@ -1,4 +1,4 @@
-# 30-Day Action Plan for Call-Me Todo
+# 30-Day Action Plan for TeliTask
 
 ## Week 1: Validate & Prep
 

@@ -40,7 +40,7 @@ export default async function handler(req, res) {
           messages: [
             {
               role: 'system',
-              content: `You are a helpful AI assistant for Call Me Todo, a task management app. 
+              content: `You are a helpful AI assistant for TeliTask, a task management app. 
               You're having a phone conversation with a user. 
               Help them manage their tasks - they can create tasks, list tasks, or mark tasks complete.
               Be conversational, friendly, and concise (under 2 sentences).
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     }
   } else if (!speechResult) {
     // Initial greeting
-    responseText = "Hello! I'm your Call Me Todo assistant. How can I help you with your tasks today? You can say things like 'create a new task' or 'what are my tasks for today'.";
+    responseText = "Hello! I'm your TeliTask assistant. How can I help you with your tasks today? You can say things like 'create a new task' or 'what are my tasks for today'.";
   } else {
     // No API key but user spoke
     responseText = "I heard you say: " + speechResult + ". However, I need OpenAI configured to help you manage tasks.";

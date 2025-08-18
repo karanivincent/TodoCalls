@@ -11,15 +11,15 @@ Your magic link emails are STILL redirecting to localhost:3000. You MUST update 
 
 #### Site URL (MUST CHANGE):
 ```
-https://call-me-todo.vercel.app
+https://telitask.com
 ```
 
 #### Redirect URLs (REPLACE ALL with these):
 ```
-https://call-me-todo.vercel.app
-https://call-me-todo.vercel.app/**
-https://call-me-todo.vercel.app/dashboard
-https://call-me-todo.vercel.app/auth/callback
+https://telitask.com
+https://telitask.com/**
+https://telitask.com/dashboard
+https://telitask.com/auth/callback
 http://localhost:5173
 http://localhost:5173/**
 ```
@@ -31,9 +31,9 @@ http://localhost:5173/**
 ### 4. Click "Save" at the bottom
 
 ## Verify It Worked:
-1. Go to https://call-me-todo.vercel.app/auth
+1. Go to https://telitask.com/auth
 2. Request a new magic link
-3. Check that the email link contains `redirect_to=https://call-me-todo.vercel.app` NOT localhost
+3. Check that the email link contains `redirect_to=https://telitask.com` NOT localhost
 
 ## Why This Happens:
 Supabase stores the redirect URLs in your project settings. Even though we updated the code, Supabase's dashboard settings override everything. You MUST change it in the dashboard.
@@ -41,5 +41,5 @@ Supabase stores the redirect URLs in your project settings. Even though we updat
 ## Alternative: Update via Supabase CLI
 If you have Supabase CLI access, you can also run:
 ```bash
-supabase --project-ref sjcnyewjhbojwopsdbjc auth set --site-url https://call-me-todo.vercel.app
+supabase --project-ref sjcnyewjhbojwopsdbjc auth set --site-url https://telitask.com
 ```

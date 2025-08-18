@@ -4,8 +4,8 @@ async function checkDeployment() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   
-  console.log('Navigating to https://call-me-todo.vercel.app/');
-  await page.goto('https://call-me-todo.vercel.app/', { waitUntil: 'networkidle' });
+  console.log('Navigating to https://telitask.com/');
+  await page.goto('https://telitask.com/', { waitUntil: 'networkidle' });
   
   // Take screenshot
   await page.screenshot({ path: 'deployment-check-2.png', fullPage: true });

@@ -9,7 +9,7 @@ console.log(`
 ================================================================================
 
 Your magic link emails are sending users to localhost:3000 instead of your 
-production app at https://call-me-todo.vercel.app
+production app at https://telitask.com
 
 YOU MUST FIX THIS NOW:
 
@@ -19,21 +19,21 @@ YOU MUST FIX THIS NOW:
 2. Change "Site URL" from:
    ❌ http://localhost:3000
    To:
-   ✅ https://call-me-todo.vercel.app
+   ✅ https://telitask.com
 
 3. In "Redirect URLs", REMOVE:
    ❌ http://localhost:3000
    
    And ADD these:
-   ✅ https://call-me-todo.vercel.app
-   ✅ https://call-me-todo.vercel.app/**
-   ✅ https://call-me-todo.vercel.app/dashboard
-   ✅ https://call-me-todo.vercel.app/auth/callback
+   ✅ https://telitask.com
+   ✅ https://telitask.com/**
+   ✅ https://telitask.com/dashboard
+   ✅ https://telitask.com/auth/callback
 
 4. Click the "Save" button at the bottom
 
 5. Test it:
-   - Go to https://call-me-todo.vercel.app/auth
+   - Go to https://telitask.com/auth
    - Enter your email
    - Check that the magic link in your email goes to the vercel.app URL
 

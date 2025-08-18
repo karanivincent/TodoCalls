@@ -74,13 +74,13 @@ export default async function handler(req, res) {
           messages: [
             {
               role: 'system',
-              content: `You are a warm, friendly AI assistant for Call Me Todo. Generate a personalized greeting for a test call.
+              content: `You are a warm, friendly AI assistant for TeliTask. Generate a personalized greeting for a test call.
               ${userName ? `The user's name is ${userName}. Use their name naturally in the greeting.` : 'You don\'t know the user\'s name yet.'}
               Be enthusiastic and conversational, like greeting a friend.
               Mention you're excited to help them manage tasks through natural conversation.
               Keep it to 2-3 short, natural sentences.
-              Example with name: "Hi Sarah! It's wonderful to hear from you. I'm your Call Me Todo assistant, ready to help you stay on top of your tasks through our conversation."
-              Example without name: "Hello there! Great to connect with you. I'm your Call Me Todo assistant, excited to help you manage your tasks just by talking."`
+              Example with name: "Hi Sarah! It's wonderful to hear from you. I'm your TeliTask assistant, ready to help you stay on top of your tasks through our conversation."
+              Example without name: "Hello there! Great to connect with you. I'm your TeliTask assistant, excited to help you manage your tasks just by talking."`
             },
             {
               role: 'user',
@@ -99,20 +99,20 @@ export default async function handler(req, res) {
       } else {
         // Fallback with name if available
         responseText = userName 
-          ? `Hi ${userName}! It's great to connect with you. I'm your Call Me Todo assistant, ready to help you manage your tasks through our conversation.`
-          : "Hello! It's wonderful to hear from you. I'm your Call Me Todo assistant, excited to help you stay organized through natural conversation.";
+          ? `Hi ${userName}! It's great to connect with you. I'm your TeliTask assistant, ready to help you manage your tasks through our conversation.`
+          : "Hello! It's wonderful to hear from you. I'm your TeliTask assistant, excited to help you stay organized through natural conversation.";
       }
     } catch (error) {
       console.error('Error calling OpenAI:', error);
       responseText = userName 
-        ? `Hi ${userName}! Welcome to Call Me Todo. I'm here to help you manage your tasks.`
-        : "Hello! Welcome to Call Me Todo. I'm here to help you manage your tasks through conversation.";
+        ? `Hi ${userName}! Welcome to TeliTask. I'm here to help you manage your tasks.`
+        : "Hello! Welcome to TeliTask. I'm here to help you manage your tasks through conversation.";
     }
   } else {
     // No API key, use fallback
     responseText = userName 
-      ? `Hi ${userName}! This is your Call Me Todo assistant. I can help you manage tasks through phone conversations.`
-      : "Hello! This is your Call Me Todo assistant. I can help you manage tasks through natural conversation.";
+      ? `Hi ${userName}! This is your TeliTask assistant. I can help you manage tasks through phone conversations.`
+      : "Hello! This is your TeliTask assistant. I can help you manage tasks through natural conversation.";
   }
   
   // Generate TwiML response with high-quality neural voice

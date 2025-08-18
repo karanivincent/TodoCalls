@@ -17,7 +17,7 @@ https://vercel.com/dashboard
 
 ### 4. Configure Project Settings
 
-**Project Name:** `call-me-todo`
+**Project Name:** `telitask`
 
 **Framework Preset:** SvelteKit (should auto-detect)
 
@@ -47,7 +47,7 @@ Click **"Deploy"**
 ## After Setup:
 - Every push to `main` branch will trigger automatic deployment
 - Pull requests will get preview deployments
-- You'll get a permanent URL like: `call-me-todo.vercel.app`
+- You'll get a permanent URL like: `telitask.com`
 
 ## Benefits:
 - Automatic deployments on git push

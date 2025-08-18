@@ -24,7 +24,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const VOICE = 'alloy';
 
 // System prompt for the AI assistant
-const SYSTEM_PROMPT = `You are a helpful AI assistant for Call-Me Todo, a task management app. 
+const SYSTEM_PROMPT = `You are a helpful AI assistant for TeliTask, a task management app. 
 You can help users:
 1. Create new tasks by asking for the task title and scheduled time
 2. List their upcoming tasks
@@ -47,7 +47,7 @@ app.post('/incoming-call', (req, res) => {
   
   twiml.say({
     voice: 'alice'
-  }, 'Welcome to Call Me Todo. Connecting you to your AI assistant.');
+  }, 'Welcome to TeliTask. Connecting you to your AI assistant.');
   
   twiml.connect().stream({
     url: `wss://${req.headers.host}/media-stream`
@@ -63,7 +63,7 @@ app.post('/test-call', (req, res) => {
   
   twiml.say({
     voice: 'alice'
-  }, 'Hello! This is your Call Me Todo AI assistant powered by OpenAI. Let me show you what I can do.');
+  }, 'Hello! This is your TeliTask AI assistant powered by OpenAI. Let me show you what I can do.');
   
   twiml.connect().stream({
     url: `wss://${req.headers.host}/media-stream`,
@@ -95,7 +95,7 @@ app.post('/outbound-call', async (req, res) => {
   
   twiml.say({
     voice: 'alice'
-  }, `Hello! This is your Call Me Todo reminder. You have a task: ${task.title}.`);
+  }, `Hello! This is your TeliTask reminder. You have a task: ${task.title}.`);
   
   twiml.connect().stream({
     url: `wss://${req.headers.host}/media-stream`,
