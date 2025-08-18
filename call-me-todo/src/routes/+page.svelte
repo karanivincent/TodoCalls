@@ -20,6 +20,17 @@
 	onMount(() => {
 		mounted = true;
 		
+		// Check if this is an email confirmation redirect
+		const urlParams = new URLSearchParams(window.location.search);
+		const hashParams = new URLSearchParams(window.location.hash.substring(1));
+		
+		// Check for Supabase auth confirmation parameters
+		if (hashParams.get('access_token') || hashParams.get('type') === 'signup' || hashParams.get('type') === 'recovery') {
+			// This is an email confirmation, redirect to callback handler
+			goto('/auth/callback' + window.location.hash);
+			return;
+		}
+		
 		// Animate stats when visible
 		const observer = new IntersectionObserver(
 			(entries) => {
