@@ -112,7 +112,7 @@
 				
 				if (signUpError) {
 					if (signUpError.message.includes('already registered')) {
-						error = 'An account with this email already exists. Please sign in instead.';
+						error = 'An account with this email already exists. Please sign in instead, or use Google if you signed up with Google.';
 						isNewUser = false;
 						step = 'signin';
 					} else {
@@ -154,7 +154,11 @@
 		const { error: oauthError } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${window.location.origin}/auth/callback`
+				redirectTo: `${window.location.origin}/auth/callback`,
+				queryParams: {
+					access_type: 'offline',
+					prompt: 'consent'
+				}
 			}
 		});
 		
@@ -539,6 +543,15 @@
 				</div>
 			{/if}
 		</div>
+		
+		{#if step !== 'verify'}
+			<div class="mt-4 p-3 bg-blue-50 rounded-lg">
+				<p class="text-xs text-blue-700 text-center">
+					<strong>Tip:</strong> You can link multiple sign-in methods to the same account in 
+					<a href="/dashboard/settings" class="underline">account settings</a> after logging in.
+				</p>
+			</div>
+		{/if}
 		
 		<p class="mt-4 text-center text-xs text-gray-400">
 			By signing up, you agree to our Terms of Service and Privacy Policy
