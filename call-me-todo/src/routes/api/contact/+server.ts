@@ -25,7 +25,7 @@ async function sendEmailNotification(data: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'TeliTask <noreply@telitask.com>', // Your verified domain
+        from: 'TeliTask <support@telitask.com>', // Your verified domain
         to: 'support@telitask.com', // Will forward to your Gmail via Cloudflare
         subject: `Contact Form: ${data.name}`,
         html: `
