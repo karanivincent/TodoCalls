@@ -18,17 +18,15 @@
 			{#if currentPage === '/'}
 				<!-- On homepage, use hash links -->
 				<a href="#how" class="hover:text-orange-700">How it works</a>
-				<a href="/pricing" class="hover:text-orange-700">Pricing</a>
 				<a href="#use-cases" class="hover:text-orange-700">Use cases</a>
 				<a href="#faq" class="hover:text-orange-700">FAQ</a>
-				<a href="#contact" class="hover:text-orange-700">Contact</a>
+				<a href="#waitlist" class="hover:text-orange-700">Join Waitlist</a>
 			{:else}
 				<!-- On other pages, link back to homepage sections -->
 				<a href="/#how" class="hover:text-orange-700">How it works</a>
-				<a href="/pricing" class="{currentPage === '/pricing' ? 'font-semibold text-orange-700' : 'hover:text-orange-700'}">Pricing</a>
 				<a href="/#use-cases" class="hover:text-orange-700">Use cases</a>
 				<a href="/#faq" class="hover:text-orange-700">FAQ</a>
-				<a href="/#contact" class="hover:text-orange-700">Contact</a>
+				<a href="/#waitlist" class="hover:text-orange-700">Join Waitlist</a>
 			{/if}
 			
 			{#if currentPage === '/dashboard'}
