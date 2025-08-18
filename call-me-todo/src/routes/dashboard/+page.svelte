@@ -37,6 +37,17 @@
 	let savingPhone = false;
 	let deletingPhoneId: string | null = null;
 	
+	// Verification state
+	let verifyModal = {
+		isOpen: false,
+		phoneId: '',
+		phoneNumber: '',
+		code: '',
+		sending: false,
+		checking: false,
+		error: ''
+	};
+	
 	// Confirmation modal
 	let confirmModal = {
 		isOpen: false,
@@ -176,6 +187,13 @@
 	}
 	
 	async function setPrimaryPhone(phoneId: string) {
+		// Check if phone is verified
+		const phone = phoneNumbers.find(p => p.id === phoneId);
+		if (!phone?.is_verified) {
+			toast.error('Please verify this phone number before setting it as primary');
+			return;
+		}
+		
 		const { error } = await supabase
 			.from('phone_numbers')
 			.update({ is_primary: true })
@@ -341,6 +359,103 @@
 			testingCall = false;
 		}
 	}
+	
+	async function startVerification(phone: PhoneNumber) {
+		verifyModal = {
+			isOpen: true,
+			phoneId: phone.id,
+			phoneNumber: phone.phone_number,
+			code: '',
+			sending: true,
+			checking: false,
+			error: ''
+		};
+		
+		try {
+			const response = await fetch('/api/verify/send', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					phoneNumber: phone.phone_number,
+					phoneId: phone.id
+				})
+			});
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				toast.success('Verification code sent to ' + phone.phone_number);
+				verifyModal.sending = false;
+			} else {
+				verifyModal.error = result.error || 'Failed to send verification code';
+				verifyModal.sending = false;
+			}
+		} catch (error: any) {
+			verifyModal.error = error.message;
+			verifyModal.sending = false;
+		}
+	}
+	
+	async function checkVerification() {
+		if (verifyModal.code.length !== 6) {
+			verifyModal.error = 'Please enter a 6-digit code';
+			return;
+		}
+		
+		verifyModal.checking = true;
+		verifyModal.error = '';
+		
+		try {
+			const response = await fetch('/api/verify/check', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					phoneNumber: verifyModal.phoneNumber,
+					phoneId: verifyModal.phoneId,
+					code: verifyModal.code
+				})
+			});
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				toast.success('Phone number verified successfully!');
+				verifyModal.isOpen = false;
+				verifyModal = {
+					isOpen: false,
+					phoneId: '',
+					phoneNumber: '',
+					code: '',
+					sending: false,
+					checking: false,
+					error: ''
+				};
+				await loadPhoneNumbers();
+			} else {
+				verifyModal.error = result.message || 'Invalid verification code';
+				verifyModal.checking = false;
+			}
+		} catch (error: any) {
+			verifyModal.error = error.message;
+			verifyModal.checking = false;
+		}
+	}
+	
+	function closeVerifyModal() {
+		verifyModal = {
+			isOpen: false,
+			phoneId: '',
+			phoneNumber: '',
+			code: '',
+			sending: false,
+			checking: false,
+			error: ''
+		};
+	}
 </script>
 
 {#each $toast as notification (notification.id)}
@@ -417,21 +532,30 @@
 									</div>
 								</div>
 								<div class="flex items-center gap-2">
-									{#if !phone.is_primary}
+									{#if !phone.is_verified}
 										<button
-											on:click={() => setPrimaryPhone(phone.id)}
-											class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+											on:click={() => startVerification(phone)}
+											class="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700"
 										>
-											Set Primary
+											Verify
+										</button>
+									{:else}
+										{#if !phone.is_primary}
+											<button
+												on:click={() => setPrimaryPhone(phone.id)}
+												class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+											>
+												Set Primary
+											</button>
+										{/if}
+										<button
+											on:click={() => testCall(phone.phone_number)}
+											disabled={testingCall}
+											class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+										>
+											Test Call
 										</button>
 									{/if}
-									<button
-										on:click={() => testCall(phone.phone_number)}
-										disabled={testingCall}
-										class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-									>
-										Test Call
-									</button>
 									<button
 										on:click={() => deletePhoneNumber(phone.id)}
 										disabled={deletingPhoneId === phone.id || (phone.is_primary && phoneNumbers.length === 1)}
@@ -679,3 +803,85 @@
 	confirmText="Delete"
 	cancelText="Cancel"
 />
+
+<!-- Verification Modal -->
+{#if verifyModal.isOpen}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+		<div class="fixed inset-0 bg-black bg-opacity-30" on:click={closeVerifyModal}></div>
+		
+		<div class="relative bg-white rounded-lg max-w-md w-full p-6">
+			<h3 class="text-lg font-semibold mb-4">Verify Phone Number</h3>
+			
+			<p class="text-sm text-gray-600 mb-4">
+				We've sent a 6-digit verification code to {verifyModal.phoneNumber}
+			</p>
+			
+			{#if verifyModal.sending}
+				<div class="flex justify-center py-4">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+				</div>
+				<p class="text-center text-sm text-gray-500">Sending verification code...</p>
+			{:else}
+				<div class="space-y-4">
+					<div>
+						<label for="verification-code" class="block text-sm font-medium text-gray-700 mb-1">
+							Enter 6-digit code
+						</label>
+						<input
+							id="verification-code"
+							type="text"
+							bind:value={verifyModal.code}
+							maxlength="6"
+							pattern="[0-9]{6}"
+							placeholder="123456"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-lg font-mono"
+							on:keydown={(e) => {
+								if (e.key === 'Enter' && verifyModal.code.length === 6) {
+									checkVerification();
+								}
+							}}
+						/>
+					</div>
+					
+					{#if verifyModal.error}
+						<div class="p-3 bg-red-50 border border-red-200 rounded-md">
+							<p class="text-sm text-red-800">{verifyModal.error}</p>
+						</div>
+					{/if}
+					
+					<div class="flex gap-3">
+						<button
+							on:click={checkVerification}
+							disabled={verifyModal.checking || verifyModal.code.length !== 6}
+							class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{verifyModal.checking ? 'Verifying...' : 'Verify'}
+						</button>
+						<button
+							on:click={closeVerifyModal}
+							class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+						>
+							Cancel
+						</button>
+					</div>
+					
+					<div class="text-center">
+						<button
+							on:click={() => startVerification({ 
+								id: verifyModal.phoneId, 
+								phone_number: verifyModal.phoneNumber,
+								label: '',
+								is_primary: false,
+								is_verified: false,
+								created_at: ''
+							})}
+							class="text-sm text-orange-600 hover:text-orange-700"
+						>
+							Resend code
+						</button>
+					</div>
+				</div>
+			{/if}
+		</div>
+	</div>
+{/if}

@@ -1,0 +1,1 @@
+- Always build and deploy after working on a feature or bug.
