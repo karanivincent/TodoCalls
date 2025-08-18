@@ -37,7 +37,7 @@
 					Sign Out
 				</button>
 			{:else}
-				<a href="/auth" class="rounded-lg bg-orange-600 px-3 py-1.5 text-white hover:bg-orange-700">Try Free</a>
+				<a href={currentPage === '/' ? '#waitlist' : '/#waitlist'} class="rounded-lg bg-orange-600 px-3 py-1.5 text-white hover:bg-orange-700">Join Waiting List</a>
 			{/if}
 		</nav>
 		

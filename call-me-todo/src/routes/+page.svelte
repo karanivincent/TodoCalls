@@ -139,10 +139,12 @@
 		openFaqIndex = openFaqIndex === index ? null : index;
 	}
 	
-	// Contact form state
+	// Waiting list form state
 	let contactName = '';
 	let contactEmail = '';
-	let contactMessage = '';
+	let contactMessage = 'I want to join the waiting list';
+	let acceptTerms = false;
+	let acceptUpdates = false;
 	let contactLoading = false;
 	let contactError = '';
 	let contactSuccess = false;
@@ -164,8 +166,8 @@
 			return;
 		}
 		
-		if (!contactMessage.trim()) {
-			contactError = 'Please enter a message';
+		if (!acceptTerms) {
+			contactError = 'Please accept the terms and privacy policy';
 			return;
 		}
 		
@@ -191,7 +193,9 @@
 				contactSuccess = true;
 				contactName = '';
 				contactEmail = '';
-				contactMessage = '';
+				contactMessage = 'I want to join the waiting list';
+				acceptTerms = false;
+				acceptUpdates = false;
 				
 				// Hide success message after 5 seconds
 				setTimeout(() => {
@@ -284,16 +288,16 @@
 				<!-- CTA Button -->
 				<div class="mt-8 space-y-4" in:fly={{ y: 20, duration: 600, delay: 300 }}>
 					<a
-						href="/auth"
+						href="#waitlist"
 						class="inline-flex items-center justify-center rounded-lg bg-orange-600 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
 					>
-						Get Started Free
+						Join Waiting List
 						<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
 						</svg>
 					</a>
 					<p class="text-sm text-gray-600">
-						No credit card required • 5 free calls/month
+						Be the first to know when we launch
 					</p>
 				</div>
 				
@@ -598,15 +602,15 @@
 	</div>
 </section>
 
-<!-- Contact Section -->
-<section id="contact" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
-	<h2 class="text-2xl font-bold text-gray-900 text-center">Get in Touch</h2>
-	<p class="mt-2 text-center text-gray-600">Have questions? We'd love to hear from you.</p>
+<!-- Waiting List Section -->
+<section id="waitlist" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
+	<h2 class="text-2xl font-bold text-gray-900 text-center">Join the Waiting List</h2>
+	<p class="mt-2 text-center text-gray-600">Be among the first to experience TeliTask when we launch.</p>
 	
 	<div class="mt-8 grid gap-8 lg:grid-cols-2">
-		<!-- Contact Form -->
+		<!-- Waiting List Form -->
 		<div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-			<h3 class="text-lg font-semibold text-gray-900 mb-4">Send us a message</h3>
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Reserve your spot</h3>
 			
 			<form on:submit={handleContactSubmit} class="space-y-4">
 				<div>
@@ -645,10 +649,37 @@
 						id="contact-message"
 						bind:value={contactMessage}
 						disabled={contactLoading}
-						rows="4"
-						class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 resize-none"
-						placeholder="Tell us how we can help you..."
+						readonly
+						rows="2"
+						class="w-full rounded-lg border border-gray-300 px-4 py-2 bg-gray-50 text-gray-700 resize-none cursor-not-allowed"
 					></textarea>
+				</div>
+				
+				<!-- Checkboxes -->
+				<div class="space-y-3">
+					<label class="flex items-start gap-3 cursor-pointer">
+						<input
+							type="checkbox"
+							bind:checked={acceptTerms}
+							disabled={contactLoading}
+							class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+						/>
+						<span class="text-sm text-gray-700">
+							I agree to the <a href="/terms" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Terms of Service</a> and <a href="/privacy" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Privacy Policy</a>
+						</span>
+					</label>
+					
+					<label class="flex items-start gap-3 cursor-pointer">
+						<input
+							type="checkbox"
+							bind:checked={acceptUpdates}
+							disabled={contactLoading}
+							class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+						/>
+						<span class="text-sm text-gray-700">
+							Send me product updates and launch announcements
+						</span>
+					</label>
 				</div>
 				
 				{#if contactError}
@@ -659,7 +690,7 @@
 				
 				{#if contactSuccess}
 					<div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-						✓ Thank you for your message! We'll get back to you within 24 hours.
+						✓ You're on the list! We'll notify you as soon as we launch.
 					</div>
 				{/if}
 				
@@ -668,67 +699,55 @@
 					disabled={contactLoading}
 					class="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-medium text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 				>
-					{contactLoading ? 'Sending...' : 'Send Message'}
+					{contactLoading ? 'Joining...' : 'Join Waiting List'}
 				</button>
 			</form>
 		</div>
 		
-		<!-- Contact Info Cards -->
+		<!-- Waiting List Benefits -->
 		<div class="space-y-6">
-			<!-- Email Card -->
+			<!-- Early Access Card -->
 			<div class="rounded-2xl border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6">
 				<div class="flex items-start gap-4">
 					<div class="rounded-lg bg-orange-500 p-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-white">
-							<path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
-							<path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+							<path fill-rule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z" clip-rule="evenodd" />
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Email Support</h4>
-						<p class="mt-1 text-sm text-gray-600">Get help with your account or tasks</p>
-						<a href="mailto:support@telitask.com" class="mt-2 inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700">
-							support@telitask.com
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-1 h-4 w-4">
-								<path fill-rule="evenodd" d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z" clip-rule="evenodd" />
-							</svg>
-						</a>
+						<h4 class="font-semibold text-gray-900">Early Access</h4>
+						<p class="mt-1 text-sm text-gray-600">Be among the first to try TeliTask when we launch</p>
 					</div>
 				</div>
 			</div>
 			
-			<!-- Response Time Card -->
+			<!-- Exclusive Pricing Card -->
 			<div class="rounded-2xl border border-gray-200 bg-white p-6">
 				<div class="flex items-start gap-4">
 					<div class="rounded-lg bg-gray-100 p-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-700">
-							<path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
+							<path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+							<path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.03 1.35-1.03 2.178 0 .829.318 1.612 1.03 2.178.712.566 1.643.823 2.22.823v2.874c-.662-.021-1.38-.222-2.103-.583a.75.75 0 10-.641 1.353c.877.45 1.773.712 2.744.737V18a.75.75 0 001.5 0v-.868c.855-.065 1.631-.361 2.191-.844.712-.566 1.059-1.35 1.059-2.178 0-.829-.347-1.612-1.059-2.178-.56-.483-1.336-.779-2.191-.843V8.354c.414.039.854.142 1.29.332a.75.75 0 10.556-1.393c-.616-.247-1.218-.396-1.846-.433V6z" clip-rule="evenodd" />
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Quick Response</h4>
-						<p class="mt-1 text-sm text-gray-600">We typically respond within 24 hours</p>
+						<h4 class="font-semibold text-gray-900">Exclusive Pricing</h4>
+						<p class="mt-1 text-sm text-gray-600">Special launch pricing for early supporters</p>
 					</div>
 				</div>
 			</div>
 			
-			<!-- Business Inquiries Card -->
+			<!-- Product Updates Card -->
 			<div class="rounded-2xl border border-gray-200 bg-white p-6">
 				<div class="flex items-start gap-4">
 					<div class="rounded-lg bg-gray-100 p-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-700">
-							<path fill-rule="evenodd" d="M4.5 2.25a.75.75 0 000 1.5v16.5h-.75a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5h-.75V3.75a.75.75 0 000-1.5h-15zM9 6a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H9zm-.75 3.75A.75.75 0 019 9h1.5a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM9 12a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H9zm3.75-5.25A.75.75 0 0113.5 6H15a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM13.5 9a.75.75 0 000 1.5H15A.75.75 0 0015 9h-1.5zm-.75 3.75a.75.75 0 01.75-.75H15a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM9 19.5v-2.25a.75.75 0 01.75-.75h4.5a.75.75 0 01.75.75v2.25a.75.75 0 01-.75.75h-4.5A.75.75 0 019 19.5z" clip-rule="evenodd" />
+							<path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z" clip-rule="evenodd" />
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Business Inquiries</h4>
-						<p class="mt-1 text-sm text-gray-600">For partnerships and enterprise solutions</p>
-						<a href="mailto:hello@telitask.com" class="mt-2 inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700">
-							hello@telitask.com
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-1 h-4 w-4">
-								<path fill-rule="evenodd" d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z" clip-rule="evenodd" />
-							</svg>
-						</a>
+						<h4 class="font-semibold text-gray-900">Product Updates</h4>
+						<p class="mt-1 text-sm text-gray-600">Get notified about new features and launch updates</p>
 					</div>
 				</div>
 			</div>
@@ -746,7 +765,7 @@
 		<div class="flex flex-wrap gap-x-6 gap-y-2">
 			<a href="/privacy" class="hover:text-orange-700">Privacy</a>
 			<a href="/terms" class="hover:text-orange-700">Terms</a>
-			<a href="#contact" class="hover:text-orange-700">Contact</a>
+			<a href="#waitlist" class="hover:text-orange-700">Join Waitlist</a>
 		</div>
 	</div>
 </footer>
@@ -759,10 +778,10 @@
 		class="fixed bottom-6 right-6 z-50"
 	>
 		<a
-			href="/auth"
+			href="#waitlist"
 			class="group flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
 		>
-			<span class="font-semibold">Get Started</span>
+			<span class="font-semibold">Join Waitlist</span>
 			<svg
 				class="w-5 h-5 group-hover:translate-x-1 transition-transform"
 				fill="none"
