@@ -4,6 +4,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import PhoneMockup from '$lib/components/PhoneMockup.svelte';
 	
 	
 	// Animation states
@@ -280,8 +281,24 @@
 					</li>
 				</ul>
 				
+				<!-- CTA Button -->
+				<div class="mt-8 space-y-4" in:fly={{ y: 20, duration: 600, delay: 300 }}>
+					<a
+						href="/auth"
+						class="inline-flex items-center justify-center rounded-lg bg-orange-600 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
+					>
+						Get Started Free
+						<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+						</svg>
+					</a>
+					<p class="text-sm text-gray-600">
+						No credit card required • 5 free calls/month
+					</p>
+				</div>
+				
 				<!-- Social proof -->
-				<div class="mt-8 flex items-center gap-4" in:fly={{ y: 20, duration: 600, delay: 300 }}>
+				<div class="mt-6 flex items-center gap-4" in:fly={{ y: 20, duration: 600, delay: 400 }}>
 					<div class="flex -space-x-2">
 						{#each [1, 2, 3, 4, 5] as i}
 							<img 
@@ -305,24 +322,11 @@
 			{/if}
 		</div>
 
-		<!-- CTA Section -->
-		<div class="lg:justify-self-end w-full max-w-md">
+		<!-- Phone Mockup Section -->
+		<div class="lg:justify-self-end w-full">
 			{#if mounted}
-				<div in:scale={{ duration: 500, delay: 400, start: 0.95 }} class="text-center">
-					<div class="space-y-4">
-						<a
-							href="/auth"
-							class="inline-flex items-center justify-center w-full rounded-lg bg-orange-600 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
-						>
-							Get Started Free
-							<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-							</svg>
-						</a>
-						<p class="text-sm text-gray-600">
-							No credit card required • 5 free calls/month
-						</p>
-					</div>
+				<div in:scale={{ duration: 600, delay: 500, start: 0.9 }}>
+					<PhoneMockup />
 				</div>
 			{/if}
 		</div>
