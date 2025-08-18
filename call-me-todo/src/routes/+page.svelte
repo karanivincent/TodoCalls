@@ -9,14 +9,7 @@
 	
 	// Animation states
 	let mounted = false;
-	let currentTestimonial = 0;
-	let statsVisible = false;
 	let showFloatingCta = false;
-	
-	// Stats counters
-	let callsMade = 0;
-	let usersActive = 0;
-	let satisfaction = 0;
 	
 	onMount(() => {
 		mounted = true;
@@ -32,19 +25,6 @@
 			return;
 		}
 		
-		// Animate stats when visible
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting && !statsVisible) {
-					statsVisible = true;
-					animateStats();
-				}
-			},
-			{ threshold: 0.5 }
-		);
-		
-		const statsSection = document.querySelector('#stats');
-		if (statsSection) observer.observe(statsSection);
 		
 		// Show floating CTA when scrolled past hero
 		const handleScroll = () => {
@@ -58,52 +38,12 @@
 		window.addEventListener('scroll', handleScroll);
 		handleScroll(); // Check initial position
 		
-		// Rotate testimonials
-		const interval = setInterval(() => {
-			currentTestimonial = (currentTestimonial + 1) % testimonials.length;
-		}, 4000);
 		
 		return () => {
-			clearInterval(interval);
-			if (statsSection) observer.unobserve(statsSection);
 			window.removeEventListener('scroll', handleScroll);
 		};
 	});
 	
-	function animateStats() {
-		const duration = 2000;
-		const steps = 60;
-		const interval = duration / steps;
-		
-		for (let i = 0; i <= steps; i++) {
-			setTimeout(() => {
-				callsMade = Math.floor((15234 / steps) * i);
-				usersActive = Math.floor((1847 / steps) * i);
-				satisfaction = Math.floor((98 / steps) * i);
-			}, interval * i);
-		}
-	}
-	
-	const testimonials = [
-		{
-			quote: "I haven't missed a medication dose in 3 months. The phone calls work where notifications failed.",
-			name: "Sarah Chen",
-			role: "Chronic illness patient",
-			rating: 5
-		},
-		{
-			quote: "My ADHD brain ignores every app notification. But a ringing phone? That gets my attention every time.",
-			name: "Marcus Johnson",
-			role: "Software Developer",
-			rating: 5
-		},
-		{
-			quote: "Perfect for my elderly parents. No apps to learn, just answer the phone for their reminders.",
-			name: "Emily Rodriguez",
-			role: "Caregiver",
-			rating: 5
-		}
-	];
 	
 	// FAQ accordion state
 	let openFaqIndex: number | null = null;
@@ -241,12 +181,12 @@
 		<div>
 			{#if mounted}
 				<div in:fly={{ y: 20, duration: 600, delay: 0 }}>
-					<!-- Trust badge -->
+					<!-- Coming Soon badge -->
 					<div class="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full mb-4">
 						<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
 						</svg>
-						<span>Trusted by 1,847+ users</span>
+						<span>Launching Soon</span>
 					</div>
 					
 					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
@@ -301,28 +241,6 @@
 					</p>
 				</div>
 				
-				<!-- Social proof -->
-				<div class="mt-6 flex items-center gap-4" in:fly={{ y: 20, duration: 600, delay: 400 }}>
-					<div class="flex -space-x-2">
-						{#each [1, 2, 3, 4, 5] as i}
-							<img 
-								class="h-8 w-8 rounded-full border-2 border-white" 
-								src="https://api.dicebear.com/7.x/avataaars/svg?seed=user{i}" 
-								alt="User {i}"
-							/>
-						{/each}
-					</div>
-					<div class="text-sm">
-						<div class="flex items-center gap-1">
-							{#each [1, 2, 3, 4, 5] as star}
-								<svg class="h-4 w-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-									<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-								</svg>
-							{/each}
-						</div>
-						<p class="text-gray-600">4.9/5 from 200+ reviews</p>
-					</div>
-				</div>
 			{/if}
 		</div>
 
@@ -337,86 +255,6 @@
 	</div>
 </section>
 
-<!-- Stats Section -->
-<section id="stats" class="bg-gradient-to-r from-orange-500 to-orange-600 py-12">
-	<div class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-			<div class="space-y-2">
-				<div class="text-4xl font-bold text-white">
-					{callsMade.toLocaleString()}+
-				</div>
-				<div class="text-orange-100">Reminder calls made</div>
-			</div>
-			<div class="space-y-2">
-				<div class="text-4xl font-bold text-white">
-					{usersActive.toLocaleString()}+
-				</div>
-				<div class="text-orange-100">Active users</div>
-			</div>
-			<div class="space-y-2">
-				<div class="text-4xl font-bold text-white">
-					{satisfaction}%
-				</div>
-				<div class="text-orange-100">User satisfaction</div>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Testimonials Section -->
-<section id="testimonials" class="bg-gray-50 py-16 sm:py-20">
-	<div class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div class="text-center mb-12">
-			<h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-				Loved by thousands who never miss what matters
-			</h2>
-			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-				From busy professionals to caregivers, TeliTask helps people stay on track
-			</p>
-		</div>
-		
-		<div class="relative max-w-4xl mx-auto h-64">
-			{#each testimonials as testimonial, i}
-				<div
-					class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-500 {currentTestimonial === i ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0'}"
-				>
-					<div class="flex mb-4">
-						{#each Array(testimonial.rating) as _}
-							<svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-								<path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-							</svg>
-						{/each}
-					</div>
-					
-					<blockquote class="text-lg sm:text-xl text-gray-700 mb-6 italic">
-						"{testimonial.quote}"
-					</blockquote>
-					
-					<div class="flex items-center">
-						<div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold">
-							{testimonial.name.split(' ').map(n => n[0]).join('')}
-						</div>
-						<div class="ml-4">
-							<div class="font-semibold text-gray-900">{testimonial.name}</div>
-							<div class="text-gray-600 text-sm">{testimonial.role}</div>
-						</div>
-					</div>
-				</div>
-			{/each}
-		</div>
-		
-		<!-- Navigation dots -->
-		<div class="flex justify-center mt-8 space-x-2">
-			{#each testimonials as _, i}
-				<button
-					on:click={() => currentTestimonial = i}
-					class="w-2 h-2 rounded-full transition-all duration-300 {currentTestimonial === i ? 'w-8 bg-orange-500' : 'bg-gray-300 hover:bg-gray-400'}"
-					aria-label="Go to testimonial {i + 1}"
-				/>
-			{/each}
-		</div>
-	</div>
-</section>
 
 <!-- How it works -->
 <section id="how" class="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
