@@ -10,34 +10,42 @@ const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 // Create or get Verify Service (you might want to store this service SID in env vars)
 const VERIFY_SERVICE_SID = process.env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request }) => {
 	try {
-		const session = await locals.getSession();
-		if (!session) {
+		// Get the authorization header
+		const authHeader = request.headers.get('authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
+		const token = authHeader.replace('Bearer ', '');
 		const { phoneNumber, phoneId } = await request.json();
 		
 		if (!phoneNumber) {
 			return json({ error: 'Phone number is required' }, { status: 400 });
 		}
 
-		// Initialize Supabase client with user session
+		// Initialize Supabase client with the user's token
 		const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
 			global: {
 				headers: {
-					Authorization: `Bearer ${session.access_token}`
+					Authorization: `Bearer ${token}`
 				}
 			}
 		});
+
+		// Get the current user
+		const { data: { user }, error: userError } = await supabase.auth.getUser();
+		if (userError || !user) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
+		}
 
 		// Check if this phone number belongs to the user
 		const { data: phoneData, error: phoneError } = await supabase
 			.from('phone_numbers')
 			.select('*')
 			.eq('id', phoneId)
-			.eq('user_id', session.user.id)
+			.eq('user_id', user.id)
 			.single();
 
 		if (phoneError || !phoneData) {

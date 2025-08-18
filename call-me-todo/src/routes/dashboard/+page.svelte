@@ -372,10 +372,19 @@
 		};
 		
 		try {
+			// Get the current session for auth token
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session) {
+				verifyModal.error = 'Not authenticated';
+				verifyModal.sending = false;
+				return;
+			}
+			
 			const response = await fetch('/api/verify/send', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${session.access_token}`
 				},
 				body: JSON.stringify({
 					phoneNumber: phone.phone_number,
@@ -408,10 +417,19 @@
 		verifyModal.error = '';
 		
 		try {
+			// Get the current session for auth token
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session) {
+				verifyModal.error = 'Not authenticated';
+				verifyModal.checking = false;
+				return;
+			}
+			
 			const response = await fetch('/api/verify/check', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${session.access_token}`
 				},
 				body: JSON.stringify({
 					phoneNumber: verifyModal.phoneNumber,
