@@ -124,7 +124,7 @@
 		},
 		{
 			question: "Is it really free?",
-			answer: "Yes! Start with 10 free calls per month, no credit card required. Need more? Upgrade anytime for unlimited calls at $9/month."
+			answer: "Yes! Start with 5 free calls per month, no credit card required. Need more? Our Essential plan starts at just $7/month for 50 calls. See our pricing page for all options."
 		}
 	];
 	
@@ -257,6 +257,7 @@
 		</a>
 		<nav class="hidden sm:flex items-center gap-6 text-sm">
 			<a href="#how" class="hover:text-orange-700">How it works</a>
+			<a href="/pricing" class="hover:text-orange-700">Pricing</a>
 			<a href="#use-cases" class="hover:text-orange-700">Use cases</a>
 			<a href="#faq" class="hover:text-orange-700">FAQ</a>
 			<a href="#contact" class="hover:text-orange-700">Contact</a>
