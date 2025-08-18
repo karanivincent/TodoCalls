@@ -1,4 +1,4 @@
-// Raw Vercel Function with OpenAI integration
+// Enhanced test call with OpenAI integration and improved voice
 export default async function handler(req, res) {
   console.log(`Test call ${req.method} request`);
   
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   
   let responseText = '';
   
-  // Try to get response from OpenAI
+  // Try to get response from OpenAI GPT-4
   const openaiApiKey = process.env.OPENAI_API_KEY;
   
   if (openaiApiKey) {
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
           'Authorization': `Bearer ${openaiApiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',  // Using GPT-4o mini for better quality
           messages: [
             {
               role: 'system',
@@ -35,43 +35,54 @@ export default async function handler(req, res) {
               Be natural and conversational like talking to a friend. 
               Mention you're excited to help them manage tasks by phone.
               Keep it under 3 sentences.
-              Example style: "Hi there! It's great to connect with you. I'm your Call Me Todo assistant, and I'm here to help make managing your tasks as easy as having a conversation."`
+              Sound natural when spoken aloud - avoid complex words.
+              Example style: "Hey there! It's great to connect with you. I'm your Call Me Todo assistant, and I'm here to help make managing your tasks as easy as having a chat."`
             },
             {
               role: 'user',
-              content: 'Generate a warm, friendly test call greeting'
+              content: 'Generate a warm, friendly test call greeting that sounds natural when spoken'
             }
           ],
           max_tokens: 150,
-          temperature: 0.7
+          temperature: 0.8
         })
       });
       
       if (response.ok) {
         const data = await response.json();
         responseText = data.choices[0].message.content;
-        console.log('OpenAI response:', responseText);
+        console.log('OpenAI GPT-4o response:', responseText);
       } else {
         console.error('OpenAI API error:', response.status);
         // Fall back to default message
-        responseText = "Hello! This is your Call Me Todo AI assistant. I can help you manage your tasks through natural conversation. Thank you for testing our service!";
+        responseText = "Hello! This is your Call Me Todo assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
       }
     } catch (error) {
       console.error('Error calling OpenAI:', error);
       // Fall back to default message
-      responseText = "Hello! This is your Call Me Todo AI assistant. I can help you manage your tasks through natural conversation. Thank you for testing our service!";
+      responseText = "Hello! This is your Call Me Todo assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
     }
   } else {
     // No API key, use default message
-    responseText = "Hello! This is your Call Me Todo AI assistant. I can help you manage your tasks through natural conversation. Thank you for testing our service!";
+    responseText = "Hello! This is your Call Me Todo assistant. I'm here to help you manage your tasks through natural conversation. Thank you for testing our service!";
   }
   
-  // Generate TwiML response with the text
+  // Use Amazon Polly neural voice for much better quality than Alice
+  // Available Polly neural voices: Olivia, Amy, Emma, Brian, Arthur, Gregory, Matthew
+  // Using Joanna (US female) or Matthew (US male) for best quality
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="en-US">${responseText}</Say>
+  <Say voice="Polly.Joanna-Neural" language="en-US">
+    <prosody rate="medium" pitch="+2%">
+      ${responseText}
+    </prosody>
+  </Say>
   <Pause length="1"/>
-  <Say voice="alice" language="en-US">Goodbye!</Say>
+  <Say voice="Polly.Joanna-Neural" language="en-US">
+    <prosody rate="medium" pitch="+2%">
+      This was a test call. Have a wonderful day!
+    </prosody>
+  </Say>
 </Response>`;
   
   res.status(200);

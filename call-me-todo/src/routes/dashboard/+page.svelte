@@ -21,6 +21,7 @@
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
+	let userName = '';
 	let phoneNumbers: PhoneNumber[] = [];
 	let primaryPhone = '';
 	let tasks: Task[] = [];
@@ -66,6 +67,27 @@
 		}
 		
 		user = currentUser;
+		
+		// Get user's full name from metadata or local storage
+		if (user.user_metadata?.full_name) {
+			userName = user.user_metadata.full_name;
+		} else if (typeof window !== 'undefined') {
+			// Check localStorage for pending name
+			const pendingName = localStorage.getItem('pendingUserName');
+			if (pendingName) {
+				userName = pendingName;
+				// Update user metadata with the name
+				await supabase.auth.updateUser({
+					data: { full_name: pendingName }
+				});
+				localStorage.removeItem('pendingUserName');
+			}
+		}
+		
+		// Fallback to email username if no name
+		if (!userName) {
+			userName = user.email?.split('@')[0] || 'User';
+		}
 		
 		await loadPhoneNumbers();
 		await loadTasks();
@@ -339,6 +361,7 @@
 				</div>
 				<div class="flex items-center space-x-4">
 					{#if user}
+						<span class="text-sm font-medium text-gray-700">Hi, {userName}!</span>
 						<span class="text-sm text-gray-500">{user.email}</span>
 						<button
 							on:click={signOut}

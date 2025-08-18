@@ -70,7 +70,7 @@ export default async function handler(req, res) {
           'Authorization': `Bearer ${openaiApiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',  // Using GPT-4o mini for better quality
           messages: [
             {
               role: 'system',
@@ -115,12 +115,20 @@ export default async function handler(req, res) {
       : "Hello! This is your Call Me Todo assistant. I can help you manage tasks through natural conversation.";
   }
   
-  // Generate TwiML response
+  // Generate TwiML response with high-quality neural voice
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="en-US">${responseText}</Say>
+  <Say voice="Polly.Joanna-Neural" language="en-US">
+    <prosody rate="medium" pitch="+2%">
+      ${responseText}
+    </prosody>
+  </Say>
   <Pause length="1"/>
-  <Say voice="alice" language="en-US">This was a test call. Have a wonderful day!</Say>
+  <Say voice="Polly.Joanna-Neural" language="en-US">
+    <prosody rate="medium" pitch="+2%">
+      This was a test call. Have a wonderful day!
+    </prosody>
+  </Say>
 </Response>`;
   
   res.status(200);
