@@ -70,8 +70,8 @@
 			answer: "Yes! During a call, press '1' to snooze for 5 minutes, '2' for 15 minutes, or '3' for 1 hour. You can customize these in settings."
 		},
 		{
-			question: "Is it really free?",
-			answer: "Yes! Start with 5 free calls per month, no credit card required. Need more? Our Essential plan starts at just $7/month for 50 calls. See our pricing page for all options."
+			question: "Is it really free to start?",
+			answer: "Yes! You can start using TeliTask completely free, no credit card required. We believe in letting you experience the value before asking for anything in return."
 		}
 	];
 
@@ -218,7 +218,7 @@
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Works on any phone—no app install required</span>
+						<span>Your phone rings. You answer. You remember.</span>
 					</li>
 					<li class="flex items-start gap-3 group">
 						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
@@ -226,7 +226,7 @@
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Start free forever (5 calls/month) • No credit card</span>
+						<span>Works with iPhone, Android, even flip phones</span>
 					</li>
 					<li class="flex items-start gap-3 group">
 						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
@@ -234,7 +234,23 @@
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Respectful quiet hours & reliable retries</span>
+						<span>Set quiet hours—we'll never disturb your sleep</span>
+					</li>
+					<li class="flex items-start gap-3 group">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<span>Miss the call? We'll try again in 5 minutes</span>
+					</li>
+					<li class="flex items-start gap-3 group">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<span>No apps, no downloads, no hassle—just calls</span>
 					</li>
 				</ul>
 
@@ -254,7 +270,7 @@
 							🔥 Only {spotsRemaining} early access spots remaining
 						</p>
 						<p class="text-sm text-gray-600">
-							Lock in 50% off forever as an early supporter
+							Be among the first to experience TeliTask
 						</p>
 					</div>
 				</div>
@@ -573,7 +589,7 @@
 			<svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
 				<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
 			</svg>
-			<span>Only {spotsRemaining} spots left at 50% off</span>
+			<span>Only {spotsRemaining} early access spots left</span>
 		</div>
 	</div>
 
