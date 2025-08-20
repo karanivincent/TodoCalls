@@ -1,31 +1,31 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { fade, fly, scale } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
-	import NavBar from '$lib/components/NavBar.svelte';
-	import PhoneMockup from '$lib/components/PhoneMockup.svelte';
-	
-	
+	import { goto } from '$app/navigation'
+	import NavBar from '$lib/components/NavBar.svelte'
+	import PhoneMockup from '$lib/components/PhoneMockup.svelte'
+	import { onMount } from 'svelte'
+	import { fly, scale } from 'svelte/transition'
+
+
 	// Animation states
 	let mounted = false;
 	let showFloatingCta = false;
-	
+
+
 	onMount(() => {
 		mounted = true;
-		
+
 		// Check if this is an email confirmation redirect
 		const urlParams = new URLSearchParams(window.location.search);
 		const hashParams = new URLSearchParams(window.location.hash.substring(1));
-		
+
 		// Check for Supabase auth confirmation parameters
 		if (hashParams.get('access_token') || hashParams.get('type') === 'signup' || hashParams.get('type') === 'recovery') {
 			// This is an email confirmation, redirect to callback handler
 			goto('/auth/callback' + window.location.hash);
 			return;
 		}
-		
-		
+
+
 		// Show floating CTA when scrolled past hero
 		const handleScroll = () => {
 			const heroSection = document.querySelector('#signup');
@@ -34,20 +34,20 @@
 				showFloatingCta = rect.bottom < 100;
 			}
 		};
-		
+
 		window.addEventListener('scroll', handleScroll);
 		handleScroll(); // Check initial position
-		
-		
+
+
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
 		};
 	});
-	
-	
+
+
 	// FAQ accordion state
 	let openFaqIndex: number | null = null;
-	
+
 	const faqs = [
 		{
 			question: "Do you support push hounds?",
@@ -74,11 +74,11 @@
 			answer: "Yes! Start with 5 free calls per month, no credit card required. Need more? Our Essential plan starts at just $7/month for 50 calls. See our pricing page for all options."
 		}
 	];
-	
+
 	function toggleFaq(index: number) {
 		openFaqIndex = openFaqIndex === index ? null : index;
 	}
-	
+
 	// Waiting list form state
 	let contactName = '';
 	let contactEmail = '';
@@ -88,31 +88,31 @@
 	let contactLoading = false;
 	let contactError = '';
 	let contactSuccess = false;
-	
-	
-	
+
+
+
 	async function handleContactSubmit(event: Event) {
 		event.preventDefault();
 		contactError = '';
 		contactSuccess = false;
-		
+
 		if (!contactName.trim()) {
 			contactError = 'Please enter your name';
 			return;
 		}
-		
+
 		if (!contactEmail.trim() || !contactEmail.includes('@')) {
 			contactError = 'Please enter a valid email address';
 			return;
 		}
-		
+
 		if (!acceptTerms) {
 			contactError = 'Please accept the terms and privacy policy';
 			return;
 		}
-		
+
 		contactLoading = true;
-		
+
 		try {
 			// Send to API endpoint
 			const response = await fetch('/api/contact', {
@@ -126,9 +126,9 @@
 					message: contactMessage
 				})
 			});
-			
+
 			const result = await response.json();
-			
+
 			if (response.ok && result.success) {
 				contactSuccess = true;
 				contactName = '';
@@ -136,7 +136,7 @@
 				contactMessage = 'I want to join the waiting list';
 				acceptTerms = false;
 				acceptUpdates = false;
-				
+
 				// Hide success message after 5 seconds
 				setTimeout(() => {
 					contactSuccess = false;
@@ -176,7 +176,7 @@
 			<rect width="100%" height="100%" fill="url(#hero-pattern)"/>
 		</svg>
 	</div>
-	
+
 	<div class="relative mx-auto max-w-6xl px-4 sm:px-6 py-14 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
 		<div>
 			{#if mounted}
@@ -188,16 +188,16 @@
 						</svg>
 						<span>Launching Soon</span>
 					</div>
-					
+
 					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
 						Task reminders that <span class="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent animate-pulse">call your phone</span>.
 					</h1>
 				</div>
-				
+
 				<p class="mt-4 text-lg text-gray-700" in:fly={{ y: 20, duration: 600, delay: 100 }}>
 					Skip the ignored push alerts. TeliTask rings you at the time you choose—so important tasks never slip.
 				</p>
-				
+
 				<ul class="mt-6 space-y-3" in:fly={{ y: 20, duration: 600, delay: 200 }}>
 					<li class="flex items-start gap-3 group">
 						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
@@ -224,7 +224,7 @@
 						<span>Respectful quiet hours & reliable retries</span>
 					</li>
 				</ul>
-				
+
 				<!-- CTA Button -->
 				<div class="mt-8 space-y-4" in:fly={{ y: 20, duration: 600, delay: 300 }}>
 					<a
@@ -240,7 +240,7 @@
 						Be the first to know when we launch
 					</p>
 				</div>
-				
+
 			{/if}
 		</div>
 
@@ -266,11 +266,11 @@
 			Get started in 30 seconds. No app downloads, no complex setup.
 		</p>
 	</div>
-	
+
 	<div class="grid gap-8 sm:grid-cols-3 relative">
 		<!-- Connection line (hidden on mobile) -->
 		<div class="hidden sm:block absolute top-20 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-orange-200 via-orange-400 to-orange-200"></div>
-		
+
 		<div class="relative group">
 			<div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
 			<div class="relative rounded-2xl bg-white border border-gray-200 p-6 hover:border-orange-300 transition-colors">
@@ -285,7 +285,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="relative group">
 			<div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
 			<div class="relative rounded-2xl bg-white border border-gray-200 p-6 hover:border-orange-300 transition-colors">
@@ -300,7 +300,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="relative group">
 			<div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
 			<div class="relative rounded-2xl bg-white border border-gray-200 p-6 hover:border-orange-300 transition-colors">
@@ -329,7 +329,7 @@
 				From morning routines to evening wind-downs, TeliTask keeps you on track
 			</p>
 		</div>
-		
+
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -340,7 +340,7 @@
 				<div class="font-semibold text-gray-900 mb-2">Meetings & calls</div>
 				<p class="text-gray-600">Never miss the daily stand-up or client check-in again.</p>
 			</div>
-			
+
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,7 +350,7 @@
 				<div class="font-semibold text-gray-900 mb-2">Meds & routines</div>
 				<p class="text-gray-600">Gentle nudges for medication, water, or quick stretches.</p>
 			</div>
-			
+
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,7 +360,7 @@
 				<div class="font-semibold text-gray-900 mb-2">Chores & errands</div>
 				<p class="text-gray-600">Bins day, laundry switch, school run—handled.</p>
 			</div>
-			
+
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,7 +370,7 @@
 				<div class="font-semibold text-gray-900 mb-2">Focus sessions</div>
 				<p class="text-gray-600">Pomodoro-style calls to start or wrap deep work.</p>
 			</div>
-			
+
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,7 +380,7 @@
 				<div class="font-semibold text-gray-900 mb-2">Accountability</div>
 				<p class="text-gray-600">Schedule end-of-day check-ins for goals and habits.</p>
 			</div>
-			
+
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
 				<div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -406,12 +406,12 @@
 				Everything you need to know about TeliTask
 			</p>
 		</div>
-		
+
 		<div class="space-y-4">
 			{#each faqs as faq, i}
 				<div class="rounded-2xl border border-gray-200 bg-white overflow-hidden transition-all duration-300 hover:shadow-lg">
 					<button
-						on:click={() => toggleFaq(i)}
+						onclick={() => toggleFaq(i)}
 						class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
 					>
 						<span class="font-semibold text-gray-900">{faq.question}</span>
@@ -424,7 +424,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
 						</svg>
 					</button>
-					
+
 					{#if openFaqIndex === i}
 						<div
 							in:fly={{ y: -10, duration: 200 }}
@@ -444,13 +444,13 @@
 <section id="waitlist" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
 	<h2 class="text-2xl font-bold text-gray-900 text-center">Join the Waiting List</h2>
 	<p class="mt-2 text-center text-gray-600">Be among the first to experience TeliTask when we launch.</p>
-	
+
 	<div class="mt-8 grid gap-8 lg:grid-cols-2">
 		<!-- Waiting List Form -->
 		<div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
 			<h3 class="text-lg font-semibold text-gray-900 mb-4">Reserve your spot</h3>
-			
-			<form on:submit={handleContactSubmit} class="space-y-4">
+
+			<form onsubmit={handleContactSubmit} class="space-y-4">
 				<div>
 					<label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">
 						Your Name
@@ -464,7 +464,7 @@
 						placeholder="John Doe"
 					/>
 				</div>
-				
+
 				<div>
 					<label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">
 						Email Address
@@ -478,7 +478,7 @@
 						placeholder="john@example.com"
 					/>
 				</div>
-				
+
 				<div>
 					<label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
 						Message
@@ -492,7 +492,7 @@
 						class="w-full rounded-lg border border-gray-300 px-4 py-2 bg-gray-50 text-gray-700 resize-none cursor-not-allowed"
 					></textarea>
 				</div>
-				
+
 				<!-- Checkboxes -->
 				<div class="space-y-3">
 					<label class="flex items-start gap-3 cursor-pointer">
@@ -506,7 +506,7 @@
 							I agree to the <a href="/terms" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Terms of Service</a> and <a href="/privacy" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Privacy Policy</a>
 						</span>
 					</label>
-					
+
 					<label class="flex items-start gap-3 cursor-pointer">
 						<input
 							type="checkbox"
@@ -519,19 +519,19 @@
 						</span>
 					</label>
 				</div>
-				
+
 				{#if contactError}
 					<div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
 						{contactError}
 					</div>
 				{/if}
-				
+
 				{#if contactSuccess}
 					<div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
 						✓ You're on the list! We'll notify you as soon as we launch.
 					</div>
 				{/if}
-				
+
 				<button
 					type="submit"
 					disabled={contactLoading}
@@ -541,7 +541,7 @@
 				</button>
 			</form>
 		</div>
-		
+
 		<!-- Waiting List Benefits -->
 		<div class="space-y-6">
 			<!-- Early Access Card -->
@@ -558,7 +558,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<!-- Exclusive Pricing Card -->
 			<div class="rounded-2xl border border-gray-200 bg-white p-6">
 				<div class="flex items-start gap-4">
@@ -574,7 +574,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<!-- Product Updates Card -->
 			<div class="rounded-2xl border border-gray-200 bg-white p-6">
 				<div class="flex items-start gap-4">
@@ -596,14 +596,13 @@
 <!-- Footer -->
 <footer class="border-t border-gray-100">
 	<div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 text-sm text-gray-600 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-		<div class="flex items-center gap-2">
-			<span class="font-semibold text-gray-800">TeliTask</span>
+		<div class="flex items-center gap-3">
+			<img src="/telitask-logo-alt-2.png" alt="TeliTask" class="h-6" />
 			<span>© {new Date().getFullYear()}</span>
 		</div>
-		<div class="flex flex-wrap gap-x-6 gap-y-2">
+		<div class="flex flex-wrap gap-x-6 gap-y-2 items-center">
 			<a href="/privacy" class="hover:text-orange-700">Privacy</a>
 			<a href="/terms" class="hover:text-orange-700">Terms</a>
-			<a href="#waitlist" class="hover:text-orange-700">Join Waitlist</a>
 		</div>
 	</div>
 </footer>
@@ -629,8 +628,8 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
 			</svg>
 		</a>
-		
+
 		<!-- Pulse animation -->
-		<div class="absolute inset-0 rounded-full bg-orange-500 animate-ping opacity-20"></div>
+		<div class="absolute inset-0 rounded-full bg-orange-500 animate-ping opacity-20 pointer-events-none"></div>
 	</div>
 {/if}
