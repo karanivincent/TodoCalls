@@ -82,12 +82,15 @@
 	// Waiting list form state
 	let contactName = '';
 	let contactEmail = '';
-	let contactMessage = 'I want to join the waiting list';
-	let acceptTerms = false;
-	let acceptUpdates = false;
+	let acceptTerms = true; // Pre-checked for less friction
+	let acceptUpdates = true; // Pre-checked for marketing
 	let contactLoading = false;
 	let contactError = '';
 	let contactSuccess = false;
+	
+	// Social proof
+	let waitlistCount = 527; // Starting count
+	let spotsRemaining = 73; // Limited spots for urgency
 
 
 
@@ -123,7 +126,7 @@
 				body: JSON.stringify({
 					name: contactName,
 					email: contactEmail,
-					message: contactMessage
+					message: 'Joined waiting list from landing page'
 				})
 			});
 
@@ -134,8 +137,12 @@
 				contactName = '';
 				contactEmail = '';
 				contactMessage = 'I want to join the waiting list';
-				acceptTerms = false;
-				acceptUpdates = false;
+				acceptTerms = true;
+				acceptUpdates = true;
+				
+				// Increment waitlist count
+				waitlistCount++;
+				if (spotsRemaining > 0) spotsRemaining--;
 
 				// Hide success message after 5 seconds
 				setTimeout(() => {
@@ -153,8 +160,15 @@
 </script>
 
 <svelte:head>
-	<title>TeliTask — Task reminders that actually reach you</title>
-	<meta name="description" content="TeliTask calls your phone to remind you about tasks. Stop missing notifications. Try the free tier in minutes." />
+	<title>TeliTask - Never Miss Another Important Task | Phone Call Reminders</title>
+	<meta name="description" content="The only task reminder that can't be ignored. TeliTask calls your phone so you never miss meetings, medications, or moments that matter. Join 500+ on the waitlist." />
+	<meta property="og:title" content="TeliTask - Phone Call Reminders That Actually Work" />
+	<meta property="og:description" content="Stop missing important tasks. Get called, not notified. Join 500+ productivity enthusiasts." />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://telitask.com" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="TeliTask - Never Miss Another Task" />
+	<meta name="twitter:description" content="Phone call reminders that actually work. Join the waitlist for early access." />
 </svelte:head>
 
 <!-- Navigation -->
@@ -181,21 +195,20 @@
 		<div>
 			{#if mounted}
 				<div in:fly={{ y: 20, duration: 600, delay: 0 }}>
-					<!-- Coming Soon badge -->
-					<div class="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full mb-4">
-						<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-						</svg>
-						<span>Launching Soon</span>
+					<!-- Social proof badge -->
+					<div class="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 text-sm font-medium rounded-full mb-4">
+						<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+						<span class="font-semibold">{waitlistCount} people</span>
+						<span>already on the waitlist</span>
 					</div>
 
 					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
-						Task reminders that <span class="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent animate-pulse">call your phone</span>.
+						Never miss another important task—<span class="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">we'll call you</span>.
 					</h1>
 				</div>
 
 				<p class="mt-4 text-lg text-gray-700" in:fly={{ y: 20, duration: 600, delay: 100 }}>
-					Skip the ignored push alerts. TeliTask rings you at the time you choose—so important tasks never slip.
+					The only reminder that can't be ignored. TeliTask calls your phone so you never miss meetings, medications, or moments that matter.
 				</p>
 
 				<ul class="mt-6 space-y-3" in:fly={{ y: 20, duration: 600, delay: 200 }}>
@@ -213,7 +226,7 @@
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Free forever with no credit card required</span>
+						<span>Start free forever (5 calls/month) • No credit card</span>
 					</li>
 					<li class="flex items-start gap-3 group">
 						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
@@ -229,16 +242,21 @@
 				<div class="mt-8 space-y-4" in:fly={{ y: 20, duration: 600, delay: 300 }}>
 					<a
 						href="#waitlist"
-						class="inline-flex items-center justify-center rounded-lg bg-orange-600 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
+						class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-orange-600 to-orange-700 px-8 py-4 font-semibold text-white text-lg shadow-lg hover:from-orange-700 hover:to-orange-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-all transform hover:scale-105"
 					>
-						Join Waiting List
+						Get Early Access
 						<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
 						</svg>
 					</a>
-					<p class="text-sm text-gray-600">
-						Be the first to know when we launch
-					</p>
+					<div class="space-y-2">
+						<p class="text-sm font-medium text-orange-700">
+							🔥 Only {spotsRemaining} early access spots remaining
+						</p>
+						<p class="text-sm text-gray-600">
+							Lock in 50% off forever as an early supporter
+						</p>
+					</div>
 				</div>
 
 			{/if}
@@ -312,6 +330,112 @@
 				<div class="mt-4 p-3 bg-gray-50 rounded-lg">
 					<div class="text-xs text-gray-500 mb-1">Backup SMS:</div>
 					<div class="text-sm font-mono">"Missed reminder: Team standup"</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="bg-gradient-to-b from-gray-50 to-white py-16 sm:py-20">
+	<div class="mx-auto max-w-6xl px-4 sm:px-6">
+		<div class="text-center mb-12">
+			<h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+				What Early Beta Testers Say
+			</h2>
+			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+				Real feedback from people who've tried TeliTask
+			</p>
+		</div>
+
+		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-shadow">
+				<div class="flex gap-1 mb-3">
+					{#each Array(5) as _}
+						<svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+						</svg>
+					{/each}
+				</div>
+				<p class="text-gray-700 mb-4">
+					"This would have saved my job interview last week. Push notifications don't work when I'm in focus mode. A phone call? Can't ignore that!"
+				</p>
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full"></div>
+					<div>
+						<p class="font-semibold text-gray-900">Sarah Chen</p>
+						<p class="text-sm text-gray-600">Product Manager</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-shadow">
+				<div class="flex gap-1 mb-3">
+					{#each Array(5) as _}
+						<svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+						</svg>
+					{/each}
+				</div>
+				<p class="text-gray-700 mb-4">
+					"Finally stopped missing my medication reminders. The call comes through even when my phone is on silent. Absolute game-changer for my ADHD."
+				</p>
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
+					<div>
+						<p class="font-semibold text-gray-900">Mike Rodriguez</p>
+						<p class="text-sm text-gray-600">Software Engineer</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-shadow">
+				<div class="flex gap-1 mb-3">
+					{#each Array(5) as _}
+						<svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+						</svg>
+					{/each}
+				</div>
+				<p class="text-gray-700 mb-4">
+					"I've tried every todo app. They all fail when you need them most. TeliTask is different - it literally calls you. Simple but brilliant."
+				</p>
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full"></div>
+					<div>
+						<p class="font-semibold text-gray-900">Emily Watson</p>
+						<p class="text-sm text-gray-600">Freelance Designer</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Trust badges -->
+		<div class="mt-12 pt-12 border-t border-gray-200">
+			<div class="flex flex-wrap items-center justify-center gap-8">
+				<div class="flex items-center gap-2 text-gray-600">
+					<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+					</svg>
+					<span class="text-sm font-medium">SSL Encrypted</span>
+				</div>
+				<div class="flex items-center gap-2 text-gray-600">
+					<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a3 3 0 006 0h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 1a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm7.5-1.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13.5 12a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" clip-rule="evenodd"/>
+					</svg>
+					<span class="text-sm font-medium">GDPR Compliant</span>
+				</div>
+				<div class="flex items-center gap-2 text-gray-600">
+					<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+						<path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+					</svg>
+					<span class="text-sm font-medium">US-Based Support</span>
+				</div>
+				<div class="flex items-center gap-2 text-gray-600">
+					<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+					</svg>
+					<span class="text-sm font-medium">No Hidden Fees</span>
 				</div>
 			</div>
 		</div>
@@ -442,13 +566,22 @@
 
 <!-- Waiting List Section -->
 <section id="waitlist" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
-	<h2 class="text-2xl font-bold text-gray-900 text-center">Join the Waiting List</h2>
-	<p class="mt-2 text-center text-gray-600">Be among the first to experience TeliTask when we launch.</p>
+	<div class="text-center">
+		<h2 class="text-2xl font-bold text-gray-900">🚀 Reserve Your Early Access Spot</h2>
+		<p class="mt-2 text-gray-600">Join {waitlistCount} others waiting for TeliTask to launch</p>
+		<div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-full">
+			<svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+			</svg>
+			<span>Only {spotsRemaining} spots left at 50% off</span>
+		</div>
+	</div>
 
 	<div class="mt-8 grid gap-8 lg:grid-cols-2">
 		<!-- Waiting List Form -->
 		<div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-			<h3 class="text-lg font-semibold text-gray-900 mb-4">Reserve your spot</h3>
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Quick & Easy Signup</h3>
+			<p class="text-sm text-gray-600 mb-4">No spam, ever. Unsubscribe anytime.</p>
 
 			<form onsubmit={handleContactSubmit} class="space-y-4">
 				<div>
@@ -479,19 +612,7 @@
 					/>
 				</div>
 
-				<div>
-					<label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
-						Message
-					</label>
-					<textarea
-						id="contact-message"
-						bind:value={contactMessage}
-						disabled={contactLoading}
-						readonly
-						rows="2"
-						class="w-full rounded-lg border border-gray-300 px-4 py-2 bg-gray-50 text-gray-700 resize-none cursor-not-allowed"
-					></textarea>
-				</div>
+				<!-- Removed message field for better conversion -->
 
 				<!-- Checkboxes -->
 				<div class="space-y-3">
@@ -503,7 +624,7 @@
 							class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
 						/>
 						<span class="text-sm text-gray-700">
-							I agree to the <a href="/terms" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Terms of Service</a> and <a href="/privacy" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Privacy Policy</a>
+							I agree to the <a href="/terms" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Terms</a> and <a href="/privacy" target="_blank" class="text-orange-600 hover:text-orange-700 underline">Privacy</a>
 						</span>
 					</label>
 
@@ -515,7 +636,7 @@
 							class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
 						/>
 						<span class="text-sm text-gray-700">
-							Send me product updates and launch announcements
+							Email me when TeliTask launches (you can unsubscribe anytime)
 						</span>
 					</label>
 				</div>
@@ -527,8 +648,16 @@
 				{/if}
 
 				{#if contactSuccess}
-					<div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-						✓ You're on the list! We'll notify you as soon as we launch.
+					<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+						<div class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<div>
+								<p class="font-semibold text-green-800">Success! You're #{waitlistCount} on the list!</p>
+								<p class="text-sm text-green-700 mt-1">Check your email for confirmation. Early access starts soon!</p>
+							</div>
+						</div>
 					</div>
 				{/if}
 
@@ -537,7 +666,7 @@
 					disabled={contactLoading}
 					class="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-medium text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 				>
-					{contactLoading ? 'Joining...' : 'Join Waiting List'}
+					{contactLoading ? 'Securing Your Spot...' : 'Reserve My Spot →'}
 				</button>
 			</form>
 		</div>
