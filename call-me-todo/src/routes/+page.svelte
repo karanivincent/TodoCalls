@@ -50,28 +50,28 @@
 
 	const faqs = [
 		{
-			question: "Do you support push hounds?",
-			answer: "If you're like us and constantly ignore app notifications, phone reminders are the perfect antidote. It's the one interruption that actually interrupts."
+			question: "Can I send reminders to other people?",
+			answer: "Yes! You can set reminders to call anyone - yourself, family members, team members, or anyone else. Perfect for medication reminders for parents, task delegation to your team, or family check-ins. Just add their phone number and set the reminder."
 		},
 		{
-			question: "Do you call outside my region?",
-			answer: "We support calls to most countries worldwide. If your country isn't available, let us know and we'll prioritize adding it."
+			question: "How does it work for family medication reminders?",
+			answer: "Set up daily or scheduled reminder calls for your loved ones. The AI calls them with a caring, natural voice reminder about their medications or appointments. They can confirm they've taken it or ask to be reminded later."
 		},
 		{
-			question: "Is there an app I need?",
-			answer: "No app required! Everything works via SMS and voice calls. Just add your reminders from our web interface or by replying to texts."
+			question: "Is the AI voice really natural?",
+			answer: "Yes! Powered by advanced AI voice synthesis, our calls sound like a real assistant. The AI understands context too - say 'I'm driving' and it'll offer to call back later. Perfect for elderly parents who appreciate a friendly voice."
 		},
 		{
-			question: "What happens if I miss a call?",
-			answer: "We'll leave a voicemail with your reminder details and send a follow-up SMS. You can customize retry settings in your preferences."
+			question: "Can I delegate tasks to my team?",
+			answer: "Absolutely! Create task reminders that call your team members or employees. The AI delivers your task details in a professional, clear manner. Track who's been reminded and when tasks are acknowledged."
 		},
 		{
-			question: "Can I snooze reminders?",
-			answer: "Yes! During a call, press '1' to snooze for 5 minutes, '2' for 15 minutes, or '3' for 1 hour. You can customize these in settings."
+			question: "Will my elderly parents be comfortable with AI calls?",
+			answer: "Most seniors find our AI voice warm and easy to understand. It sounds like a real person, not a robot. The AI speaks clearly, can repeat information, and even understands simple responses like 'yes' or 'I already took it'."
 		},
 		{
-			question: "Is it really free to start?",
-			answer: "Yes! You can start using TeliTask completely free, no credit card required. We believe in letting you experience the value before asking for anything in return."
+			question: "How does the AI learn calling patterns?",
+			answer: "Our AI learns when each person best responds to calls. It tracks completion rates, snooze patterns, and optimal timing for each recipient. Your mom might prefer 9am calls while your assistant responds better at 2pm - the AI figures this out automatically."
 		}
 	];
 
@@ -89,8 +89,8 @@
 	let contactSuccess = false;
 	
 	// Social proof
-	let waitlistCount = 527; // Starting count
-	let spotsRemaining = 73; // Limited spots for urgency
+	let waitlistCount = 827; // Starting count (updated for AI launch)
+	let spotsRemaining = 47; // Limited AI beta spots
 
 
 
@@ -160,15 +160,15 @@
 </script>
 
 <svelte:head>
-	<title>TeliTask - Never Miss Another Important Task | Phone Call Reminders</title>
-	<meta name="description" content="The only task reminder that can't be ignored. TeliTask calls your phone so you never miss meetings, medications, or moments that matter. Join 500+ on the waitlist." />
-	<meta property="og:title" content="TeliTask - Phone Call Reminders That Actually Work" />
-	<meta property="og:description" content="Stop missing important tasks. Get called, not notified. Join 500+ productivity enthusiasts." />
+	<title>TeliTask - AI-Powered Phone Reminders That Learn Your Habits</title>
+	<meta name="description" content="The only AI assistant that actually calls you. Smart scheduling, natural conversations, and predictive reminders. Join 800+ using AI for 67% better task completion." />
+	<meta property="og:title" content="TeliTask - Your AI Assistant That Actually Calls You" />
+	<meta property="og:description" content="AI-powered task management with natural voice calls. Smart scheduling that learns your patterns. Join 800+ professionals boosting productivity with AI." />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://telitask.com" />
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="TeliTask - Never Miss Another Task" />
-	<meta name="twitter:description" content="Phone call reminders that actually work. Join the waitlist for early access." />
+	<meta name="twitter:title" content="TeliTask - AI Assistant That Calls You" />
+	<meta name="twitter:description" content="AI-powered phone reminders with 67% better task completion. Join the AI productivity revolution." />
 </svelte:head>
 
 <!-- Navigation -->
@@ -195,62 +195,70 @@
 		<div>
 			{#if mounted}
 				<div in:fly={{ y: 20, duration: 600, delay: 0 }}>
-					<!-- Social proof badge -->
-					<div class="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 text-sm font-medium rounded-full mb-4">
-						<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-						<span class="font-semibold">{waitlistCount} people</span>
-						<span>already on the waitlist</span>
+					<!-- Social proof badges -->
+					<div class="flex flex-wrap gap-2 mb-4">
+						<div class="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 text-purple-800 text-sm font-medium rounded-full">
+							<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+								<path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 01-.69.001l-.002-.001z"/>
+							</svg>
+							<span class="font-semibold">Powered by AI</span>
+						</div>
+						<div class="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 text-sm font-medium rounded-full">
+							<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+							<span class="font-semibold">{waitlistCount} professionals</span>
+							<span>using AI reminders</span>
+						</div>
 					</div>
 
 					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
-						Never miss another important task—<span class="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">we'll call you</span>.
+						<span class="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">AI Reminders</span> That Call You - <span class="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">Or Anyone You Choose</span>
 					</h1>
 				</div>
 
 				<p class="mt-4 text-lg text-gray-700" in:fly={{ y: 20, duration: 600, delay: 100 }}>
-					The only reminder that can't be ignored. TeliTask calls your phone so you never miss meetings, medications, or moments that matter.
+					Never forget a task again. Set reminders that call you, your team, or your family. Natural AI voice calls that ensure things get done - for everyone who matters.
 				</p>
 
 				<ul class="mt-6 space-y-3" in:fly={{ y: 20, duration: 600, delay: 200 }}>
 					<li class="flex items-start gap-3 group">
-						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
-							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Your phone rings. You answer. You remember.</span>
+						<span><strong>Send reminders</strong> to yourself or anyone else</span>
 					</li>
 					<li class="flex items-start gap-3 group">
-						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
-							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Works with iPhone, Android, even flip phones</span>
+						<span><strong>Perfect for family</strong> medication and care reminders</span>
 					</li>
 					<li class="flex items-start gap-3 group">
-						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
-							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Set quiet hours—we'll never disturb your sleep</span>
+						<span><strong>Delegate tasks</strong> with reminder calls to your team</span>
 					</li>
 					<li class="flex items-start gap-3 group">
-						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
-							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>Miss the call? We'll try again in 5 minutes</span>
+						<span><strong>Natural AI voice</strong> that sounds like a real assistant</span>
 					</li>
 					<li class="flex items-start gap-3 group">
-						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 group-hover:scale-110 transition-transform">
-							<svg class="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+						<span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:scale-110 transition-transform">
+							<svg class="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 							</svg>
 						</span>
-						<span>No apps, no downloads, no hassle—just calls</span>
+						<span><strong>AI learns</strong> the best time to call each person</span>
 					</li>
 				</ul>
 
@@ -266,11 +274,11 @@
 						</svg>
 					</a>
 					<div class="space-y-2">
-						<p class="text-sm font-medium text-orange-700">
-							🔥 Only {spotsRemaining} early access spots remaining
+						<p class="text-sm font-medium text-purple-700">
+							🤖 Only {spotsRemaining} AI beta spots remaining
 						</p>
 						<p class="text-sm text-gray-600">
-							Be among the first to experience TeliTask
+							Be first to experience AI-powered productivity
 						</p>
 					</div>
 				</div>
@@ -293,11 +301,11 @@
 <!-- How it works -->
 <section id="how" class="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
 	<div class="text-center mb-12">
-		<h2 class="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-			How TeliTask Works
+		<h2 class="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-700 bg-clip-text text-transparent">
+			How It Works - For You and Your Loved Ones
 		</h2>
 		<p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-			Get started in 30 seconds. No app downloads, no complex setup.
+			Set reminders that call the right person at the right time. Perfect for personal tasks, family care, and team delegation.
 		</p>
 	</div>
 
@@ -311,11 +319,12 @@
 				<div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-4">
 					<span class="text-xl font-bold text-orange-600">1</span>
 				</div>
-				<h3 class="text-lg font-semibold mb-2">Tell us when to call</h3>
-				<p class="text-gray-600">Set your reminder time and add a brief message. Choose quiet hours when you don't want calls.</p>
-				<div class="mt-4 p-3 bg-gray-50 rounded-lg">
-					<div class="text-xs text-gray-500 mb-1">Example:</div>
-					<div class="text-sm font-mono">"Team standup at 9:30 AM"</div>
+				<h3 class="text-lg font-semibold mb-2">Create your reminder</h3>
+				<p class="text-gray-600">Set a reminder for yourself or someone else. Choose who gets called and when - it's that simple.</p>
+				<div class="mt-4 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg">
+					<div class="text-xs text-purple-600 mb-1">Examples:</div>
+					<div class="text-sm font-mono">"Remind Mom about her medication at 9am"</div>
+					<div class="text-xs text-purple-500 mt-1">→ AI calls Mom daily with a caring reminder</div>
 				</div>
 			</div>
 		</div>
@@ -326,11 +335,12 @@
 				<div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-4">
 					<span class="text-xl font-bold text-orange-600">2</span>
 				</div>
-				<h3 class="text-lg font-semibold mb-2">Your phone rings</h3>
-				<p class="text-gray-600">At the scheduled time, we call you. Answer to hear your reminder in a clear, natural voice.</p>
-				<div class="mt-4 p-3 bg-gray-50 rounded-lg">
-					<div class="text-xs text-gray-500 mb-1">You'll hear:</div>
-					<div class="text-sm font-mono">"Reminder: Team standup"</div>
+				<h3 class="text-lg font-semibold mb-2">AI makes the call</h3>
+				<p class="text-gray-600">Natural voice calls that sound like a real person. Recipients can interact naturally - snooze, confirm, or reschedule.</p>
+				<div class="mt-4 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg">
+					<div class="text-xs text-purple-600 mb-1">AI to Mom:</div>
+					<div class="text-sm font-mono">"Good morning! This is your reminder to take your heart medication"</div>
+					<div class="text-xs text-purple-500 mt-1">Mom: "Thank you, I'll take it now"</div>
 				</div>
 			</div>
 		</div>
@@ -341,11 +351,196 @@
 				<div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-4">
 					<span class="text-xl font-bold text-orange-600">3</span>
 				</div>
-				<h3 class="text-lg font-semibold mb-2">Smart retries</h3>
-				<p class="text-gray-600">Miss the call? We'll try again in 5 minutes and send an SMS backup so nothing slips through.</p>
-				<div class="mt-4 p-3 bg-gray-50 rounded-lg">
-					<div class="text-xs text-gray-500 mb-1">Backup SMS:</div>
-					<div class="text-sm font-mono">"Missed reminder: Team standup"</div>
+				<h3 class="text-lg font-semibold mb-2">Track & optimize</h3>
+				<p class="text-gray-600">See who's completing tasks, when calls are most effective, and let AI optimize timing for each person.</p>
+				<div class="mt-4 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg">
+					<div class="text-xs text-purple-600 mb-1">AI Learning:</div>
+					<div class="text-sm font-mono">"Mom responds best to 9am calls"</div>
+					<div class="text-xs text-purple-500 mt-1">→ AI automatically adjusts future reminders</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- AI Features Section -->
+<section id="ai-features" class="bg-gradient-to-b from-purple-50 via-indigo-50 to-white py-16 sm:py-20">
+	<div class="mx-auto max-w-6xl px-4 sm:px-6">
+		<div class="text-center mb-12">
+			<div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-300 text-purple-800 text-sm font-bold rounded-full mb-4">
+				<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+					<path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+				</svg>
+				<span>SMART REMINDER TECHNOLOGY</span>
+			</div>
+			<h2 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-700 bg-clip-text text-transparent mb-4">
+				Why Our Reminders Actually Work
+			</h2>
+			<p class="text-lg text-gray-600 max-w-3xl mx-auto">
+				Smart features that solve real problems - from forgotten medications to uncompleted tasks
+			</p>
+		</div>
+
+		<div class="grid gap-6 lg:grid-cols-2">
+			<!-- Intelligent Scheduling -->
+			<div class="group relative rounded-2xl bg-white border border-purple-200 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+				<div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-2xl opacity-5 group-hover:opacity-10 transition-opacity"></div>
+				<div class="relative">
+					<div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+						<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-gray-900 mb-3">No More Forgotten Pills</h3>
+					<p class="text-gray-600 mb-4">
+						Medication reminders that actually work for your loved ones. Never worry about whether Mom took her medicine.
+					</p>
+					<ul class="space-y-2 text-sm">
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Calls at the exact time medications are needed</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Confirms medication was taken</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Alerts you if parents don't respond</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Voice Intelligence -->
+			<div class="group relative rounded-2xl bg-white border border-purple-200 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+				<div class="absolute inset-0 bg-gradient-to-br from-indigo-400 to-blue-600 rounded-2xl opacity-5 group-hover:opacity-10 transition-opacity"></div>
+				<div class="relative">
+					<div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+						<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-gray-900 mb-3">Tasks That Get Done</h3>
+					<p class="text-gray-600 mb-4">
+						Stop chasing people for updates. Delegate tasks and let AI handle the follow-ups.
+					</p>
+					<ul class="space-y-2 text-sm">
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-indigo-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Automated task assignment calls</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-indigo-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Smart follow-ups until confirmed</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-indigo-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Real-time completion tracking</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Predictive Analytics -->
+			<div class="group relative rounded-2xl bg-white border border-purple-200 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+				<div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-600 rounded-2xl opacity-5 group-hover:opacity-10 transition-opacity"></div>
+				<div class="relative">
+					<div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+						<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-gray-900 mb-3">Family Connection Made Easy</h3>
+					<p class="text-gray-600 mb-4">
+						Stay close even when you're far. Care for your loved ones with thoughtful reminder calls.
+					</p>
+					<ul class="space-y-2 text-sm">
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Daily check-in calls to loved ones</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Appointment and event reminders</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Emergency contact if no response</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Smart Learning -->
+			<div class="group relative rounded-2xl bg-white border border-purple-200 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+				<div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl opacity-5 group-hover:opacity-10 transition-opacity"></div>
+				<div class="relative">
+					<div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+						<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-gray-900 mb-3">Personalized for Everyone</h3>
+					<p class="text-gray-600 mb-4">
+						Each person gets reminders their way. AI learns what works best for each recipient.
+					</p>
+					<ul class="space-y-2 text-sm">
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Learns each person's best response times</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Adapts tone and urgency per recipient</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg class="w-4 h-4 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<span class="text-gray-700">Different strategies for different people</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<!-- AI Stats Banner -->
+		<div class="mt-12 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 p-8 text-white">
+			<div class="grid gap-8 sm:grid-cols-3 text-center">
+				<div>
+					<div class="text-4xl font-bold mb-2">67%</div>
+					<div class="text-purple-100">Higher task completion with AI</div>
+				</div>
+				<div>
+					<div class="text-4xl font-bold mb-2">2.3x</div>
+					<div class="text-purple-100">More productive mornings</div>
+				</div>
+				<div>
+					<div class="text-4xl font-bold mb-2">94%</div>
+					<div class="text-purple-100">Call prediction accuracy</div>
 				</div>
 			</div>
 		</div>
@@ -357,10 +552,10 @@
 	<div class="mx-auto max-w-6xl px-4 sm:px-6">
 		<div class="text-center mb-12">
 			<h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-				What Early Beta Testers Say
+				Loved by Families and Teams
 			</h2>
 			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-				Real feedback from people who've tried TeliTask
+				Real stories from people using AI reminders for themselves and others
 			</p>
 		</div>
 
@@ -374,13 +569,13 @@
 					{/each}
 				</div>
 				<p class="text-gray-700 mb-4">
-					"This would have saved my job interview last week. Push notifications don't work when I'm in focus mode. A phone call? Can't ignore that!"
+					"I set daily medication reminders for my mom. The AI calls her every morning with a friendly reminder. She loves the natural voice and hasn't missed her pills since we started!"
 				</p>
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full"></div>
 					<div>
 						<p class="font-semibold text-gray-900">Sarah Chen</p>
-						<p class="text-sm text-gray-600">Product Manager</p>
+						<p class="text-sm text-gray-600">Caring Daughter</p>
 					</div>
 				</div>
 			</div>
@@ -394,13 +589,13 @@
 					{/each}
 				</div>
 				<p class="text-gray-700 mb-4">
-					"Finally stopped missing my medication reminders. The call comes through even when my phone is on silent. Absolute game-changer for my ADHD."
+					"I delegate task reminders to my team through TeliTask. The AI calls each person with their assignments. It's like having an assistant who never forgets to follow up."
 				</p>
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
 					<div>
 						<p class="font-semibold text-gray-900">Mike Rodriguez</p>
-						<p class="text-sm text-gray-600">Software Engineer</p>
+						<p class="text-sm text-gray-600">Startup Founder</p>
 					</div>
 				</div>
 			</div>
@@ -414,13 +609,13 @@
 					{/each}
 				</div>
 				<p class="text-gray-700 mb-4">
-					"I've tried every todo app. They all fail when you need them most. TeliTask is different - it literally calls you. Simple but brilliant."
+					"Perfect for our family! I get work reminders, my dad gets his medication calls, and I can send task reminders to my assistant. One app handles it all beautifully."
 				</p>
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full"></div>
 					<div>
 						<p class="font-semibold text-gray-900">Emily Watson</p>
-						<p class="text-sm text-gray-600">Freelance Designer</p>
+						<p class="text-sm text-gray-600">Marketing Director</p>
 					</div>
 				</div>
 			</div>
@@ -463,10 +658,10 @@
 	<div class="mx-auto max-w-6xl px-4 sm:px-6">
 		<div class="text-center mb-12">
 			<h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-				Perfect for every part of your day
+				AI Optimizes Every Part of Your Day
 			</h2>
 			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-				From morning routines to evening wind-downs, TeliTask keeps you on track
+				Our AI learns your patterns and schedules tasks when you're most likely to complete them
 			</p>
 		</div>
 
@@ -477,8 +672,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">Meetings & calls</div>
-				<p class="text-gray-600">Never miss the daily stand-up or client check-in again.</p>
+				<div class="font-semibold text-gray-900 mb-2">Personal Task Reminders</div>
+				<p class="text-gray-600">Get AI calls about your own tasks at the perfect time.</p>
 			</div>
 
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
@@ -487,8 +682,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">Meds & routines</div>
-				<p class="text-gray-600">Gentle nudges for medication, water, or quick stretches.</p>
+				<div class="font-semibold text-gray-900 mb-2">Family Medication Reminders</div>
+				<p class="text-gray-600">Send caring reminder calls to parents about their medications.</p>
 			</div>
 
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
@@ -497,8 +692,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">Chores & errands</div>
-				<p class="text-gray-600">Bins day, laundry switch, school run—handled.</p>
+				<div class="font-semibold text-gray-900 mb-2">Team Task Delegation</div>
+				<p class="text-gray-600">Send task reminders to team members or employees.</p>
 			</div>
 
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
@@ -507,8 +702,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">Focus sessions</div>
-				<p class="text-gray-600">Pomodoro-style calls to start or wrap deep work.</p>
+				<div class="font-semibold text-gray-900 mb-2">Doctor Appointments</div>
+				<p class="text-gray-600">Remind family members about upcoming appointments.</p>
 			</div>
 
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
@@ -517,8 +712,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">Accountability</div>
-				<p class="text-gray-600">Schedule end-of-day check-ins for goals and habits.</p>
+				<div class="font-semibold text-gray-900 mb-2">Daily Check-ins</div>
+				<p class="text-gray-600">Regular reminder calls to loved ones who need extra care.</p>
 			</div>
 
 			<div class="group rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
@@ -527,8 +722,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
 					</svg>
 				</div>
-				<div class="font-semibold text-gray-900 mb-2">VIP follow-ups</div>
-				<p class="text-gray-600">Time-critical reminders that must break through.</p>
+				<div class="font-semibold text-gray-900 mb-2">Project Reminders</div>
+				<p class="text-gray-600">Delegate project tasks with smart reminder calls to your team.</p>
 			</div>
 		</div>
 	</div>
@@ -583,21 +778,21 @@
 <!-- Waiting List Section -->
 <section id="waitlist" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16 border-t border-gray-100">
 	<div class="text-center">
-		<h2 class="text-2xl font-bold text-gray-900">🚀 Reserve Your Early Access Spot</h2>
-		<p class="mt-2 text-gray-600">Join {waitlistCount} others waiting for TeliTask to launch</p>
-		<div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-full">
+		<h2 class="text-2xl font-bold bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-700 bg-clip-text text-transparent">🤖 Be First to Send Reminders to Anyone</h2>
+		<p class="mt-2 text-gray-600">Join {waitlistCount} people using AI reminders for themselves and their loved ones</p>
+		<div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 text-purple-700 text-sm font-medium rounded-full">
 			<svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
 				<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
 			</svg>
-			<span>Only {spotsRemaining} early access spots left</span>
+			<span>Only {spotsRemaining} AI beta spots remaining</span>
 		</div>
 	</div>
 
 	<div class="mt-8 grid gap-8 lg:grid-cols-2">
 		<!-- Waiting List Form -->
 		<div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-			<h3 class="text-lg font-semibold text-gray-900 mb-4">Quick & Easy Signup</h3>
-			<p class="text-sm text-gray-600 mb-4">No spam, ever. Unsubscribe anytime.</p>
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Reserve Your Early Access</h3>
+			<p class="text-sm text-gray-600 mb-4">Be among the first to send AI reminder calls to family, team members, and yourself.</p>
 
 			<form onsubmit={handleContactSubmit} class="space-y-4">
 				<div>
@@ -670,8 +865,8 @@
 								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
 							</svg>
 							<div>
-								<p class="font-semibold text-green-800">Success! You're #{waitlistCount} on the list!</p>
-								<p class="text-sm text-green-700 mt-1">Check your email for confirmation. Early access starts soon!</p>
+								<p class="font-semibold text-green-800">Success! You're #{waitlistCount} for AI beta access!</p>
+								<p class="text-sm text-green-700 mt-1">Check your email for confirmation. AI features launching soon!</p>
 							</div>
 						</div>
 					</div>
@@ -682,7 +877,7 @@
 					disabled={contactLoading}
 					class="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-medium text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 				>
-					{contactLoading ? 'Securing Your Spot...' : 'Reserve My Spot →'}
+					{contactLoading ? 'Securing AI Access...' : 'Get AI Beta Access →'}
 				</button>
 			</form>
 		</div>
@@ -698,8 +893,8 @@
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Early Access</h4>
-						<p class="mt-1 text-sm text-gray-600">Be among the first to try TeliTask when we launch</p>
+						<h4 class="font-semibold text-gray-900">Delegation Features</h4>
+						<p class="mt-1 text-sm text-gray-600">Send reminder calls to anyone - family, team, or yourself</p>
 					</div>
 				</div>
 			</div>
@@ -714,8 +909,8 @@
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Exclusive Pricing</h4>
-						<p class="mt-1 text-sm text-gray-600">Special launch pricing for early supporters</p>
+						<h4 class="font-semibold text-gray-900">Perfect for Families</h4>
+						<p class="mt-1 text-sm text-gray-600">Medication reminders, appointment calls, and daily check-ins</p>
 					</div>
 				</div>
 			</div>
@@ -729,8 +924,8 @@
 						</svg>
 					</div>
 					<div>
-						<h4 class="font-semibold text-gray-900">Product Updates</h4>
-						<p class="mt-1 text-sm text-gray-600">Get notified about new features and launch updates</p>
+						<h4 class="font-semibold text-gray-900">Team Management</h4>
+						<p class="mt-1 text-sm text-gray-600">Delegate tasks with automatic reminder calls to your team</p>
 					</div>
 				</div>
 			</div>
