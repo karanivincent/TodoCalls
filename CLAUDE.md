@@ -1,0 +1,3 @@
+- Whenever we merge to prod always deploy to prod.
+- Deployments in other branches should only be for preview.
+- after you are done working on a page generate a screenshot ang view it to see if everything is ok
