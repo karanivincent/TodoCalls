@@ -9,15 +9,30 @@
 	onMount(async () => {
 		const supabase = createSupabaseClient();
 		
-		// Get the hash from the URL
+		// Get the hash and query params from the URL
 		const hashParams = new URLSearchParams($page.url.hash.substring(1));
-		const errorParam = hashParams.get('error');
-		const errorDescription = hashParams.get('error_description');
+		const queryParams = $page.url.searchParams;
+		const errorParam = hashParams.get('error') || queryParams.get('error');
+		const errorDescription = hashParams.get('error_description') || queryParams.get('error_description');
 		const type = hashParams.get('type');
+		const provider = hashParams.get('provider_token') || hashParams.get('provider');
 		
 		if (errorParam) {
 			error = errorDescription || errorParam;
 			return;
+		}
+		
+		// For OAuth callbacks, we need to exchange the code for a session
+		if (queryParams.get('code')) {
+			try {
+				const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(queryParams.get('code'));
+				if (exchangeError) {
+					error = exchangeError.message;
+					return;
+				}
+			} catch (e) {
+				// If exchange fails, continue to check session
+			}
 		}
 		
 		// Try to get the session
@@ -32,11 +47,15 @@
 			// Check if this is an email confirmation (signup or recovery)
 			const isEmailConfirmation = type === 'signup' || type === 'recovery';
 			
-			if (isEmailConfirmation) {
+			// Always redirect OAuth sign-ins (including Google) to dashboard
+			if (provider || queryParams.get('code') || (!isEmailConfirmation && !type)) {
+				// This is OAuth or a sign-in without type, go to dashboard
+				goto('/dashboard');
+			} else if (isEmailConfirmation) {
 				// For email confirmations, redirect to auth page with success message
 				goto('/auth?verified=true');
 			} else {
-				// For OAuth or magic link sign-ins, redirect to dashboard
+				// Default to dashboard for other sign-ins
 				goto('/dashboard');
 			}
 		} else {
