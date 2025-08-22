@@ -74,21 +74,53 @@ export default async function handler(req, res) {
   
   try {
     // Fetch task details from Supabase
+    console.log('Fetching task with ID:', taskId);
+    console.log('Using service key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    
     const { data: task, error } = await supabase
       .from('tasks')
       .select('*')
       .eq('id', taskId)
       .single();
     
-    if (error || !task) {
-      console.error('Task not found:', error);
+    if (error) {
+      console.error('Supabase error fetching task:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      
+      // Provide helpful error messages
+      let errorMessage = "Sorry, I couldn't find the task details.";
+      if (error.code === 'PGRST116') {
+        errorMessage = "Task not found. It may have been deleted.";
+      } else if (error.message?.includes('row-level')) {
+        errorMessage = "Database permission error. Please check the configuration.";
+      }
+      
       const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">Sorry, I couldn't find the task details.</Say>
+  <Say voice="alice">${errorMessage}</Say>
 </Response>`;
       res.status(200).setHeader('Content-Type', 'text/xml').send(twiml);
       return;
     }
+    
+    if (!task) {
+      console.error('No task found with ID:', taskId);
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">Sorry, I couldn't find that task. It may have been deleted.</Say>
+</Response>`;
+      res.status(200).setHeader('Content-Type', 'text/xml').send(twiml);
+      return;
+    }
+    
+    console.log('Task found:', { 
+      id: task.id, 
+      title: task.title, 
+      status: task.status 
+    });
     
     // Handle user response (if any)
     if (digits || speechResult) {
