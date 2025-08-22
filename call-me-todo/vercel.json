@@ -28,20 +28,8 @@
       "destination": "/api/voice/test-call-personalized.js"
     },
     {
-      "source": "/api/voice/task-reminder",
-      "destination": "/api/voice/task-reminder.js"
-    },
-    {
-      "source": "/api/voice/task-reminder/(.*)",
-      "destination": "/api/voice/task-reminder.js"
-    },
-    {
       "source": "/api/voice/incoming",
       "destination": "/api/voice/incoming.js"
-    },
-    {
-      "source": "/api/voice/status", 
-      "destination": "/api/voice/status.js"
     },
     {
       "source": "/api/voice/ping",
