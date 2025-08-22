@@ -192,14 +192,17 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		
 		// Generate high-quality audio if OpenAI is available
 		if (!openai) {
-			console.log(`[${requestId}] Using fallback Twilio Say (no OpenAI key)`);
-			// Fallback to Twilio Say if OpenAI is not available
+			console.log(`[${requestId}] Using enhanced fallback Twilio Say (no OpenAI key)`);
+			// Enhanced fallback to Twilio Say if OpenAI is not available
+			const fallbackScript = await generateReminderScript(task, null);
 			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">${task.title}. Press 1 to mark complete, 2 to snooze for 10 minutes, or 3 to reschedule.</Say>
-  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
-    <Pause length="2"/>
+  <Say voice="alice">${fallbackScript}</Say>
+  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="8" speechTimeout="3" input="dtmf speech">
+    <Say voice="alice">You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule, or just tell me what you'd like to do.</Say>
+    <Pause length="3"/>
   </Gather>
+  <Say voice="alice">No response received. Your task remains scheduled. Have a productive day!</Say>
 </Response>`;
 			return new Response(twiml, {
 				headers: {
@@ -230,14 +233,15 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
 			console.log(`[${requestId}] Audio generated and cached:`, { audioId, audioUrl, size: audioBuffer.length });
 		
-			// Return TwiML with audio and gather for user response
+			// Return TwiML with audio and enhanced gather for user response
 			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Play>${audioUrl}</Play>
-  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
-    <Say voice="alice">Press 1 to mark complete, 2 to snooze for 10 minutes, or 3 to reschedule.</Say>
+  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="8" speechTimeout="3" input="dtmf speech">
+    <Say voice="alice">You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule, or just tell me what you'd like to do.</Say>
+    <Pause length="3"/>
   </Gather>
-  <Say voice="alice">Goodbye!</Say>
+  <Say voice="alice">No response received. Your task remains scheduled. Have a productive day!</Say>
 </Response>`;
 			
 			console.log(`[${requestId}] ✅ Success! Returning TwiML with audio. Processing time: ${Date.now() - startTime}ms`);
@@ -255,15 +259,16 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		} catch (audioError: any) {
 			logError(`[${requestId}] Audio generation failed`, audioError, { taskId });
 			
-			// Fallback to Twilio Say on audio generation failure
-			console.log(`[${requestId}] Falling back to Twilio Say due to audio error`);
+			// Enhanced fallback to Twilio Say on audio generation failure
+			console.log(`[${requestId}] Falling back to enhanced Twilio Say due to audio error`);
 			const fallbackTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">Hello! This is your task reminder: ${task.title}. Press 1 to mark complete, 2 to snooze for 10 minutes, or 3 to reschedule.</Say>
-  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
-    <Pause length="2"/>
+  <Say voice="alice">${reminderScript}</Say>
+  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="8" speechTimeout="3" input="dtmf speech">
+    <Say voice="alice">You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule, or just tell me what you'd like to do.</Say>
+    <Pause length="3"/>
   </Gather>
-  <Say voice="alice">Goodbye!</Say>
+  <Say voice="alice">No response received. Your task remains scheduled. Have a productive day!</Say>
 </Response>`;
 			
 			return new Response(fallbackTwiml, {
@@ -278,6 +283,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 	} catch (error: any) {
+		const taskId = url.searchParams.get('taskId');
 		logError(`[${requestId}] Critical error in task reminder webhook`, error, {
 			taskId,
 			url: url.toString()
@@ -309,52 +315,154 @@ async function generateReminderScript(task: any, openai: OpenAI | null): Promise
 	const timeOfDay = now.getHours() < 12 ? 'morning' : 
 					   now.getHours() < 17 ? 'afternoon' : 'evening';
 	
-	// If no OpenAI client, return a simple message
+	// Enhanced fallback for no OpenAI
 	if (!openai) {
-		return `Good ${timeOfDay}! This is your reminder: ${task.title}. I'm here to help you stay on track.`;
+		return `Hi! Good ${timeOfDay}. This is Nova calling with your reminder about: ${task.title}. 
+		I'm here to help you stay organized and on track with your goals.`;
 	}
 	
 	try {
+		// Enhanced conversational prompt with more context
 		const completion = await openai.chat.completions.create({
 			model: 'gpt-4o-mini',
 			messages: [
 				{
 					role: 'system',
-					content: `You are Nova, a warm and friendly AI assistant making a reminder call.
-					Generate a natural, conversational reminder message. Be encouraging and helpful.
-					Keep it brief (2-3 sentences) and end by mentioning the options available.
-					The time of day is ${timeOfDay}.`
+					content: `You are Nova, an AI assistant powered by artificial intelligence, making a friendly reminder call. 
+
+					IMPORTANT: Always disclose that you are an AI assistant at the beginning of the call.
+					
+					Your personality:
+					- Warm, encouraging, and supportive
+					- Professional yet conversational
+					- Empathetic to user's productivity challenges
+					- Brief but engaging (aim for 30-40 words total)
+					
+					Call structure:
+					1. Greeting with AI disclosure
+					2. Reminder about their task
+					3. Brief encouragement or context
+					4. Clear instruction about response options
+					
+					Time context: It's currently ${timeOfDay}.
+					
+					Always end with clear instructions about how they can respond - either by pressing numbers on their keypad OR speaking their choice aloud.`
 				},
 				{
 					role: 'user',
-					content: `Create a reminder message for this task: "${task.title}"`
+					content: `Create a personalized reminder message for this task: "${task.title}"`
 				}
 			],
-			max_tokens: 150,
-			temperature: 0.7
+			max_tokens: 200,
+			temperature: 0.8
 		});
 		
-		return completion.choices[0].message.content || `Good ${timeOfDay}! This is your reminder: ${task.title}.`;
+		const script = completion.choices[0].message.content || 
+			`Hi! This is Nova, your AI assistant. Good ${timeOfDay}! I'm calling to remind you about: ${task.title}.`;
+		
+		// Ensure the script mentions response options
+		const hasResponseMention = script.toLowerCase().includes('press') || 
+			script.toLowerCase().includes('key') || 
+			script.toLowerCase().includes('speak') ||
+			script.toLowerCase().includes('say');
+		
+		if (!hasResponseMention) {
+			return `${script} You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule for later, or just tell me what you'd like to do.`;
+		}
+		
+		return script;
 	} catch (error) {
 		console.error('Error generating script:', error);
-		return `Good ${timeOfDay}! This is your reminder: ${task.title}. I'm here to help you stay on track.`;
+		return `Hi! This is Nova, your AI assistant. Good ${timeOfDay}! I'm calling to remind you about: ${task.title}. I'm here to help you stay organized and productive.`;
 	}
 }
 
 async function handleUserResponse(task: any, digits: string, speechResult: string, supabase: any, requestId: string, startTime: number) {
 	let action = '';
+	let responseMethod = '';
 	
+	// Handle DTMF input (keypad)
 	if (digits === '1') {
 		action = 'complete';
+		responseMethod = 'keypad';
 	} else if (digits === '2') {
 		action = 'snooze';
+		responseMethod = 'keypad';
 	} else if (digits === '3') {
 		action = 'reschedule';
+		responseMethod = 'keypad';
 	}
 	
-	console.log(`[${requestId}] User action for task ${task.id}: ${action}`);
+	// Handle speech input with natural language processing
+	if (!action && speechResult) {
+		responseMethod = 'speech';
+		const speech = speechResult.toLowerCase().trim();
+		
+		// Complete variations
+		if (speech.includes('complete') || speech.includes('done') || speech.includes('finished') || 
+			speech.includes('finish') || speech.includes('mark complete') || speech.includes('completed')) {
+			action = 'complete';
+		}
+		// Snooze variations
+		else if (speech.includes('snooze') || speech.includes('remind me later') || 
+				 speech.includes('10 minutes') || speech.includes('ten minutes') ||
+				 speech.includes('later') || speech.includes('few minutes')) {
+			action = 'snooze';
+		}
+		// Reschedule variations
+		else if (speech.includes('reschedule') || speech.includes('different time') ||
+				 speech.includes('hour') || speech.includes('tomorrow') ||
+				 speech.includes('postpone') || speech.includes('delay')) {
+			action = 'reschedule';
+		}
+		// Cancel/ignore variations
+		else if (speech.includes('cancel') || speech.includes('ignore') ||
+				 speech.includes('delete') || speech.includes('remove') ||
+				 speech.includes('not now') || speech.includes('skip')) {
+			action = 'cancel';
+		}
+	}
+	
+	console.log(`[${requestId}] User response for task ${task.id}:`, { 
+		action, 
+		responseMethod, 
+		digits, 
+		speechResult: speechResult?.substring(0, 100) 
+	});
 	
 	let responseMessage = '';
+	
+	// Generate varied, encouraging responses
+	const encouragingMessages = {
+		complete: [
+			"Fantastic! I've marked your task as complete. You're crushing your goals today!",
+			"Excellent work! Task marked as done. Keep that momentum going!",
+			"Amazing! I've updated your task to complete. You're doing great!",
+			"Perfect! Task completed and logged. Your productivity is inspiring!",
+			"Outstanding! I've marked that as finished. Way to stay on top of things!"
+		],
+		snooze: [
+			"No worries! I'll give you a gentle nudge in 10 minutes. You've got this!",
+			"Absolutely! Taking a quick 10-minute break. I'll check back with you soon!",
+			"Sure thing! I'll remind you again in 10 minutes. Stay focused!",
+			"Of course! 10-minute snooze activated. I'll be back to help you tackle this!",
+			"Perfect timing! I'll circle back in 10 minutes. Keep up the great work!"
+		],
+		reschedule: [
+			"Smart choice! I've moved this to one hour from now. Planning ahead is key!",
+			"Great thinking! Rescheduled for one hour later. I'll call you then!",
+			"Wise decision! I've pushed this back an hour. Better timing coming up!",
+			"Excellent planning! Task moved to one hour from now. I'll be in touch!",
+			"Good call! Rescheduled for later today. I'll remind you at the perfect time!"
+		],
+		cancel: [
+			"Understood! I've noted that you'd like to skip this reminder. Task remains as is.",
+			"Got it! No action taken on this task. It will stay on your list for now.",
+			"Noted! I'll leave this task unchanged. You know what works best for you!",
+			"Perfectly fine! This reminder is dismissed, but the task stays active.",
+			"Absolutely! Sometimes timing isn't right. The task remains in your queue."
+		]
+	};
 	
 	try {
 		if (action === 'complete') {
@@ -367,7 +475,8 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 				})
 				.eq('id', task.id);
 			
-			responseMessage = "Great job! I've marked your task as complete. Keep up the excellent work!";
+			const messages = encouragingMessages.complete;
+			responseMessage = messages[Math.floor(Math.random() * messages.length)];
 			
 		} else if (action === 'snooze') {
 			// Snooze for 10 minutes
@@ -380,7 +489,8 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 				})
 				.eq('id', task.id);
 			
-			responseMessage = "No problem! I'll remind you again in 10 minutes. Stay focused!";
+			const messages = encouragingMessages.snooze;
+			responseMessage = messages[Math.floor(Math.random() * messages.length)];
 			
 		} else if (action === 'reschedule') {
 			// For MVP, we'll snooze for 1 hour
@@ -393,15 +503,22 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 				})
 				.eq('id', task.id);
 			
-			responseMessage = "I've rescheduled your task for one hour from now. I'll call you then!";
+			const messages = encouragingMessages.reschedule;
+			responseMessage = messages[Math.floor(Math.random() * messages.length)];
+			
+		} else if (action === 'cancel') {
+			const messages = encouragingMessages.cancel;
+			responseMessage = messages[Math.floor(Math.random() * messages.length)];
 			
 		} else {
-			responseMessage = "I didn't catch that. The task remains scheduled. Goodbye!";
+			// Handle unclear responses more gracefully
+			const method = responseMethod === 'speech' ? 'what you said' : 'that input';
+			responseMessage = `I didn't quite catch ${method}. Your task "${task.title}" remains scheduled. You can press 1 to complete, 2 to snooze, or 3 to reschedule. Have a great day!`;
 		}
 		
 	} catch (error) {
 		logError(`[${requestId}] Error updating task`, error, { taskId: task.id, action });
-		responseMessage = "Sorry, I had trouble updating your task. Please try again later.";
+		responseMessage = "I apologize, but I had trouble updating your task. Please try again later, or manage it through your dashboard. Thanks for your patience!";
 	}
 	
 	const twiml = `<?xml version="1.0" encoding="UTF-8"?>
