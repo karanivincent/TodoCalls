@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": "sveltekit",
   "functions": {
     "api/voice/*.js": {
       "maxDuration": 10
