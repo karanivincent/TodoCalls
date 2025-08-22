@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
-// Cache for audio files
-const audioCache = new Map<string, Buffer>();
+// Import shared audio cache
+import { audioCache } from '../task-reminder-audio/[audioId]/+server';
 
 export const POST: RequestHandler = async ({ request, url }) => {
 	console.log(`Task reminder POST request at ${url.pathname}`);
@@ -183,7 +183,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		audioCache.set(audioId, audioBuffer);
 		setTimeout(() => audioCache.delete(audioId), 300000);
 		
-		const audioUrl = `${url.origin}/api/voice/task-reminder/audio/${audioId}`;
+		// Use the dedicated audio serving route
+		const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
 		
 		// Return TwiML with audio and gather for user response
 		const twiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -223,25 +224,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	}
 };
 
-// Handle audio serving
-export const GET: RequestHandler = async ({ params, url }) => {
-	const pathParts = url.pathname.split('/');
-	const audioId = pathParts[pathParts.length - 1];
-	
-	if (audioId && audioCache.has(audioId)) {
-		const audioBuffer = audioCache.get(audioId)!;
-		console.log(`Serving audio ${audioId}`);
-		
-		return new Response(audioBuffer, {
-			headers: {
-				'Content-Type': 'audio/mpeg',
-				'Cache-Control': 'public, max-age=3600'
-			}
-		});
-	}
-	
-	return new Response('Audio not found', { status: 404 });
-};
+// Removed GET handler to prevent catch-all routing issues
+// Audio will be served via the Vercel function instead
 
 async function generateReminderScript(task: any, openai: OpenAI | null): Promise<string> {
 	const now = new Date();
