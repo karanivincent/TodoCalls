@@ -4,12 +4,14 @@
 	import type { Database } from '$lib/database.types';
 	import { toast } from '$lib/stores/toast';
 	import { fade } from 'svelte/transition';
+	import { getUserTimezone, formatTimeInTimezone, getHourInTimezone } from '$lib/utils/timezone';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
 	let userName = '';
+	let userTimezone = 'Africa/Nairobi';
 	let tasks: Task[] = [];
 	let loading = true;
 	
@@ -30,11 +32,32 @@
 		const { data: { user: currentUser } } = await supabase.auth.getUser();
 		user = currentUser;
 		
-		// Get user's full name
+		// Get user's full name and timezone
 		if (user?.user_metadata?.full_name) {
 			userName = user.user_metadata.full_name;
 		} else {
 			userName = user?.email?.split('@')[0] || 'User';
+		}
+		
+		// Get user's timezone from profile
+		const { data: profile } = await supabase
+			.from('user_profiles')
+			.select('timezone')
+			.eq('id', user.id)
+			.single();
+		
+		if (profile?.timezone) {
+			userTimezone = profile.timezone;
+		} else {
+			// Auto-detect and save timezone if not set
+			const detectedTimezone = getUserTimezone();
+			userTimezone = detectedTimezone;
+			
+			// Update profile with detected timezone
+			await supabase
+				.from('user_profiles')
+				.update({ timezone: detectedTimezone })
+				.eq('id', user.id);
 		}
 		
 		// Load tasks
@@ -75,17 +98,15 @@
 	
 	function getTasksForHour(hour: number) {
 		return tasks.filter(task => {
-			const taskHour = new Date(task.scheduled_at).getHours();
+			// Convert UTC time to user's timezone for display
+			const taskHour = getHourInTimezone(task.scheduled_at, userTimezone);
 			return taskHour === hour;
 		});
 	}
 	
 	function formatTime(date: string) {
-		return new Date(date).toLocaleTimeString('en-US', {
-			hour: 'numeric',
-			minute: '2-digit',
-			hour12: true
-		});
+		// Format time in user's timezone
+		return formatTimeInTimezone(date, userTimezone);
 	}
 	
 	// Mock data for stats

@@ -4,6 +4,7 @@
 	import { createSupabaseClient } from '$lib/supabase';
 	import Toast from '$lib/components/Toast.svelte';
 	import { toast } from '$lib/stores/toast';
+	import { getUserTimezone, commonTimezones } from '$lib/utils/timezone';
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
@@ -16,6 +17,11 @@
 	let phoneNumber = '';
 	let savedPhoneNumber = '';
 	let savingPhone = false;
+	
+	// Timezone management
+	let userTimezone = 'Africa/Nairobi';
+	let savedTimezone = 'Africa/Nairobi';
+	let savingTimezone = false;
 	
 	// Password management
 	let showPasswordForm = false;
@@ -44,16 +50,25 @@
 		hasPassword = identities.some((id: any) => id.provider === 'email');
 		hasGoogle = identities.some((id: any) => id.provider === 'google');
 		
-		// Load existing phone number
+		// Load existing phone number and timezone
 		const { data: profile } = await supabase
 			.from('user_profiles')
-			.select('phone_number')
+			.select('phone_number, timezone')
 			.eq('id', user.id)
 			.single();
 		
 		if (profile?.phone_number) {
 			phoneNumber = profile.phone_number;
 			savedPhoneNumber = profile.phone_number;
+		}
+		
+		if (profile?.timezone) {
+			userTimezone = profile.timezone;
+			savedTimezone = profile.timezone;
+		} else {
+			// Auto-detect timezone if not set
+			const detectedTimezone = getUserTimezone();
+			userTimezone = detectedTimezone;
 		}
 		
 		loading = false;
@@ -250,6 +265,38 @@
 		}
 	}
 	
+	async function saveTimezone() {
+		if (!userTimezone) {
+			toast.add('Please select a timezone', 'error');
+			return;
+		}
+		
+		savingTimezone = true;
+		
+		try {
+			const { error } = await supabase
+				.from('user_profiles')
+				.upsert({
+					id: user.id,
+					timezone: userTimezone,
+					updated_at: new Date().toISOString()
+				});
+			
+			if (error) {
+				console.error('Error saving timezone:', error);
+				toast.add('Failed to save timezone', 'error');
+			} else {
+				savedTimezone = userTimezone;
+				toast.add('Timezone saved successfully!', 'success');
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			toast.add('Failed to save timezone', 'error');
+		} finally {
+			savingTimezone = false;
+		}
+	}
+	
 	function signOut() {
 		supabase.auth.signOut();
 		goto('/');
@@ -340,6 +387,52 @@
 							</p>
 						</div>
 					{/if}
+				</div>
+			</div>
+			
+			<!-- Timezone Settings -->
+			<div class="bg-white rounded-lg shadow p-6 mb-6">
+				<h2 class="text-lg font-medium mb-4">Timezone Settings</h2>
+				<p class="text-sm text-gray-600 mb-4">
+					Set your timezone to ensure reminders are scheduled at the correct time for your location.
+				</p>
+				
+				<div class="space-y-4">
+					<div>
+						<label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">
+							Your Timezone
+						</label>
+						<div class="flex gap-2">
+							<select
+								id="timezone"
+								bind:value={userTimezone}
+								class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+								disabled={savingTimezone}
+							>
+								{#each commonTimezones as tz}
+									<option value={tz.value}>{tz.label}</option>
+								{/each}
+							</select>
+							<button
+								on:click={saveTimezone}
+								disabled={savingTimezone || userTimezone === savedTimezone}
+								class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{savingTimezone ? 'Saving...' : 'Save'}
+							</button>
+						</div>
+						{#if savedTimezone && userTimezone === savedTimezone}
+							<p class="mt-2 text-sm text-green-600 flex items-center gap-1">
+								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+								</svg>
+								Timezone saved - {savedTimezone}
+							</p>
+						{/if}
+						<p class="mt-2 text-xs text-gray-500">
+							Current time in your timezone: {new Date().toLocaleString('en-US', { timeZone: userTimezone, dateStyle: 'short', timeStyle: 'short' })}
+						</p>
+					</div>
 				</div>
 			</div>
 			

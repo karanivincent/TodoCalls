@@ -33,16 +33,22 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       return json({ error: 'Unauthorized - Please log in' }, { status: 401 });
     }
 
-    // Get user's phone number if not provided
+    // Get user's phone number and timezone
     let userPhoneNumber = phoneNumber;
+    let userTimezone = 'Africa/Nairobi'; // Default timezone
+    
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('phone_number, timezone')
+      .eq('id', user.id)
+      .single();
+    
     if (!userPhoneNumber) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('phone_number')
-        .eq('id', user.id)
-        .single();
-      
       userPhoneNumber = profile?.phone_number;
+    }
+    
+    if (profile?.timezone) {
+      userTimezone = profile.timezone;
     }
 
     if (!userPhoneNumber) {
@@ -51,8 +57,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       }, { status: 400 });
     }
 
-    // Parse the natural language input
-    const parsedTask = await parseTaskFromNaturalLanguage(input, userPhoneNumber);
+    // Parse the natural language input with timezone
+    const parsedTask = await parseTaskFromNaturalLanguage(input, userPhoneNumber, userTimezone);
 
     // Handle recipient phone numbers (for MVP, we'll use the user's phone for all)
     // In the future, this would look up family members' phone numbers

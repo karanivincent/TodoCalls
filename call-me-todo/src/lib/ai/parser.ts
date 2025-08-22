@@ -9,41 +9,58 @@ export interface ParsedTask {
   confidence: number;
 }
 
-export async function parseTaskFromNaturalLanguage(input: string, userPhoneNumber: string): Promise<ParsedTask> {
+export async function parseTaskFromNaturalLanguage(
+  input: string, 
+  userPhoneNumber: string,
+  userTimezone: string = 'Africa/Nairobi'
+): Promise<ParsedTask> {
   // Initialize OpenAI client inside the function
   const openai = new OpenAI({
     apiKey: env.OPENAI_API_KEY
   });
   
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  const currentDate = now.getDate();
+  // Get current time in user's timezone
+  const nowUTC = new Date();
+  const nowLocal = new Date(nowUTC.toLocaleString('en-US', { timeZone: userTimezone }));
+  const currentYear = nowLocal.getFullYear();
+  const currentMonth = nowLocal.getMonth();
+  const currentDate = nowLocal.getDate();
   
   try {
     const systemPrompt = `You are a task parser for a reminder app. Extract task information from natural language.
     
-Current date/time: ${now.toLocaleString()}
+IMPORTANT: User is in timezone: ${userTimezone}
+Current date/time in user's timezone: ${nowLocal.toLocaleString('en-US', { 
+  timeZone: userTimezone,
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: true,
+  weekday: 'short'
+})}
 User's phone number: ${userPhoneNumber}
 
 Parse the input and return a JSON object with:
 - title: The task description (what needs to be done)
 - recipient: Who should receive the call ("me" for self, or the person's name)
 - phoneNumber: The phone number to call (use ${userPhoneNumber} for "me")
-- scheduledAt: ISO datetime string for when to make the reminder call
+- scheduledAt: ISO datetime string in UTC (IMPORTANT: Convert from user's timezone ${userTimezone} to UTC)
 - confidence: 0-1 score of parsing confidence
 
-Time parsing rules:
-- "in X minutes/hours" = add to current time
-- "at 3pm" = today at 3pm (unless that's past, then tomorrow)
-- "tomorrow at 9am" = tomorrow at 9am
-- "Monday at 2pm" = next Monday at 2pm
+Time parsing rules (all times are in user's ${userTimezone} timezone):
+- "in X minutes/hours" = add to current time in user's timezone
+- "at 3pm" = today at 3pm in user's timezone (unless that's past, then tomorrow)
+- "tomorrow at 9am" = tomorrow at 9am in user's timezone
+- "Monday at 2pm" = next Monday at 2pm in user's timezone
 - Default to 1 hour from now if no time specified
+- IMPORTANT: Convert all times to UTC for the scheduledAt field
 
-Examples:
+Examples (assuming user is in ${userTimezone}):
 "Remind me to take medication in 30 minutes" -> Call user in 30 min
-"Tell Mom to pick up groceries at 5pm" -> Call Mom at 5pm today
-"Call John about the meeting tomorrow at 9am" -> Call John tomorrow 9am`;
+"Tell Mom to pick up groceries at 5pm" -> Call Mom at 5pm today in user's timezone
+"Call John about the meeting tomorrow at 9am" -> Call John tomorrow 9am in user's timezone`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -76,11 +93,11 @@ Examples:
     console.error('Error parsing task:', error);
     
     // Fallback parsing with simple regex
-    return fallbackParser(input, userPhoneNumber);
+    return fallbackParser(input, userPhoneNumber, userTimezone);
   }
 }
 
-function fallbackParser(input: string, userPhoneNumber: string): ParsedTask {
+function fallbackParser(input: string, userPhoneNumber: string, userTimezone: string = 'Africa/Nairobi'): ParsedTask {
   const now = new Date();
   let scheduledAt = new Date(now.getTime() + 60 * 60 * 1000); // Default 1 hour
   
