@@ -4,8 +4,7 @@
 	import { createSupabaseClient } from '$lib/supabase';
 	import DashboardSidebar from '$lib/components/DashboardSidebar.svelte';
 	import QuickAddBar from '$lib/components/QuickAddBar.svelte';
-	import Toast from '$lib/components/Toast.svelte';
-	import { toast } from '$lib/stores/toast';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
@@ -32,14 +31,10 @@
 	
 	async function handleTaskCreated(event: CustomEvent) {
 		const { task, parsed, message } = event.detail;
-		
-		// Show success toast
-		toast.show(message || 'Task created successfully', 'success');
 		console.log('Task created:', task);
 		
-		// Refresh the tasks in the dashboard (if we have a reference to it)
-		// The dashboard page will handle reloading its own tasks
-		window.dispatchEvent(new CustomEvent('taskListUpdate', { detail: { task } }));
+		// The QuickAddBar already shows toast and dispatches taskListUpdate event
+		// No need to duplicate here
 	}
 </script>
 
@@ -95,7 +90,7 @@
 		</div>
 	</div>
 	
-	<Toast />
+	<ToastContainer />
 {/if}
 
 <style>

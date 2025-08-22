@@ -27,6 +27,7 @@ function createToastStore() {
 	
 	return {
 		subscribe,
+		show: (message: string, type: ToastType = 'info', duration?: number) => addToast(message, type, duration),
 		success: (message: string, duration?: number) => addToast(message, 'success', duration),
 		error: (message: string, duration?: number) => addToast(message, 'error', duration),
 		info: (message: string, duration?: number) => addToast(message, 'info', duration),

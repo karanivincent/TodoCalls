@@ -4,14 +4,23 @@ import { createSupabaseClient } from '$lib/supabase';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
-export const POST: RequestHandler = async ({ request }) => {
+// Vercel cron jobs use GET requests
+export const GET: RequestHandler = async ({ request }) => {
 	try {
+		console.log('Cron job triggered: Checking for due tasks...');
+		
 		// Initialize Twilio client inside the function
 		const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-		// Optional: Add authentication for cron job endpoint
-		const authHeader = request.headers.get('authorization');
-		if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
-			// return json({ error: 'Unauthorized' }, { status: 401 });
+		
+		// Vercel cron jobs include a special header
+		const isVercelCron = request.headers.get('x-vercel-cron') === '1';
+		if (!isVercelCron) {
+			// Optional: Add authentication for manual triggers
+			const authHeader = request.headers.get('authorization');
+			if (env.CRON_SECRET && authHeader !== `Bearer ${env.CRON_SECRET}`) {
+				console.log('Unauthorized cron request');
+				// Uncomment to enforce auth: return json({ error: 'Unauthorized' }, { status: 401 });
+			}
 		}
 
 		const supabase = createSupabaseClient();
@@ -32,6 +41,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: error.message }, { status: 500 });
 		}
 
+		console.log(`Found ${dueTasks?.length || 0} tasks due between ${oneMinuteAgo.toISOString()} and ${now.toISOString()}`);
+		
 		const results = [];
 		
 		// Initiate calls for each due task
@@ -93,3 +104,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}, { status: 500 });
 	}
 };
+
+// Also support POST for manual triggering
+export const POST = GET;

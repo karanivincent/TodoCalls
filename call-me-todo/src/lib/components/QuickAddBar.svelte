@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { toast } from '$lib/stores/toast';
 	
 	const dispatch = createEventDispatcher();
 	
 	let input = '';
 	let isExpanded = false;
 	let showRecipients = false;
+	let isLoading = false;
 	let parsedData = {
 		recipient: '',
 		task: '',
@@ -60,13 +62,13 @@
 	}
 	
 	async function handleSubmit() {
-		if (!input.trim()) return;
+		if (!input.trim() || isLoading) return;
 		
 		const taskInput = input;
 		input = ''; // Clear immediately for better UX
+		isLoading = true;
 		
 		try {
-			// Show loading state (you could add a loading indicator here)
 			const response = await fetch('/api/tasks/create', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -77,24 +79,31 @@
 			const result = await response.json();
 			
 			if (result.success) {
+				// Show success toast
+				toast.success(result.message || 'Task created successfully!');
+				
+				// Dispatch event for dashboard to update
 				dispatch('taskCreated', {
 					task: result.task,
 					parsed: result.parsed,
 					message: result.message
 				});
 				
-				// Show success feedback
-				console.log('Task created:', result.message);
+				// Also dispatch a global event for the dashboard
+				window.dispatchEvent(new CustomEvent('taskListUpdate', { 
+					detail: { task: result.task }
+				}));
 			} else {
-				// Show error and restore input
-				console.error('Failed to create task:', result.error);
+				// Show error toast and restore input
+				toast.error(result.error || 'Failed to create task');
 				input = taskInput;
-				alert(result.error || 'Failed to create task');
 			}
 		} catch (error) {
 			console.error('Error creating task:', error);
+			toast.error('Failed to create task. Please try again.');
 			input = taskInput; // Restore input on error
-			alert('Failed to create task. Please try again.');
+		} finally {
+			isLoading = false;
 		}
 		
 		parsedData = { recipient: '', task: '', time: '' };
@@ -129,41 +138,51 @@
 		<div class="py-3">
 			<div class="relative">
 				<!-- Main Input Container -->
-				<div class="flex items-center gap-2 bg-white rounded-lg border border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-					<!-- Voice Input Button -->
-					<button
-						on:click={startVoiceInput}
-						class="p-2 ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-						aria-label="Voice input"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-						</svg>
-					</button>
+				<div class="flex items-center gap-2">
+					<!-- Input Field with Voice Button -->
+					<div class="flex-1 flex items-center gap-2 bg-white rounded-lg border border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
+						<!-- Voice Input Button -->
+						<button
+							on:click={startVoiceInput}
+							class="p-2 ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+							aria-label="Voice input"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+							</svg>
+						</button>
+						
+						<!-- Input Field -->
+						<input
+							type="text"
+							bind:value={input}
+							on:input={handleInputChange}
+							on:keydown={handleKeyDown}
+							on:focus={() => isExpanded = true}
+							on:blur={() => setTimeout(() => isExpanded = false, 200)}
+							placeholder='Try: "Remind Mom to take medication at 9am" or "Tell John to submit report by 5pm"'
+							class="flex-1 py-2 pr-3 text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
+							autocomplete="off"
+						/>
+					</div>
 					
-					<!-- Input Field -->
-					<input
-						type="text"
-						bind:value={input}
-						on:input={handleInputChange}
-						on:keydown={handleKeyDown}
-						on:focus={() => isExpanded = true}
-						on:blur={() => setTimeout(() => isExpanded = false, 200)}
-						placeholder='Try: "Remind Mom to take medication at 9am" or "Tell John to submit report by 5pm"'
-						class="flex-1 py-2 px-3 text-gray-900 placeholder-gray-400 focus:outline-none"
-						autocomplete="off"
-					/>
-					
-					<!-- Add Button -->
+					<!-- Add Button (Outside) -->
 					<button
 						on:click={handleSubmit}
-						disabled={!input.trim()}
-						class="px-4 py-2 mr-1 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+						disabled={!input.trim() || isLoading}
+						class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-sm"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-						</svg>
-						<span class="hidden sm:inline">Add</span>
+						{#if isLoading}
+							<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+							</svg>
+						{:else}
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+							</svg>
+						{/if}
+						<span>{isLoading ? 'Adding...' : 'Add'}</span>
 					</button>
 				</div>
 				
