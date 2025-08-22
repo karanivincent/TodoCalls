@@ -6,7 +6,8 @@
 	let isRinging = true;
 	let isDemoPlaying = false;
 	let showCallScreen = true;
-	let audioElement: HTMLAudioElement;
+	let audioElement: HTMLAudioElement | null = null;
+	let isLoadingAudio = false;
 	
 	// Spring animation for the phone shake effect
 	const shake = spring(0, {
@@ -27,40 +28,56 @@
 		};
 	});
 	
-	function playDemo() {
-		isDemoPlaying = true;
+	async function playDemo() {
+		isLoadingAudio = true;
 		isRinging = false;
 		shake.set(0);
 		
-		// Create and play demo audio
-		const demoText = "Hello! This is your TeliTask reminder. You have a team meeting scheduled in 30 minutes. Have a productive meeting!";
-		
-		// Use the Web Speech API for demo (fallback to just visual demo if not supported)
-		if ('speechSynthesis' in window) {
-			const utterance = new SpeechSynthesisUtterance(demoText);
-			utterance.rate = 0.9;
-			utterance.pitch = 1.0;
-			utterance.volume = 0.8;
+		try {
+			// Fetch the demo audio from our API
+			const response = await fetch('/api/demo-audio');
 			
-			// Try to use a more natural voice if available
-			const voices = speechSynthesis.getVoices();
-			const preferredVoice = voices.find(voice => 
-				voice.name.includes('Google') || 
-				voice.name.includes('Microsoft') || 
-				voice.name.includes('Natural')
-			);
-			if (preferredVoice) {
-				utterance.voice = preferredVoice;
+			if (!response.ok) {
+				throw new Error('Failed to load demo audio');
 			}
 			
-			utterance.onend = () => {
-				isDemoPlaying = false;
-				isRinging = true;
-			};
+			// Create audio element if it doesn't exist
+			if (!audioElement) {
+				audioElement = new Audio();
+				
+				// Set up event listeners
+				audioElement.addEventListener('ended', () => {
+					isDemoPlaying = false;
+					isRinging = true;
+				});
+				
+				audioElement.addEventListener('error', (e) => {
+					console.error('Audio playback error:', e);
+					isDemoPlaying = false;
+					isRinging = true;
+					isLoadingAudio = false;
+				});
+			}
 			
-			speechSynthesis.speak(utterance);
-		} else {
-			// Just show visual demo for 5 seconds if speech not supported
+			// Create blob URL from the response
+			const audioBlob = await response.blob();
+			const audioUrl = URL.createObjectURL(audioBlob);
+			
+			// Set the source and play
+			audioElement.src = audioUrl;
+			audioElement.volume = 0.8;
+			
+			await audioElement.play();
+			isDemoPlaying = true;
+			isLoadingAudio = false;
+			
+		} catch (error) {
+			console.error('Error playing demo:', error);
+			isLoadingAudio = false;
+			isRinging = true;
+			
+			// Fallback to visual-only demo
+			isDemoPlaying = true;
 			setTimeout(() => {
 				isDemoPlaying = false;
 				isRinging = true;
@@ -69,10 +86,12 @@
 	}
 	
 	function stopDemo() {
-		if ('speechSynthesis' in window) {
-			speechSynthesis.cancel();
+		if (audioElement) {
+			audioElement.pause();
+			audioElement.currentTime = 0;
 		}
 		isDemoPlaying = false;
+		isLoadingAudio = false;
 		isRinging = true;
 	}
 	
@@ -168,7 +187,18 @@
 	
 	<!-- Play Demo Button -->
 	<div class="mt-8 text-center">
-		{#if !isDemoPlaying}
+		{#if isLoadingAudio}
+			<button
+				disabled
+				class="inline-flex items-center gap-2 px-6 py-3 bg-gray-400 text-white rounded-lg font-medium shadow-lg cursor-not-allowed"
+			>
+				<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+				</svg>
+				Loading Audio...
+			</button>
+		{:else if !isDemoPlaying}
 			<button
 				on:click={playDemo}
 				class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
