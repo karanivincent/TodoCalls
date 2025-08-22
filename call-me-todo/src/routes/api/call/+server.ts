@@ -19,9 +19,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Determine the endpoint based on whether it's a test call or task reminder
 		let url = `${baseUrl}/api/voice/`;
 		if (isTestCall) {
-			url += 'test-call';
+			url += 'test-call-audio'; // Use the audio version that properly serves audio files
 		} else if (taskId) {
-			url += `outbound?taskId=${taskId}`;
+			url += `task-reminder?taskId=${taskId}`; // Use the new task-reminder endpoint
 		} else {
 			url += 'incoming';
 		}

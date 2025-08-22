@@ -14,6 +14,10 @@
       "destination": "/api/voice/test-call-audio.js"
     },
     {
+      "source": "/api/voice/test-call-audio/(.*)",
+      "destination": "/api/voice/test-call-audio.js"
+    },
+    {
       "source": "/api/voice/test-call-personalized",
       "destination": "/api/voice/test-call-personalized.js"
     },
