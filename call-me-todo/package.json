@@ -11,7 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"voice-server": "node src/server/voice-server.js",
-		"dev:all": "npm run dev & npm run voice-server"
+		"dev:all": "npm run dev & npm run voice-server",
+		"vercel-build": "npm install && npm run build"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.54.2",
