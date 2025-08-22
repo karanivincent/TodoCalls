@@ -37,13 +37,18 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Initiate calls for each due task
 		for (const task of dueTasks || []) {
 			try {
+				// Use the production URL for Vercel deployments
+				const baseUrl = process.env.VERCEL_URL 
+					? `https://${process.env.VERCEL_URL}`
+					: 'https://telitask.com';
+				
 				const call = await twilioClient.calls.create({
 					to: task.phone_number,
 					from: TWILIO_PHONE_NUMBER,
-					// Pass task context as query parameters
-					url: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/outbound-call?taskId=${task.id}&userId=${task.user_id}`,
+					// Use the new task-reminder endpoint
+					url: `${baseUrl}/api/voice/task-reminder?taskId=${task.id}`,
 					method: 'POST',
-					statusCallback: `${process.env.WEBHOOK_BASE_URL || 'http://localhost:5050'}/call-status`,
+					statusCallback: `${baseUrl}/api/voice/status`,
 					statusCallbackMethod: 'POST',
 					statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
 				});

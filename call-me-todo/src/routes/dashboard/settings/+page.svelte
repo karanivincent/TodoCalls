@@ -12,6 +12,11 @@
 	let linking = false;
 	let unlinking = false;
 	
+	// Phone number management
+	let phoneNumber = '';
+	let savedPhoneNumber = '';
+	let savingPhone = false;
+	
 	// Password management
 	let showPasswordForm = false;
 	let passwordForm = {
@@ -38,6 +43,18 @@
 		// Check authentication methods
 		hasPassword = identities.some((id: any) => id.provider === 'email');
 		hasGoogle = identities.some((id: any) => id.provider === 'google');
+		
+		// Load existing phone number
+		const { data: profile } = await supabase
+			.from('user_profiles')
+			.select('phone_number')
+			.eq('id', user.id)
+			.single();
+		
+		if (profile?.phone_number) {
+			phoneNumber = profile.phone_number;
+			savedPhoneNumber = profile.phone_number;
+		}
 		
 		loading = false;
 	});
@@ -153,6 +170,86 @@
 		}
 	}
 	
+	async function savePhoneNumber() {
+		if (!phoneNumber) {
+			toast.add('Please enter a phone number', 'error');
+			return;
+		}
+		
+		// Allow any format, but ensure it starts with + for international format
+		let formattedPhone = phoneNumber.trim();
+		
+		// If it doesn't start with +, add it
+		if (!formattedPhone.startsWith('+')) {
+			// If it's just digits and looks like a US number, add +1
+			const cleanPhone = formattedPhone.replace(/\D/g, '');
+			if (cleanPhone.length === 10) {
+				// Likely US number without country code
+				formattedPhone = `+1${cleanPhone}`;
+			} else {
+				// Keep as is but add +
+				formattedPhone = `+${cleanPhone}`;
+			}
+		}
+		
+		// Basic validation - must have at least 10 digits
+		const digitCount = formattedPhone.replace(/\D/g, '').length;
+		if (digitCount < 10) {
+			toast.add('Please enter a valid phone number with country code (e.g., +1234567890)', 'error');
+			return;
+		}
+		
+		savingPhone = true;
+		
+		try {
+			// Save or update phone number
+			const { error } = await supabase
+				.from('user_profiles')
+				.upsert({
+					id: user.id,
+					phone_number: formattedPhone,
+					updated_at: new Date().toISOString()
+				});
+			
+			if (error) {
+				console.error('Error saving phone number:', error);
+				toast.add('Failed to save phone number', 'error');
+			} else {
+				phoneNumber = formattedPhone;
+				savedPhoneNumber = formattedPhone;
+				toast.add('Phone number saved successfully!', 'success');
+				
+				// Test the phone with a welcome call
+				await testWelcomeCall();
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			toast.add('Failed to save phone number', 'error');
+		} finally {
+			savingPhone = false;
+		}
+	}
+	
+	async function testWelcomeCall() {
+		try {
+			const response = await fetch('/api/call', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					phoneNumber: savedPhoneNumber,
+					isTestCall: true
+				})
+			});
+			
+			const result = await response.json();
+			if (result.success) {
+				toast.add('Test call initiated! Your phone should ring shortly.', 'info');
+			}
+		} catch (error) {
+			console.error('Welcome call error:', error);
+		}
+	}
+	
 	function signOut() {
 		supabase.auth.signOut();
 		goto('/');
@@ -189,6 +286,63 @@
 				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
 			</div>
 		{:else if user}
+			<!-- Phone Number Section -->
+			<div class="bg-white rounded-lg shadow p-6 mb-6">
+				<h2 class="text-lg font-medium mb-4">Phone Number for Reminders</h2>
+				<p class="text-sm text-gray-600 mb-4">
+					We'll call this number for your task reminders. Standard calling rates may apply.
+					<br />
+					<span class="text-xs">Include country code (e.g., +1 for US, +44 for UK, +254 for Kenya)</span>
+				</p>
+				
+				<div class="space-y-4">
+					<div>
+						<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+							Phone Number
+						</label>
+						<div class="flex gap-2">
+							<input
+								id="phone"
+								type="tel"
+								bind:value={phoneNumber}
+								placeholder="+1234567890 or +44123456789"
+								class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+								disabled={savingPhone}
+							/>
+							<button
+								on:click={savePhoneNumber}
+								disabled={savingPhone || phoneNumber === savedPhoneNumber}
+								class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{savingPhone ? 'Saving...' : 'Save'}
+							</button>
+						</div>
+						{#if savedPhoneNumber && phoneNumber === savedPhoneNumber}
+							<p class="mt-2 text-sm text-green-600 flex items-center gap-1">
+								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+								</svg>
+								Phone number saved
+							</p>
+						{/if}
+					</div>
+					
+					{#if savedPhoneNumber}
+						<div class="border-t pt-4">
+							<button
+								on:click={testWelcomeCall}
+								class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+							>
+								📞 Send Test Call
+							</button>
+							<p class="mt-2 text-sm text-gray-500">
+								Test that your phone number is working correctly
+							</p>
+						</div>
+					{/if}
+				</div>
+			</div>
+			
 			<!-- Account Information -->
 			<div class="bg-white rounded-lg shadow p-6 mb-6">
 				<h2 class="text-lg font-medium mb-4">Account Information</h2>

@@ -41,12 +41,21 @@
 		await loadTasks();
 		loading = false;
 		
+		// Listen for task updates from QuickAddBar
+		const handleTaskUpdate = () => {
+			loadTasks();
+		};
+		window.addEventListener('taskListUpdate', handleTaskUpdate);
+		
 		// Update current hour every minute
 		const interval = setInterval(() => {
 			currentHour = new Date().getHours();
 		}, 60000);
 		
-		return () => clearInterval(interval);
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener('taskListUpdate', handleTaskUpdate);
+		};
 	});
 	
 	async function loadTasks() {
@@ -86,6 +95,26 @@
 		delegatedActive: 3,
 		familyCompliance: 85
 	};
+	
+	async function testReminder(taskId: string) {
+		try {
+			const response = await fetch('/api/tasks/test-reminder', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ taskId })
+			});
+			
+			const result = await response.json();
+			if (result.success) {
+				toast.show('Test call initiated! Your phone should ring shortly.', 'success');
+			} else {
+				toast.show(result.error || 'Failed to initiate test call', 'error');
+			}
+		} catch (error) {
+			console.error('Error testing reminder:', error);
+			toast.show('Failed to initiate test call', 'error');
+		}
+	}
 </script>
 
 <div class="p-8 max-w-7xl mx-auto">
@@ -187,7 +216,7 @@
 											{#each getTasksForHour(hour) as task}
 												<div class="mb-3 bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
 													<div class="flex items-start justify-between">
-														<div>
+														<div class="flex-1">
 															<div class="flex items-center gap-2 mb-1">
 																{#if task.status === 'completed'}
 																	<span class="text-green-600">✓</span>
@@ -199,6 +228,15 @@
 																<h4 class="font-medium text-gray-900">{task.title}</h4>
 															</div>
 															<p class="text-sm text-gray-600">{formatTime(task.scheduled_at)}</p>
+															{#if task.status === 'pending'}
+																<button 
+																	on:click={() => testReminder(task.id)}
+																	class="mt-2 text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
+																	title="Test reminder call now"
+																>
+																	📞 Test Call
+																</button>
+															{/if}
 														</div>
 														<button class="text-gray-400 hover:text-gray-600">
 															<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

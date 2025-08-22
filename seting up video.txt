@@ -1,0 +1,327 @@
+By now, most of us have interacted with ChatGPT, either in the ChatGPT app, in a web
+
+browser, or in the applications that we're building.
+
+It's very powerful and undeniably helpful, but I've often wondered what it would be like
+
+if it was slightly more personal.
+
+Like through a phone call powered by Twilio.
+
+Hello?
+
+Hey there, how can I help brighten your day today?
+
+Can you tell me a joke about owls?
+
+Of course.
+
+What do you call an owl who's a magician?
+
+Hoo-dini.
+
+That sounds fun, so let's build it.
+
+We're going to build an AI voice assistant with Twilio Voice and OpenAI's Realtime API.
+
+To get started, we need to square away a few prereqs.
+
+You're going to need Node.js 18+, you'll need a Twilio account, as well as a Twilio phone
+
+number with voice capabilities.
+
+You're also going to need an OpenAI account, plus an OpenAI API key that has access to
+
+OpenAI's Realtime API.
+
+If you need any help with any of these prereqs, we've got a blog post in the description below
+
+this video.
+
+We'll start by creating a directory to hold our Node application, and then we'll change
+
+directories into that new project location, and run npm init -y.
+
+And while we're here, we'll also set the package type for our project to "module".
+
+Once that's done, we'll use npm to install the dependencies that we'll need for this
+
+project, which are Fastify, ws for WebSockets, .env, and then a few modules for Fastify,
+
+the form body, and the WebSocket modules.
+
+Once those are done installing, I'll open everything up in a code editor, and we'll
+
+get started.
+
+Inside of our project, we'll create a couple of files here.
+
+The first one is a .env file, which will store our OpenAI API key, which you can add here
+
+by typing in OpenAI_API_KEY= and then putting in your OpenAI API key here.
+
+Next, we'll create index.js, which will hold our application.
+
+To kick things off in index.js, we'll import the dependencies we're using in the application.
+
+We're using WebSockets to connect to both Twilio MediaStreams and OpenAI's Realtime
+
+API.
+
+We're using .env to load in our API key, and we're using Fastify as a web framework along
+
+with its form body and WebSocket modules.
+
+Next we'll run .env.config, which will populate process.env with the values from our .env
+
+file, which will give us access to our OpenAI API key, which we'll store in a local constant
+
+and then check to make sure it exists.
+
+Next we'll instantiate the Fastify web framework as well as registering the formBody and WebSocket
+
+modules.
+
+Next we'll set up some constants for our application.
+
+The first is a system message.
+
+This we will pass to OpenAI's Realtime API to let the assistant know how to behave.
+
+Here we're telling it it's a helpful bubbly AI assistant who has a penchant for dad jokes,
+
+owl jokes, and the occasional rick roll, because hey, we're Twilio, and we're never going to
+
+give that one up.
+
+Next we'll set up a constant for the voice the AI assistant will use.
+
+We're going to set it to Alloy.
+
+There are other options in OpenAI's documentation if you want to explore.
+
+Then we'll set up the port that our application will run on, either from environment variable
+
+named port or 50/50 by default.
+
+Next we'll start configuring the routes for our Fastify web application, starting with
+
+/. Here we're just returning a message "Twilio Media Stream server is running" which we'll
+
+test when we start the application server later.
+
+Next is the route that will respond to an incoming voice call at our Twilio number,
+
+at /incoming-call.
+
+This route returns TwiML, which is a set of XML instructions that tell Twilio what to
+
+do with the incoming call.
+
+We start with a say tag that reads a message, then we pause for a second, then we read another
+
+message that tells the caller that they can begin speaking.
+
+Then we use a connect tag to connect the Twilio MediaStream for this call to a WebSocket endpoint
+
+at /media-stream that we'll write in a moment.
+
+This WebSocket connection will enable us to proxy audio between our Twilio call over to
+
+OpenAI's Realtime API.
+
+Now let's write that media-stream endpoint.
+
+This endpoint is going to use Fastify's WebSocket support.
+
+The first thing we're going to do here is just log a message letting us know that the
+
+client has been connected.
+
+Next we'll create a WebSocket connection to the OpenAI Realtime API.
+
+To do that we'll create a new WebSocket object.
+
+We'll pass in the URL to the OpenAI Realtime API model, and then pass in our credentials
+
+to authenticate with the service.
+
+We'll create a constant to store the stream ID.
+
+Next we'll configure a SessionUpdate object that will be sent whenever the WebSocket connects
+
+to configure the OpenAI session.
+
+TurnDetection sets up voice activity detection.
+
+The input and output audio format is set to G.711 ulaw, which is required for Twilio MediaStreams.
+
+Voice sets the voice that will be used by the AI assistant.
+
+Instructions influences the AI assistant using that system message that we set up earlier
+
+that tells it it's a bubbly assistant that tells jokes occasionally.
+
+Modalities allows for both text and audio interactions with the API, and the temperature
+
+controls randomness within the assistant.
+
+Next let's set up the events that can be fired by this WebSocket connection.
+
+We'll start with open.
+
+When open runs we're going to send that SessionUpdate object to configure the AI assistant session
+
+on the Realtime API.
+
+Now we need to respond to incoming messages on this OpenAI WebSocket connection.
+
+If we receive a SessionUpdated message, that means that the SessionUpdate object was received
+
+successfully.
+
+If instead we receive a Response.audio.delta message, that means we've received some audio
+
+back from OpenAI that we need to encode and then send back to MediaStreams back to the
+
+call.
+
+Now let's turn to the Twilio Media Streams WebSocket connection and handle messages that
+
+it sends.
+
+The first message that this will send is Start, and when this runs we'll just log out the
+
+streamSID to the console when it starts up.
+
+Next we need to handle the Media message.
+
+This message gets sent when we have audio coming from Twilio MediaStream that we need
+
+to send to OpenAI.
+
+So as long as the OpenAI WebSocket is open, we'll package up that audio in a buffer append
+
+and send it off to the OpenAI WebSocket.
+
+If we receive a message that's not Start or Media, that means we've received a non-media
+
+message and we don't really care about that in this application, so we'll just log that
+
+out to the console so that we know that it happened.
+
+Down in the catch block we'll log any errors that might occur out to console.error, but
+
+hopefully if all goes well, we won't have any.
+
+Our WebSocket fun finishes with three more events, two that handle when the WebSocket
+
+connections close, and one that handles any errors that may occur on the OpenAI WebSocket
+
+connection.
+
+With all of that in place, we're finally ready to run Fastify.listen to spin up our web server
+
+on port 5050 or whatever port you configured in your environment variable port.
+
+Now we're ready to start our application by running node-index.js which will spin up a
+
+web server on localhost port 5050.
+
+Only one problem, Twilio can't reach localhost port 5050, so I'll use ngrok to create an
+
+HTTP tunnel to access my application from a public URL.
+
+We'll start up in a new terminal, ngrok/http/5050, and then I'll add my subdomain, brent.ngrok.io.
+
+This creates an HTTP tunnel, little tunnel traffic from brent.ngrok.io forward to our
+
+localhost port 5050 web application.
+
+If we head over to a web browser, we can test that slash route that we wrote by heading
+
+to brent.ngrok.io and see the Twilio MediaStream server is running.
+
+Heading over to the Twilio console, I'll go to the phone number that I want to set this
+
+application up on, scroll down to where it says a call comes in, and update the URL there
+
+to say brent.ngrok.io/incoming-call.
+
+Next we'll scroll down to the bottom of the page and hit the save configuration button
+
+to save the configuration for our URL.
+
+To test our application, I'm going to use the Twilio Dev Phone.
+
+You can find out more about the Dev Phone from the link appearing on screen or down
+
+in the description below this video, but the Dev Phone is a very handy way to test your
+
+Twilio applications.
+
+All I need to do is punch in the phone number I would like to call, and then hit the call
+
+button and we can call our app.
+
+"Please wait while we connect your call to the AI voice assistant powered by Twilio and
+
+the open AI real-time API.
+
+Okay, you can start talking."
+
+Hi there, how's it going?
+
+"Hey there, how can I help you today?"
+
+I was wondering if you could tell me a good owl joke.
+
+"Of course.
+
+How about this one?
+
+What does an owl say when it goes trick-or-treating?
+
+Happy Owl-o-ween."
+
+Oh, that's really good and very topical.
+
+Halloween is coming up soon.
+
+"I'm glad you liked it.
+
+Halloween is such a fun time of the year.
+
+Do you have any exciting plans for it?"
+
+Not really.
+
+I was wondering though, are you ever going to give me up?
+
+"Oh, I think I know where this is going.
+
+And I'm never going to give you up, never going to let you down.
+
+Gotcha."
+
+That's perfect.
+
+Thank you so much.
+
+"You're welcome."
+
+Quick shout out to Paul Kamp and Dominic for this fantastic blog post and all of the reviewers
+
+that were involved.
+
+If you want to go through this blog post, please head to the link in the description.
+
+We've also dropped links to code exchange samples that you can quickly deploy to get
+
+started with OpenAI's Realtime API.
+
+I hope you have fun building this and let us know in the comments if there's something
+
+else you want to see on the channel.
+
+

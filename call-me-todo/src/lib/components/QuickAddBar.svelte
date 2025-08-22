@@ -59,16 +59,46 @@
 		}
 	}
 	
-	function handleSubmit() {
-		if (input.trim()) {
-			dispatch('addTask', {
-				text: input,
-				parsed: parsedData
+	async function handleSubmit() {
+		if (!input.trim()) return;
+		
+		const taskInput = input;
+		input = ''; // Clear immediately for better UX
+		
+		try {
+			// Show loading state (you could add a loading indicator here)
+			const response = await fetch('/api/tasks/create', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'same-origin', // Include cookies for authentication
+				body: JSON.stringify({ input: taskInput })
 			});
-			input = '';
-			parsedData = { recipient: '', task: '', time: '' };
-			isExpanded = false;
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				dispatch('taskCreated', {
+					task: result.task,
+					parsed: result.parsed,
+					message: result.message
+				});
+				
+				// Show success feedback
+				console.log('Task created:', result.message);
+			} else {
+				// Show error and restore input
+				console.error('Failed to create task:', result.error);
+				input = taskInput;
+				alert(result.error || 'Failed to create task');
+			}
+		} catch (error) {
+			console.error('Error creating task:', error);
+			input = taskInput; // Restore input on error
+			alert('Failed to create task. Please try again.');
 		}
+		
+		parsedData = { recipient: '', task: '', time: '' };
+		isExpanded = false;
 	}
 	
 	function selectRecipient(recipient: any) {

@@ -30,14 +30,16 @@
 		}
 	});
 	
-	async function handleQuickAdd(event: CustomEvent) {
-		const { text, parsed } = event.detail;
+	async function handleTaskCreated(event: CustomEvent) {
+		const { task, parsed, message } = event.detail;
 		
-		// For now, just show a toast with the parsed data
-		toast.show(`Task added: "${text}"`, 'success');
-		console.log('Parsed data:', parsed);
+		// Show success toast
+		toast.show(message || 'Task created successfully', 'success');
+		console.log('Task created:', task);
 		
-		// TODO: Implement actual task creation with recipient support
+		// Refresh the tasks in the dashboard (if we have a reference to it)
+		// The dashboard page will handle reloading its own tasks
+		window.dispatchEvent(new CustomEvent('taskListUpdate', { detail: { task } }));
 	}
 </script>
 
@@ -58,7 +60,7 @@
 		<!-- Main Content Area -->
 		<div class="flex-1 flex flex-col min-w-0">
 			<!-- Quick Add Bar -->
-			<QuickAddBar on:addTask={handleQuickAdd} />
+			<QuickAddBar on:taskCreated={handleTaskCreated} />
 			
 			<!-- Page Content -->
 			<main class="flex-1 overflow-y-auto">
