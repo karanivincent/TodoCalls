@@ -2,15 +2,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createSupabaseClient } from '$lib/supabase';
 import twilio from 'twilio';
-import { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
-const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		// Optional: Add authentication for cron job endpoint
 		const authHeader = request.headers.get('authorization');
-		if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+		if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
 			// return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
@@ -38,13 +38,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		for (const task of dueTasks || []) {
 			try {
 				// Use the production URL for Vercel deployments
-				const baseUrl = process.env.VERCEL_URL 
-					? `https://${process.env.VERCEL_URL}`
+				const baseUrl = env.VERCEL_URL 
+					? `https://${env.VERCEL_URL}`
 					: 'https://telitask.com';
 				
 				const call = await twilioClient.calls.create({
 					to: task.phone_number,
-					from: TWILIO_PHONE_NUMBER,
+					from: env.TWILIO_PHONE_NUMBER,
 					// Use the new task-reminder endpoint
 					url: `${baseUrl}/api/voice/task-reminder?taskId=${task.id}`,
 					method: 'POST',

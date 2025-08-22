@@ -1,9 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import twilio from 'twilio';
-import { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
-const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Create the call
 		const call = await client.calls.create({
 			to: phoneNumber,
-			from: TWILIO_PHONE_NUMBER,
+			from: env.TWILIO_PHONE_NUMBER,
 			url: url,
 			method: 'POST',
 			statusCallback: `${baseUrl}/api/voice/status`,

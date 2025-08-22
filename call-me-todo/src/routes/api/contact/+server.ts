@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createSupabaseClient } from '$lib/supabase';
+import { env } from '$env/dynamic/private';
 
 // Email notification using Resend (free tier: 100 emails/day)
 async function sendEmailNotification(data: {
@@ -9,7 +10,7 @@ async function sendEmailNotification(data: {
   message: string;
 }) {
   // Using Resend API - sign up at https://resend.com for free API key
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const RESEND_API_KEY = env.RESEND_API_KEY;
   
   if (!RESEND_API_KEY) {
     console.log('RESEND_API_KEY not configured, skipping email notification');

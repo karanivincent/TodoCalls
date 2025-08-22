@@ -1,14 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import twilio from 'twilio';
-import { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
 // Create or get Verify Service (you might want to store this service SID in env vars)
-const VERIFY_SERVICE_SID = process.env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
+const VERIFY_SERVICE_SID = env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
