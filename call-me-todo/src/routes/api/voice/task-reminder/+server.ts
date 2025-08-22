@@ -4,8 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
-// Import shared audio cache
-import { audioCache } from '../task-reminder-audio/[audioId]/+server';
+import { addAudioToCache } from '$lib/audio-cache';
 
 export const POST: RequestHandler = async ({ request, url }) => {
 	console.log(`Task reminder POST request at ${url.pathname}`);
@@ -180,8 +179,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		// Convert to buffer and cache
 		const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
 		const audioId = `audio_${taskId}_${Date.now()}`;
-		audioCache.set(audioId, audioBuffer);
-		setTimeout(() => audioCache.delete(audioId), 300000);
+		addAudioToCache(audioId, audioBuffer);
 		
 		// Use the dedicated audio serving route
 		const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;

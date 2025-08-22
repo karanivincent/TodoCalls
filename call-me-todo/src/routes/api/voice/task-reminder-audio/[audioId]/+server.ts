@@ -1,13 +1,11 @@
 import type { RequestHandler } from './$types';
-
-// Audio cache shared with task-reminder route
-export const audioCache = new Map<string, Buffer>();
+import { getAudioFromCache, hasAudio } from '$lib/audio-cache';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const audioId = params.audioId;
 	
-	if (audioId && audioCache.has(audioId)) {
-		const audioBuffer = audioCache.get(audioId)!;
+	if (audioId && hasAudio(audioId)) {
+		const audioBuffer = getAudioFromCache(audioId)!;
 		console.log(`Serving audio ${audioId}`);
 		
 		return new Response(audioBuffer, {
