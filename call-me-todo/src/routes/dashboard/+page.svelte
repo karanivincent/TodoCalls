@@ -115,6 +115,23 @@
 			toast.show('Failed to initiate test call', 'error');
 		}
 	}
+	
+	// Manual cron trigger for testing in preview deployments
+	async function triggerCron() {
+		try {
+			const response = await fetch('/api/test-cron');
+			const result = await response.json();
+			
+			if (result.cronResult?.tasksProcessed > 0) {
+				toast.show(`Processed ${result.cronResult.tasksProcessed} due tasks`, 'success');
+			} else {
+				toast.show('No tasks are currently due', 'info');
+			}
+		} catch (error) {
+			console.error('Error triggering cron:', error);
+			toast.show('Failed to check for due tasks', 'error');
+		}
+	}
 </script>
 
 <div class="p-8 max-w-7xl mx-auto">
@@ -161,11 +178,24 @@
 					<h2 class="text-base font-medium text-gray-900">
 						Today • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
 					</h2>
-					<button class="p-1 hover:bg-gray-50 rounded transition-colors">
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-						</svg>
-					</button>
+					<div class="flex items-center gap-2">
+						<!-- Manual cron trigger for preview deployments -->
+						<button 
+							on:click={triggerCron}
+							class="px-3 py-1 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md transition-colors flex items-center gap-1"
+							title="Check for due tasks (for testing in preview)"
+						>
+							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+							</svg>
+							Check Due
+						</button>
+						<button class="p-1 hover:bg-gray-50 rounded transition-colors">
+							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+							</svg>
+						</button>
+					</div>
 				</div>
 				
 				<div class="p-6">
