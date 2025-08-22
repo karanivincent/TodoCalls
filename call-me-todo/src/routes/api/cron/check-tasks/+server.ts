@@ -4,10 +4,10 @@ import { createSupabaseClient } from '$lib/supabase';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
-const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		// Initialize Twilio client inside the function
+		const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 		// Optional: Add authentication for cron job endpoint
 		const authHeader = request.headers.get('authorization');
 		if (authHeader !== `Bearer ${env.CRON_SECRET}`) {

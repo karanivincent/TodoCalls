@@ -5,13 +5,12 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { env as publicEnv } from '$env/dynamic/public';
 
-const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-
-// Create or get Verify Service (you might want to store this service SID in env vars)
-const VERIFY_SERVICE_SID = env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
-
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		// Initialize Twilio client inside the function
+		const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+		// Create or get Verify Service (you might want to store this service SID in env vars)
+		const VERIFY_SERVICE_SID = env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
 		// Get the authorization header
 		const authHeader = request.headers.get('authorization');
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {

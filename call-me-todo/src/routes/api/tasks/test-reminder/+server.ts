@@ -5,10 +5,10 @@ import { env as publicEnv } from '$env/dynamic/public';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
-const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-
 export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
+    // Initialize Twilio client inside the function
+    const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
     const { taskId } = await request.json();
     
     if (!taskId) {

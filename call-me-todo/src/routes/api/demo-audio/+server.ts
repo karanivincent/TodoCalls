@@ -1,10 +1,6 @@
 import { env } from '$env/dynamic/private';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY
-});
-
 // Cache the audio in memory to avoid regenerating
 let cachedAudio: Buffer | null = null;
 let cacheTime: number = 0;
@@ -12,6 +8,10 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // Cache for 24 hours
 
 export async function GET() {
   try {
+    // Initialize OpenAI client inside the function
+    const openai = new OpenAI({
+      apiKey: env.OPENAI_API_KEY
+    });
     // Check if we have cached audio that's still fresh
     const now = Date.now();
     if (cachedAudio && (now - cacheTime) < CACHE_DURATION) {

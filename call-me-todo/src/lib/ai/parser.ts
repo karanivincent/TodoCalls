@@ -1,10 +1,6 @@
 import OpenAI from 'openai';
 import { env } from '$env/dynamic/private';
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY
-});
-
 export interface ParsedTask {
   title: string;
   recipient: string;
@@ -14,6 +10,11 @@ export interface ParsedTask {
 }
 
 export async function parseTaskFromNaturalLanguage(input: string, userPhoneNumber: string): Promise<ParsedTask> {
+  // Initialize OpenAI client inside the function
+  const openai = new OpenAI({
+    apiKey: env.OPENAI_API_KEY
+  });
+  
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();

@@ -3,10 +3,10 @@ import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
-const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		// Initialize Twilio client inside the function
+		const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 		const { phoneNumber, taskId, isTestCall } = await request.json();
 		
 		if (!phoneNumber) {
