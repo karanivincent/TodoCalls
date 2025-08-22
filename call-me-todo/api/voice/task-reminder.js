@@ -1,22 +1,47 @@
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-// Use service key if available for bypassing RLS, otherwise use anon key
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(
-  process.env.PUBLIC_SUPABASE_URL,
-  supabaseKey
-);
-
 // Cache for audio files (in production, use proper storage)
 const audioCache = new Map();
 
 export default async function handler(req, res) {
   console.log(`Task reminder ${req.method} request at ${req.url}`);
+  
+  // Initialize clients inside the handler to ensure env vars are available
+  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  
+  // Log environment status for debugging
+  console.log('Environment check:', {
+    hasSupabaseUrl: !!supabaseUrl,
+    hasSupabaseKey: !!supabaseKey,
+    hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasOpenAIKey: !!openaiKey,
+    url: supabaseUrl ? 'Set' : 'Missing'
+  });
+  
+  // Validate required environment variables
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase credentials:', {
+      url: supabaseUrl || 'MISSING',
+      key: supabaseKey ? 'Present' : 'MISSING'
+    });
+    const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">Configuration error. Please contact support.</Say>
+</Response>`;
+    res.status(200).setHeader('Content-Type', 'text/xml').send(twiml);
+    return;
+  }
+  
+  if (!openaiKey) {
+    console.error('Missing OpenAI API key');
+  }
+  
+  // Create clients with validated credentials
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
   
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -124,14 +149,27 @@ export default async function handler(req, res) {
     
     // Handle user response (if any)
     if (digits || speechResult) {
-      return handleUserResponse(req, res, task, digits, speechResult);
+      return handleUserResponse(req, res, task, digits, speechResult, supabase);
     }
     
     // Generate personalized reminder message
-    const reminderScript = await generateReminderScript(task);
+    const reminderScript = await generateReminderScript(task, openai);
     console.log('Generated script:', reminderScript);
     
-    // Generate high-quality audio
+    // Generate high-quality audio if OpenAI is available
+    if (!openai) {
+      // Fallback to Twilio Say if OpenAI is not available
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">${task.title}. Press 1 to mark complete, 2 to snooze for 10 minutes, or 3 to reschedule.</Say>
+  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
+    <Pause length="2"/>
+  </Gather>
+</Response>`;
+      res.status(200).setHeader('Content-Type', 'text/xml').send(twiml);
+      return;
+    }
+    
     const mp3Response = await openai.audio.speech.create({
       model: 'tts-1-hd',
       voice: 'nova',
@@ -178,10 +216,15 @@ export default async function handler(req, res) {
   }
 }
 
-async function generateReminderScript(task) {
+async function generateReminderScript(task, openai) {
   const now = new Date();
   const timeOfDay = now.getHours() < 12 ? 'morning' : 
                      now.getHours() < 17 ? 'afternoon' : 'evening';
+  
+  // If no OpenAI client, return a simple message
+  if (!openai) {
+    return `Good ${timeOfDay}! This is your reminder: ${task.title}. I'm here to help you stay on track.`;
+  }
   
   try {
     const completion = await openai.chat.completions.create({
@@ -210,7 +253,7 @@ async function generateReminderScript(task) {
   }
 }
 
-async function handleUserResponse(req, res, task, digits, speechResult) {
+async function handleUserResponse(req, res, task, digits, speechResult, supabase) {
   let action = '';
   
   if (digits === '1') {
