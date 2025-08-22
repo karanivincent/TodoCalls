@@ -7,6 +7,31 @@ import { env as publicEnv } from '$env/dynamic/public';
 import { addAudioToCache } from '$lib/audio-cache';
 import { parseTwilioRequest, errorTwiML, logError } from '$lib/twilio-utils';
 
+// Handle GET requests from Twilio (for initial webhook validation or fallback)
+export const GET: RequestHandler = async ({ url }) => {
+	const taskId = url.searchParams.get('taskId');
+	const requestId = Math.random().toString(36).substring(7);
+	
+	console.log(`📞 [${requestId}] GET request to task-reminder (Twilio validation?):`, {
+		taskId,
+		url: url.toString()
+	});
+	
+	// Return a simple TwiML response for GET requests
+	const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">This webhook requires a POST request with task details.</Say>
+</Response>`;
+
+	return new Response(twiml, {
+		headers: {
+			'Content-Type': 'text/xml',
+			'Cache-Control': 'no-cache',
+			'X-Request-ID': requestId
+		}
+	});
+};
+
 export const POST: RequestHandler = async ({ request, url }) => {
 	const requestId = Math.random().toString(36).substring(7);
 	const startTime = Date.now();
