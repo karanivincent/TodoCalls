@@ -1,43 +1,70 @@
 import type { RequestHandler } from './$types';
+import { parseTwilioRequest, logError } from '$lib/twilio-utils';
 
-export const POST: RequestHandler = async ({ request }) => {
-	console.log('Status webhook POST request');
+export const POST: RequestHandler = async ({ request, url }) => {
+	const requestId = Math.random().toString(36).substring(7);
+	const startTime = Date.now();
 	
-	// Parse form data from Twilio
-	const formData = await request.formData();
-	const body: any = {};
-	for (const [key, value] of formData) {
-		body[key] = value;
-	}
-	
-	// Log the call status update
-	console.log('Call Status Update:', {
-		CallSid: body.CallSid,
-		CallStatus: body.CallStatus,
-		CallDuration: body.CallDuration,
-		From: body.From,
-		To: body.To,
-		TaskId: body.taskId,
-		Timestamp: new Date().toISOString()
+	console.log(`📞 [${requestId}] Status webhook called:`, {
+		method: request.method,
+		url: url.toString(),
+		headers: Object.fromEntries(request.headers.entries()),
+		timestamp: new Date().toISOString()
 	});
 	
-	// Log any errors from Twilio
-	if (body.ErrorCode) {
-		console.error('Call Error:', {
-			ErrorCode: body.ErrorCode,
-			ErrorMessage: body.ErrorMessage,
-			CallSid: body.CallSid
+	try {
+		// Safely parse request body from Twilio
+		const body = await parseTwilioRequest(request);
+	
+		// Log the call status update
+		const taskId = url.searchParams.get('taskId') || body.taskId;
+		
+		console.log(`[${requestId}] Call Status Update:`, {
+			CallSid: body.CallSid,
+			CallStatus: body.CallStatus,
+			CallDuration: body.CallDuration,
+			From: body.From,
+			To: body.To,
+			TaskId: taskId,
+			Timestamp: new Date().toISOString()
+		});
+		
+		// Log any errors from Twilio
+		if (body.ErrorCode) {
+			logError(`[${requestId}] Twilio reported call error`, new Error(body.ErrorMessage), {
+				ErrorCode: body.ErrorCode,
+				CallSid: body.CallSid,
+				TaskId: taskId
+			});
+		}
+	
+		// Return 200 OK - Twilio expects this
+		console.log(`[${requestId}] ✅ Status update processed. Time: ${Date.now() - startTime}ms`);
+		
+		return new Response('OK', {
+			status: 200,
+			headers: {
+				'Content-Type': 'text/plain',
+				'Cache-Control': 'no-cache',
+				'X-Request-ID': requestId,
+				'X-Processing-Time': `${Date.now() - startTime}ms`
+			}
+		});
+		
+	} catch (error: any) {
+		logError(`[${requestId}] Error in status webhook`, error);
+		
+		// Still return OK to Twilio even on error
+		return new Response('OK', {
+			status: 200,
+			headers: {
+				'Content-Type': 'text/plain',
+				'Cache-Control': 'no-cache',
+				'X-Request-ID': requestId,
+				'X-Error': 'true'
+			}
 		});
 	}
-	
-	// Return 200 OK - Twilio expects this
-	return new Response('OK', {
-		status: 200,
-		headers: {
-			'Content-Type': 'text/plain',
-			'Cache-Control': 'no-cache'
-		}
-	});
 };
 
 // Handle OPTIONS for CORS

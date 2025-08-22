@@ -5,89 +5,95 @@ import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
 import { addAudioToCache } from '$lib/audio-cache';
+import { parseTwilioRequest, errorTwiML, logError } from '$lib/twilio-utils';
 
 export const POST: RequestHandler = async ({ request, url }) => {
-	console.log(`Task reminder POST request at ${url.pathname}`);
+	const requestId = Math.random().toString(36).substring(7);
+	const startTime = Date.now();
 	
-	// Initialize clients inside the handler to ensure env vars are available
-	const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
-	const supabaseKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY || publicEnv.PUBLIC_SUPABASE_ANON_KEY;
-	const openaiKey = privateEnv.OPENAI_API_KEY;
-	
-	// Log environment status for debugging
-	console.log('Environment check:', {
-		hasSupabaseUrl: !!supabaseUrl,
-		hasSupabaseKey: !!supabaseKey,
-		hasServiceKey: !!privateEnv.SUPABASE_SERVICE_ROLE_KEY,
-		hasOpenAIKey: !!openaiKey,
-		url: supabaseUrl ? 'Set' : 'Missing'
-	});
-	
-	// Validate required environment variables
-	if (!supabaseUrl || !supabaseKey) {
-		console.error('Missing Supabase credentials:', {
-			url: supabaseUrl || 'MISSING',
-			key: supabaseKey ? 'Present' : 'MISSING'
-		});
-		const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">Configuration error. Please contact support.</Say>
-</Response>`;
-		return new Response(twiml, {
-			headers: {
-				'Content-Type': 'text/xml',
-				'Cache-Control': 'no-cache'
-			}
-		});
-	}
-	
-	if (!openaiKey) {
-		console.error('Missing OpenAI API key');
-	}
-	
-	// Create clients with validated credentials
-	const supabase = createClient(supabaseUrl, supabaseKey);
-	const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
-	
-	// Parse form data from Twilio
-	const formData = await request.formData();
-	const body: any = {};
-	for (const [key, value] of formData) {
-		body[key] = value;
-	}
-	
-	// Get task ID from query params or body
-	const taskId = url.searchParams.get('taskId') || body.taskId;
-	const digits = body.Digits; // For user input via keypad
-	const speechResult = body.SpeechResult; // For voice input
-	
-	console.log('Task reminder request:', {
+	console.log(`📞 [${requestId}] Task reminder webhook called:`, {
 		method: request.method,
-		taskId,
-		digits,
-		speechResult,
-		query: Object.fromEntries(url.searchParams),
-		body
+		url: url.toString(),
+		pathname: url.pathname,
+		searchParams: Object.fromEntries(url.searchParams),
+		headers: Object.fromEntries(request.headers.entries()),
+		timestamp: new Date().toISOString()
 	});
-	
-	if (!taskId) {
-		console.error('No task ID provided');
-		const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">Error: No task ID provided for this reminder.</Say>
-</Response>`;
-		return new Response(twiml, {
-			headers: {
-				'Content-Type': 'text/xml',
-				'Cache-Control': 'no-cache'
-			}
-		});
-	}
 	
 	try {
+		// Initialize clients inside the handler to ensure env vars are available
+		const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
+		const supabaseKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY || publicEnv.PUBLIC_SUPABASE_ANON_KEY;
+		const openaiKey = privateEnv.OPENAI_API_KEY;
+	
+		// Log environment status for debugging
+		console.log(`[${requestId}] Environment check:`, {
+			hasSupabaseUrl: !!supabaseUrl,
+			hasSupabaseKey: !!supabaseKey,
+			hasServiceKey: !!privateEnv.SUPABASE_SERVICE_ROLE_KEY,
+			hasOpenAIKey: !!openaiKey,
+			supabaseUrl: supabaseUrl || 'MISSING'
+		});
+	
+		// Validate required environment variables
+		if (!supabaseUrl || !supabaseKey) {
+			logError(`[${requestId}] Missing Supabase credentials`, new Error('Configuration error'), {
+				url: supabaseUrl || 'MISSING',
+				key: supabaseKey ? 'Present' : 'MISSING'
+			});
+			return new Response(errorTwiML('Configuration error', true), {
+				headers: {
+					'Content-Type': 'text/xml',
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Error-Type': 'configuration'
+				}
+			});
+		}
+	
+		if (!openaiKey) {
+			console.warn(`[${requestId}] Missing OpenAI API key - will use fallback voice`);
+		}
+	
+		// Create clients with validated credentials
+		const supabase = createClient(supabaseUrl, supabaseKey);
+		const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
+		
+		// Safely parse request body from Twilio
+		const body = await parseTwilioRequest(request);
+	
+		// Get task ID from query params or body
+		const taskId = url.searchParams.get('taskId') || body.taskId;
+		const digits = body.Digits; // For user input via keypad
+		const speechResult = body.SpeechResult; // For voice input
+		
+		console.log(`[${requestId}] Parsed request:`, {
+			taskId,
+			digits,
+			speechResult,
+			callSid: body.CallSid,
+			callStatus: body.CallStatus,
+			from: body.From,
+			to: body.To,
+			body
+		});
+	
+		if (!taskId) {
+			console.error(`[${requestId}] No task ID provided`);
+			return new Response(errorTwiML('No task ID provided for this reminder'), {
+				headers: {
+					'Content-Type': 'text/xml',
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Error-Type': 'missing-task-id',
+					'X-Processing-Time': `${Date.now() - startTime}ms`
+				}
+			});
+		}
+		
 		// Fetch task details from Supabase
-		console.log('Fetching task with ID:', taskId);
-		console.log('Using service key:', !!privateEnv.SUPABASE_SERVICE_ROLE_KEY);
+		console.log(`[${requestId}] Fetching task with ID:`, taskId);
+		console.log(`[${requestId}] Using service key:`, !!privateEnv.SUPABASE_SERVICE_ROLE_KEY);
 		
 		const { data: task, error } = await supabase
 			.from('tasks')
@@ -96,8 +102,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			.single();
 		
 		if (error) {
-			console.error('Supabase error fetching task:', {
-				message: error.message,
+			logError(`[${requestId}] Supabase error fetching task`, error, {
+				taskId,
 				code: error.code,
 				details: error.details
 			});
@@ -109,49 +115,51 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				errorMessage = "Database permission error. Please check the configuration.";
 			}
 			
-			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">${errorMessage}</Say>
-</Response>`;
-			return new Response(twiml, {
+			return new Response(errorTwiML(errorMessage), {
 				headers: {
 					'Content-Type': 'text/xml',
-					'Cache-Control': 'no-cache'
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Error-Type': 'database-error',
+					'X-Processing-Time': `${Date.now() - startTime}ms`
 				}
 			});
 		}
 		
 		if (!task) {
-			console.error('No task found with ID:', taskId);
-			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">Sorry, I couldn't find that task. It may have been deleted.</Say>
-</Response>`;
-			return new Response(twiml, {
+			console.error(`[${requestId}] No task found with ID:`, taskId);
+			return new Response(errorTwiML("Sorry, I couldn't find that task. It may have been deleted."), {
 				headers: {
 					'Content-Type': 'text/xml',
-					'Cache-Control': 'no-cache'
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Error-Type': 'task-not-found',
+					'X-Processing-Time': `${Date.now() - startTime}ms`
 				}
 			});
 		}
 		
-		console.log('Task found:', { 
+		console.log(`[${requestId}] Task found:`, { 
 			id: task.id, 
 			title: task.title, 
-			status: task.status 
+			status: task.status,
+			phone_number: task.phone_number
 		});
 		
 		// Handle user response (if any)
 		if (digits || speechResult) {
-			return handleUserResponse(task, digits, speechResult, supabase);
+			console.log(`[${requestId}] Handling user response:`, { digits, speechResult });
+			return handleUserResponse(task, digits, speechResult, supabase, requestId, startTime);
 		}
 		
 		// Generate personalized reminder message
+		console.log(`[${requestId}] Generating reminder script...`);
 		const reminderScript = await generateReminderScript(task, openai);
-		console.log('Generated script:', reminderScript);
+		console.log(`[${requestId}] Generated script:`, reminderScript);
 		
 		// Generate high-quality audio if OpenAI is available
 		if (!openai) {
+			console.log(`[${requestId}] Using fallback Twilio Say (no OpenAI key)`);
 			// Fallback to Twilio Say if OpenAI is not available
 			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -163,29 +171,34 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			return new Response(twiml, {
 				headers: {
 					'Content-Type': 'text/xml',
-					'Cache-Control': 'no-cache'
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Processing-Time': `${Date.now() - startTime}ms`
 				}
 			});
 		}
 		
-		const mp3Response = await openai.audio.speech.create({
-			model: 'tts-1-hd',
-			voice: 'nova',
-			input: reminderScript,
-			response_format: 'mp3',
-			speed: 1.0
-		});
+		try {
+			console.log(`[${requestId}] Generating audio with OpenAI TTS...`);
+			const mp3Response = await openai.audio.speech.create({
+				model: 'tts-1-hd',
+				voice: 'nova',
+				input: reminderScript,
+				response_format: 'mp3',
+				speed: 1.0
+			});
+			
+			// Convert to buffer and cache
+			const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
+			const audioId = `audio_${taskId}_${Date.now()}`;
+			addAudioToCache(audioId, audioBuffer);
+			
+			// Use the dedicated audio serving route
+			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
+			console.log(`[${requestId}] Audio generated and cached:`, { audioId, audioUrl, size: audioBuffer.length });
 		
-		// Convert to buffer and cache
-		const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
-		const audioId = `audio_${taskId}_${Date.now()}`;
-		addAudioToCache(audioId, audioBuffer);
-		
-		// Use the dedicated audio serving route
-		const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
-		
-		// Return TwiML with audio and gather for user response
-		const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+			// Return TwiML with audio and gather for user response
+			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Play>${audioUrl}</Play>
   <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
@@ -193,30 +206,63 @@ export const POST: RequestHandler = async ({ request, url }) => {
   </Gather>
   <Say voice="alice">Goodbye!</Say>
 </Response>`;
-		
-		return new Response(twiml, {
-			headers: {
-				'Content-Type': 'text/xml',
-				'Cache-Control': 'no-cache'
-			}
-		});
-		
-	} catch (error: any) {
-		console.error('Error in task reminder:', error);
-		
-		// Fallback TwiML
-		const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+			
+			console.log(`[${requestId}] ✅ Success! Returning TwiML with audio. Processing time: ${Date.now() - startTime}ms`);
+			
+			return new Response(twiml, {
+				headers: {
+					'Content-Type': 'text/xml',
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Processing-Time': `${Date.now() - startTime}ms`,
+					'X-Audio-URL': audioUrl
+				}
+			});
+			
+		} catch (audioError: any) {
+			logError(`[${requestId}] Audio generation failed`, audioError, { taskId });
+			
+			// Fallback to Twilio Say on audio generation failure
+			console.log(`[${requestId}] Falling back to Twilio Say due to audio error`);
+			const fallbackTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">This is your task reminder. You have a scheduled task. Press 1 to mark complete or 2 to snooze.</Say>
+  <Say voice="alice">Hello! This is your task reminder: ${task.title}. Press 1 to mark complete, 2 to snooze for 10 minutes, or 3 to reschedule.</Say>
   <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="5">
     <Pause length="2"/>
   </Gather>
+  <Say voice="alice">Goodbye!</Say>
+</Response>`;
+			
+			return new Response(fallbackTwiml, {
+				headers: {
+					'Content-Type': 'text/xml',
+					'Cache-Control': 'no-cache',
+					'X-Request-ID': requestId,
+					'X-Error-Type': 'audio-generation-failed',
+					'X-Processing-Time': `${Date.now() - startTime}ms`
+				}
+			});
+		}
+		
+	} catch (error: any) {
+		logError(`[${requestId}] Critical error in task reminder webhook`, error, {
+			taskId,
+			url: url.toString()
+		});
+		
+		// Always return valid TwiML on any error
+		const emergencyTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">This is your task reminder. Sorry, I'm having trouble accessing the full details right now. Please check your task list.</Say>
 </Response>`;
 		
-		return new Response(twiml, {
+		return new Response(emergencyTwiml, {
 			headers: {
 				'Content-Type': 'text/xml',
-				'Cache-Control': 'no-cache'
+				'Cache-Control': 'no-cache',
+				'X-Request-ID': requestId,
+				'X-Error-Type': 'critical-error',
+				'X-Processing-Time': `${Date.now() - startTime}ms`
 			}
 		});
 	}
@@ -262,7 +308,7 @@ async function generateReminderScript(task: any, openai: OpenAI | null): Promise
 	}
 }
 
-async function handleUserResponse(task: any, digits: string, speechResult: string, supabase: any) {
+async function handleUserResponse(task: any, digits: string, speechResult: string, supabase: any, requestId: string, startTime: number) {
 	let action = '';
 	
 	if (digits === '1') {
@@ -273,7 +319,7 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 		action = 'reschedule';
 	}
 	
-	console.log(`User action for task ${task.id}: ${action}`);
+	console.log(`[${requestId}] User action for task ${task.id}: ${action}`);
 	
 	let responseMessage = '';
 	
@@ -321,7 +367,7 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 		}
 		
 	} catch (error) {
-		console.error('Error updating task:', error);
+		logError(`[${requestId}] Error updating task`, error, { taskId: task.id, action });
 		responseMessage = "Sorry, I had trouble updating your task. Please try again later.";
 	}
 	
@@ -333,7 +379,10 @@ async function handleUserResponse(task: any, digits: string, speechResult: strin
 	return new Response(twiml, {
 		headers: {
 			'Content-Type': 'text/xml',
-			'Cache-Control': 'no-cache'
+			'Cache-Control': 'no-cache',
+			'X-Request-ID': requestId,
+			'X-User-Action': action,
+			'X-Processing-Time': `${Date.now() - startTime}ms`
 		}
 	});
 }
