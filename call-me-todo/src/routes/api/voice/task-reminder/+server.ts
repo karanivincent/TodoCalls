@@ -80,6 +80,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	
 		if (!taskId) {
 			console.error(`[${requestId}] No task ID provided`);
+			console.error(`[${requestId}] Debug - Available query params:`, Object.fromEntries(url.searchParams));
+			console.error(`[${requestId}] Debug - Available body data:`, body);
 			return new Response(errorTwiML('No task ID provided for this reminder'), {
 				headers: {
 					'Content-Type': 'text/xml',
@@ -108,6 +110,10 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				details: error.details
 			});
 			
+			console.error(`[${requestId}] 🔍 DEBUG: Supabase query failed for taskId: ${taskId}`);
+			console.error(`[${requestId}] 🔍 DEBUG: Error code: ${error.code}, Message: ${error.message}`);
+			console.error(`[${requestId}] 🔍 DEBUG: Using service key: ${!!privateEnv.SUPABASE_SERVICE_ROLE_KEY}`);
+			
 			let errorMessage = "Sorry, I couldn't find the task details.";
 			if (error.code === 'PGRST116') {
 				errorMessage = "Task not found. It may have been deleted.";
@@ -127,7 +133,9 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 		if (!task) {
-			console.error(`[${requestId}] No task found with ID:`, taskId);
+			console.error(`[${requestId}] 🔍 DEBUG: No task found with ID: ${taskId}`);
+			console.error(`[${requestId}] 🔍 DEBUG: Query returned data:`, task);
+			console.error(`[${requestId}] 🔍 DEBUG: This suggests the task doesn't exist or RLS is blocking access`);
 			return new Response(errorTwiML("Sorry, I couldn't find that task. It may have been deleted."), {
 				headers: {
 					'Content-Type': 'text/xml',
