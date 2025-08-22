@@ -46,6 +46,23 @@ export function getHourInTimezone(date: string | Date, timezone: string): number
   return parseInt(formatted);
 }
 
+// Get timezone offset in hours from UTC (more reliable method)
+export function getTimezoneOffsetHours(timezone: string): number {
+  // Create two dates: one in UTC and one in the target timezone
+  const now = new Date();
+  
+  // Format the date in both timezones
+  const utcString = now.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
+  const tzString = now.toLocaleString('en-US', { timeZone: timezone, hour12: false });
+  
+  // Parse both strings to get the actual times
+  const utcDate = new Date(utcString);
+  const tzDate = new Date(tzString);
+  
+  // Calculate the difference in hours
+  return (tzDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60);
+}
+
 // Common timezones for selection
 export const commonTimezones = [
   { value: 'Africa/Nairobi', label: 'Nairobi (EAT)' },

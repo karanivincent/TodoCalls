@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { toast } from '$lib/stores/toast';
+	import { getUserTimezone, formatInTimezone } from '$lib/utils/timezone';
 	
 	const dispatch = createEventDispatcher();
 	
@@ -65,6 +66,7 @@
 		if (!input.trim() || isLoading) return;
 		
 		const taskInput = input;
+		const userTimezone = getUserTimezone();
 		input = ''; // Clear immediately for better UX
 		isLoading = true;
 		
@@ -73,20 +75,24 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'same-origin', // Include cookies for authentication
-				body: JSON.stringify({ input: taskInput })
+				body: JSON.stringify({ 
+					input: taskInput,
+					timezone: userTimezone
+				})
 			});
 			
 			const result = await response.json();
 			
 			if (result.success) {
-				// Show success toast
-				toast.success(result.message || 'Task created successfully!');
+				// Show success toast with time in user's timezone
+				const localTime = formatInTimezone(result.task.scheduled_at, userTimezone);
+				toast.success(`Task scheduled for ${localTime}`);
 				
 				// Dispatch event for dashboard to update
 				dispatch('taskCreated', {
 					task: result.task,
 					parsed: result.parsed,
-					message: result.message
+					message: `Task scheduled for ${localTime}`
 				});
 				
 				// Also dispatch a global event for the dashboard

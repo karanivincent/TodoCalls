@@ -3,10 +3,11 @@ import type { RequestHandler } from './$types';
 import { createServerClient } from '@supabase/ssr';
 import { env as publicEnv } from '$env/dynamic/public';
 import { parseTaskFromNaturalLanguage } from '$lib/ai/parser';
+import { formatInTimezone } from '$lib/utils/timezone';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
-    const { input, phoneNumber } = await request.json();
+    const { input, phoneNumber, timezone: requestTimezone } = await request.json();
     
     if (!input) {
       return json({ error: 'Input text is required' }, { status: 400 });
@@ -35,7 +36,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
     // Get user's phone number and timezone
     let userPhoneNumber = phoneNumber;
-    let userTimezone = 'Africa/Nairobi'; // Default timezone
     
     const { data: profile } = await supabase
       .from('user_profiles')
@@ -47,9 +47,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       userPhoneNumber = profile?.phone_number;
     }
     
-    if (profile?.timezone) {
-      userTimezone = profile.timezone;
-    }
+    // Prioritize request timezone, then profile, then default
+    const userTimezone = requestTimezone || profile?.timezone || 'Africa/Nairobi';
 
     if (!userPhoneNumber) {
       return json({ 
@@ -90,6 +89,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       return json({ error: 'Failed to create task' }, { status: 500 });
     }
 
+    // Format the scheduled time in user's timezone for the response
+    const formattedTime = formatInTimezone(task.scheduled_at, userTimezone);
+    
     return json({
       success: true,
       task,
@@ -97,7 +99,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         ...parsedTask,
         phoneNumber: taskPhoneNumber
       },
-      message: `Task scheduled for ${parsedTask.scheduledAt.toLocaleString()}`
+      message: `Task scheduled for ${formattedTime}`
     });
 
   } catch (error: any) {

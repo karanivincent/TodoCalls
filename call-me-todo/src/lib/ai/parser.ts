@@ -19,48 +19,44 @@ export async function parseTaskFromNaturalLanguage(
     apiKey: env.OPENAI_API_KEY
   });
   
-  // Get current time in user's timezone
-  const nowUTC = new Date();
-  const nowLocal = new Date(nowUTC.toLocaleString('en-US', { timeZone: userTimezone }));
-  const currentYear = nowLocal.getFullYear();
-  const currentMonth = nowLocal.getMonth();
-  const currentDate = nowLocal.getDate();
+  // Get current UTC time
+  const now = new Date();
+  const userLocalTime = now.toLocaleString('en-US', { 
+    timeZone: userTimezone,
+    dateStyle: 'full',
+    timeStyle: 'long'
+  });
   
   try {
-    const systemPrompt = `You are a task parser for a reminder app. Extract task information from natural language.
+    const systemPrompt = `You are a task parser for a reminder app. The user is located in ${userTimezone} timezone.
     
-IMPORTANT: User is in timezone: ${userTimezone}
-Current date/time in user's timezone: ${nowLocal.toLocaleString('en-US', { 
-  timeZone: userTimezone,
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: true,
-  weekday: 'short'
-})}
-User's phone number: ${userPhoneNumber}
+CURRENT TIME CONTEXT:
+- Current UTC time: ${now.toISOString()}
+- Current time in user's ${userTimezone}: ${userLocalTime}
+- User's phone number: ${userPhoneNumber}
 
 Parse the input and return a JSON object with:
 - title: The task description (what needs to be done)
 - recipient: Who should receive the call ("me" for self, or the person's name)
 - phoneNumber: The phone number to call (use ${userPhoneNumber} for "me")
-- scheduledAt: ISO datetime string in UTC (IMPORTANT: Convert from user's timezone ${userTimezone} to UTC)
+- scheduledAt: ISO datetime string in UTC (IMPORTANT: Must be in UTC format)
 - confidence: 0-1 score of parsing confidence
 
-Time parsing rules (all times are in user's ${userTimezone} timezone):
-- "in X minutes/hours" = add to current time in user's timezone
-- "at 3pm" = today at 3pm in user's timezone (unless that's past, then tomorrow)
-- "tomorrow at 9am" = tomorrow at 9am in user's timezone
-- "Monday at 2pm" = next Monday at 2pm in user's timezone
-- Default to 1 hour from now if no time specified
-- IMPORTANT: Convert all times to UTC for the scheduledAt field
+CRITICAL TIME PARSING RULES:
+1. "in X minutes/hours" = add X to current UTC time (${now.toISOString()})
+2. "at 3pm" = 3pm TODAY in user's ${userTimezone}, converted to UTC
+   - If that time has already passed today, use tomorrow
+3. "tomorrow at 9am" = 9am tomorrow in user's ${userTimezone}, converted to UTC
+4. "Monday at 2pm" = next Monday at 2pm in user's ${userTimezone}, converted to UTC
+5. Default to 1 hour from now if no time specified
 
-Examples (assuming user is in ${userTimezone}):
-"Remind me to take medication in 30 minutes" -> Call user in 30 min
-"Tell Mom to pick up groceries at 5pm" -> Call Mom at 5pm today in user's timezone
-"Call John about the meeting tomorrow at 9am" -> Call John tomorrow 9am in user's timezone`;
+IMPORTANT: When user mentions a specific time (like "3pm" or "10:30am"), they mean that time in THEIR timezone (${userTimezone}), not UTC!
+You must convert times from ${userTimezone} to UTC for the scheduledAt field.
+
+Examples for user in ${userTimezone}:
+- "call in 10 minutes" at 12:00 UTC → scheduledAt: 12:10 UTC
+- "call at 3pm" when it's morning in ${userTimezone} → convert 3pm ${userTimezone} to UTC
+- "call tomorrow at 9am" → convert 9am ${userTimezone} tomorrow to UTC`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -98,8 +94,8 @@ Examples (assuming user is in ${userTimezone}):
 }
 
 function fallbackParser(input: string, userPhoneNumber: string, userTimezone: string = 'Africa/Nairobi'): ParsedTask {
-  const now = new Date();
-  let scheduledAt = new Date(now.getTime() + 60 * 60 * 1000); // Default 1 hour
+  const now = new Date(); // Current UTC time
+  let scheduledAt = new Date(now.getTime() + 60 * 60 * 1000); // Default 1 hour from now in UTC
   
   // Try to extract time
   const timePatterns = [
