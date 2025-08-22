@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createSupabaseClient } from '$lib/supabase';
+import { createServiceSupabaseClient } from '$lib/supabase-service';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
@@ -39,7 +39,8 @@ export const GET: RequestHandler = async ({ request, url }) => {
 			}
 		}
 
-		const supabase = createSupabaseClient();
+		// Use service client to bypass RLS for system operations
+		const supabase = createServiceSupabaseClient();
 		
 		// Increase time window to 2 minutes to handle any timing discrepancies
 		const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);

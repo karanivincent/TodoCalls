@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createSupabaseClient } from '$lib/supabase';
+import { createServiceSupabaseClient } from '$lib/supabase-service';
 import { env } from '$env/dynamic/private';
 
 // Manual test endpoint for debugging cron job issues
@@ -9,7 +9,8 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 	const testCall = url.searchParams.get('call') === 'true';
 	
 	try {
-		const supabase = createSupabaseClient();
+		// Use service client to bypass RLS and see all tasks
+		const supabase = createServiceSupabaseClient();
 		const now = new Date();
 		const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
 		const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
