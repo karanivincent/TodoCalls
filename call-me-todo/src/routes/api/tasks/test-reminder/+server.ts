@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServerClient } from '@supabase/ssr';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env as publicEnv } from '$env/dynamic/public';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 
@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
 
     // Create a proper server client with cookie handling
-    const supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    const supabase = createServerClient(publicEnv.PUBLIC_SUPABASE_URL, publicEnv.PUBLIC_SUPABASE_ANON_KEY, {
       cookies: {
         getAll() {
           return cookies.getAll();

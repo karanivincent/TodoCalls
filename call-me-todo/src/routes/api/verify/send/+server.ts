@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import twilio from 'twilio';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env as publicEnv } from '$env/dynamic/public';
 
 const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Initialize Supabase client with the user's token
-		const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+		const supabase = createClient(publicEnv.PUBLIC_SUPABASE_URL, publicEnv.PUBLIC_SUPABASE_ANON_KEY, {
 			global: {
 				headers: {
 					Authorization: `Bearer ${token}`
