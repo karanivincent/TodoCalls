@@ -40,6 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Check if this phone number belongs to the user
+		console.log('Looking for phone record - User ID:', user.id, 'Phone ID:', phoneId);
 		const { data: phoneData, error: phoneError } = await supabase
 			.from('phone_numbers')
 			.select('*')
@@ -47,7 +48,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			.eq('user_id', user.id)
 			.single();
 
+		console.log('Phone lookup result:', { phoneData, phoneError });
 		if (phoneError || !phoneData) {
+			console.error('Phone number not found for user', user.id, 'phone ID', phoneId, 'Error:', phoneError);
 			return json({ error: 'Phone number not found' }, { status: 404 });
 		}
 
@@ -76,21 +79,68 @@ export const POST: RequestHandler = async ({ request }) => {
 				});
 
 			if (verificationCheck.status === 'approved') {
+				console.log('Twilio verification approved! Updating database...');
+				console.log('Update target - Phone ID:', phoneId, 'User ID:', user.id);
+				
+				// First, let's verify the record still exists and get its current state
+				const { data: currentRecord, error: fetchError } = await supabase
+					.from('phone_numbers')
+					.select('*')
+					.eq('id', phoneId)
+					.eq('user_id', user.id)
+					.single();
+					
+				console.log('Current record before update:', { currentRecord, fetchError });
+				
+				if (fetchError) {
+					console.error('Could not fetch phone record for verification update:', fetchError);
+					return json({ 
+						error: 'Verification successful but phone record not found',
+						details: 'Phone record may have been deleted or access denied'
+					}, { status: 404 });
+				}
+				
 				// Update phone number as verified in database
-				const { error: updateError } = await supabase
+				const { error: updateError, data: updateData } = await supabase
 					.from('phone_numbers')
 					.update({ 
-						is_verified: true
+						is_verified: true,
+						updated_at: new Date().toISOString()
 					})
 					.eq('id', phoneId)
-					.eq('user_id', user.id);
+					.eq('user_id', user.id)
+					.select();
 
+				console.log('Database update result:', { updateData, updateError });
+				
 				if (updateError) {
 					console.error('Error updating phone verification status:', updateError);
+					console.error('Update error details:', JSON.stringify(updateError, null, 2));
 					return json({ 
-						error: 'Verification successful but failed to update status' 
+						error: 'Verification successful but failed to update status',
+						details: updateError.message || 'Database update failed'
 					}, { status: 500 });
 				}
+
+				if (!updateData || updateData.length === 0) {
+					console.error('No rows updated - this should not happen after successful fetch');
+					// Try to fetch the record again to see if it was updated by something else
+					const { data: finalRecord } = await supabase
+						.from('phone_numbers')
+						.select('*')
+						.eq('id', phoneId)
+						.eq('user_id', user.id)
+						.single();
+					console.log('Final record state:', finalRecord);
+					
+					return json({ 
+						error: 'Verification successful but update returned no rows',
+						details: 'Phone record exists but update failed unexpectedly'
+					}, { status: 500 });
+				}
+
+				console.log('Successfully updated phone verification status:', updateData[0]);
+			
 
 				return json({
 					success: true,

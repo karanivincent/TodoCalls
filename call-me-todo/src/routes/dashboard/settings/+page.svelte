@@ -241,6 +241,12 @@
 			// Determine if this should be primary (first number)
 			const isPrimary = phoneNumbers.length === 0;
 			
+			console.log('Adding phone number:', {
+				user_id: user.id,
+				phone_number: newPhoneNumber,
+				is_primary: isPrimary
+			});
+			
 			// Add phone number to database
 			const { data, error } = await supabase
 				.from('phone_numbers')
@@ -254,9 +260,17 @@
 				.select()
 				.single();
 			
+			console.log('Phone number insert result:', { data, error });
+			
 			if (error) {
 				console.error('Error saving phone number:', error);
 				toast.add('Failed to save phone number', 'error');
+				return;
+			}
+			
+			if (!data || !data.id) {
+				console.error('Phone number inserted but no data returned');
+				toast.add('Failed to save phone number - no ID returned', 'error');
 				return;
 			}
 			
