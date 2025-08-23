@@ -1,0 +1,97 @@
+2025-08-23T14:12:50.168Z [info] ========================================
+2025-08-23T14:12:50.168Z [info] CRON JOB STARTED: {
+  time: '2025-08-23T14:12:50.167Z',
+  timezone: ':UTC',
+  url: 'https://call-me-todo-lj80ue2ts-karanivincents-projects.vercel.app/api/cron/check-tasks'
+}
+2025-08-23T14:12:50.168Z [info] Trigger source: {
+  isVercelCron: false,
+  isManualTrigger: false,
+  headers: {
+    accept: '*/*',
+    'accept-encoding': 'gzip',
+    connection: 'close',
+    cookie: '_vercel_jwt=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcm90ZWN0aW9uLXN5c3RlbSIsImF1ZCI6ImNhbGwtbWUtdG9kby1sajgwdWUydHMta2FyYW5pdmluY2VudHMtcHJvamVjdHMudmVyY2VsLmFwcCIsImlhdCI6MTc1NTk1ODM3MCwiZXhwIjoxNzU1OTU4MzgwfQ.B0v_sdRdu_EChFIXwyG_GXX6idH8CH8GsH84VousWkQ',
+    forwarded: 'for=13.222.9.71;host=call-me-todo-lj80ue2ts-karanivincents-projects.vercel.app;proto=https;sig=0QmVhcmVyIDE5ZTI1MWEyMDg2NDE4Yzg3ZGVjODBlZDI1ODI2ODA3MWE1NmZkZjNjYzRlOWFlZWM4YTAyYzZkYTk3MTBiMWQ=;exp=1755958670',
+    host: 'call-me-todo-lj80ue2ts-karanivincents-projects.vercel.app',
+    'user-agent': 'vercel-cron/1.0',
+    'x-forwarded-for': '13.222.9.71',
+    'x-forwarded-host': 'call-me-todo-lj80ue2ts-karanivincents-projects.vercel.app',
+    'x-forwarded-proto': 'https',
+    'x-real-ip': '13.222.9.71',
+    'x-vercel-deployment-url': 'call-me-todo-lj80ue2ts-karanivincents-projects.vercel.app',
+    'x-vercel-firewall-bypass': 'true',
+    'x-vercel-forwarded-for': '13.222.9.71',
+    'x-vercel-id': 'iad1::lhqvb-1755958370133-7855e7dd11e4',
+    'x-vercel-internal-bot-check': 'skip',
+    'x-vercel-internal-ingress-bucket': 'bucket018',
+    'x-vercel-internal-ingress-port': '18444',
+    'x-vercel-ip-as-number': '14618',
+    'x-vercel-ip-city': 'Ashburn',
+    'x-vercel-ip-continent': 'NA',
+    'x-vercel-ip-country': 'US',
+    'x-vercel-ip-country-region': 'VA',
+    'x-vercel-ip-latitude': '39.0469',
+    'x-vercel-ip-longitude': '-77.4903',
+    'x-vercel-ip-postal-code': '20149',
+    'x-vercel-ip-timezone': 'America/New_York',
+    'x-vercel-ja4-digest': 't13d531000_ed6c8d7875f9_518fb456ca59',
+    'x-vercel-oidc-token': 'eyJraWQiOiJtcmstNDMwMmVjMWI2NzBmNDhhOThhZDYxZGFkZTRhMjNiZTciLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE3NTU5NTY0NTAsIm93bmVyX2lkIjoidGVhbV8zekJFMmhwQjNHOE9vdnlIVVl4RHdLVkUiLCJpYXQiOjE3NTU5NTY0NTAsInZlcmNlbF9pZCI6ImlhZDE6OmZkcGJjLTE3NTU5NTY0NTAyMjYtNTdkYzZmMzU2NWM3IiwiYXVkIjoiaHR0cHM6XC9cL3ZlcmNlbC5jb21cL2thcmFuaXZpbmNlbnRzLXByb2plY3RzIiwib3duZXIiOiJrYXJhbml2aW5jZW50cy1wcm9qZWN0cyIsImlzcyI6Imh0dHBzOlwvXC9vaWRjLnZlcmNlbC5jb21cL2thcmFuaXZpbmNlbnRzLXByb2plY3RzIiwicHJvamVjdF9pZCI6InByal9TcVpCelgxbGFiMWVMeHNvZWNPZHl3dFdxQVFhIiwiZXhwIjoxNzU1OTYwMDUwLCJlbnZpcm9ubWVudCI6InByb2R1Y3Rpb24iLCJzY29wZSI6Im93bmVyOmthcmFuaXZpbmNlbnRzLXByb2plY3RzOnByb2plY3Q6Y2FsbC1tZS10b2RvOmVudmlyb25tZW50OnByb2R1Y3Rpb24iLCJzdWIiOiJvd25lcjprYXJhbml2aW5jZW50cy1wcm9qZWN0czpwcm9qZWN0OmNhbGwtbWUtdG9kbzplbnZpcm9ubWVudDpwcm9kdWN0aW9uIiwicHJvamVjdCI6ImNhbGwtbWUtdG9kbyJ9.SJu6wO65vtc6SUi_3l2zbON-lQ6-yCLHu5Ja_PhWW0319HkZBPr7TUL2joUCvNXgYRemLjWx8N0VI6XtWPjspTGVQ4v-o0OW2pPcxOmfH2cVcUj_awRmlD0uQzTMMexaNhkF1rrRyxM5gGxoxuWsXRr9nGyvxJdiy5-h5xw6jWmi2TVrFYkqdNEwm89a7O2qKwRALS8FrlS4S1IO8GktPEFYdxeq1J70cx3rmqdIEcBmK6EqW4IDmKHdXSQr9xV6sYPpW9TGM_4dFdNBZSsRu6Nr4VO9AKJaZr8fjlIwJr4kDTWJiIb7iM0dvH_CRVtHAcBVkkQfXbipBT5MLva9hA',
+    'x-vercel-proxied-for': '13.222.9.71',
+    'x-vercel-proxy-signature': 'Bearer 19e251a2086418c87dec80ed258268071a56fdf3cc4e9aeec8a02c6da9710b1d',
+    'x-vercel-proxy-signature-ts': '1755958670'
+  }
+}
+2025-08-23T14:12:50.168Z [info] Creating service client with: { hasUrl: true, hasServiceKey: true, usingAnonKey: false }
+2025-08-23T14:12:50.168Z [info] Query window: {
+  from: '2025-08-23T14:10:50.167Z',
+  to: '2025-08-23T14:12:50.167Z',
+  stuckCallsFrom: '2025-08-23T14:07:50.167Z'
+}
+2025-08-23T14:12:50.970Z [info] Found 1 due tasks
+2025-08-23T14:12:50.970Z [info] Due tasks: [
+  {
+    id: '631682a9-1b40-4a3e-a65a-5715242dd168',
+    title: 'call njeri',
+    scheduled_at: '2025-08-23T14:12:00.937+00:00',
+    status: 'pending',
+    retry_count: 0
+  }
+]
+2025-08-23T14:12:50.970Z [info] Using base URL: https://telitask.com/
+2025-08-23T14:12:50.970Z [info] Twilio phone number: +17744316453
+2025-08-23T14:12:50.971Z [info] Processing task 631682a9-1b40-4a3e-a65a-5715242dd168: call njeri
+2025-08-23T14:12:51.358Z [info] Initiating call for task 631682a9-1b40-4a3e-a65a-5715242dd168 to +254704985136
+2025-08-23T14:12:51.358Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] Initiating call for task: 631682a9-1b40-4a3e-a65a-5715242dd168
+2025-08-23T14:12:51.358Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] Fetching task from database...
+2025-08-23T14:12:51.732Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] ✅ Task found: {
+  id: '631682a9-1b40-4a3e-a65a-5715242dd168',
+  title: 'call njeri',
+  phone: '+254704985136',
+  status: 'calling'
+}
+2025-08-23T14:12:51.732Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] Initializing Twilio client...
+2025-08-23T14:12:51.732Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] Creating Twilio call: {
+  to: '+254704985136',
+  from: '+17744316453\n',
+  webhookUrl: 'https://telitask.com//api/voice/task-reminder?taskId=631682a9-1b40-4a3e-a65a-5715242dd168',
+  timeout: 30
+}
+2025-08-23T14:12:51.856Z [info] 📞 [CALL-INIT] [cron-htnfa-631682a9-1b40-4a3e-a65a-5715242dd168] ✅ Twilio call created successfully: {
+  callSid: 'CA6d0ecc0a563a6a76d27f7d3b5f606393',
+  status: 'queued',
+  to: '+254704985136',
+  from: '+17744316453'
+}
+2025-08-23T14:12:51.856Z [info] Call initiated successfully: {
+  taskId: '631682a9-1b40-4a3e-a65a-5715242dd168',
+  callSid: 'CA6d0ecc0a563a6a76d27f7d3b5f606393',
+  phoneNumber: '+254704985136'
+}
+2025-08-23T14:12:51.856Z [info] CRON JOB COMPLETED: {
+  executionTime: '1689ms',
+  tasksProcessed: 1,
+  callsInitiated: 1,
+  callsFailed: 0
+}
+2025-08-23T14:12:51.856Z [info] ========================================

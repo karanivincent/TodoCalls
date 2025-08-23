@@ -63,6 +63,37 @@ export async function initiateTaskCall(
 			};
 		}
 		
+		// Check if phone number is verified (security requirement)
+		console.log(`📞 [CALL-INIT] [${requestId}] Checking phone verification status...`);
+		const { data: phoneRecord, error: phoneError } = await supabaseClient
+			.from('phone_numbers')
+			.select('is_verified, phone_number')
+			.eq('phone_number', task.phone_number)
+			.eq('user_id', task.user_id)
+			.single();
+		
+		if (phoneError || !phoneRecord) {
+			console.error(`📞 [CALL-INIT] [${requestId}] ❌ Phone number not found in verified numbers:`, phoneError);
+			return {
+				success: false,
+				taskId,
+				error: 'Phone number not found or not registered',
+				code: phoneError?.code
+			};
+		}
+		
+		if (!phoneRecord.is_verified) {
+			console.error(`📞 [CALL-INIT] [${requestId}] ❌ Phone number not verified:`, task.phone_number);
+			return {
+				success: false,
+				taskId,
+				error: 'Phone number must be verified before receiving calls',
+				phoneNumber: task.phone_number
+			};
+		}
+		
+		console.log(`📞 [CALL-INIT] [${requestId}] ✅ Phone number verified:`, task.phone_number);
+		
 		// Initialize Twilio client
 		console.log(`📞 [CALL-INIT] [${requestId}] Initializing Twilio client...`);
 		if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_PHONE_NUMBER) {

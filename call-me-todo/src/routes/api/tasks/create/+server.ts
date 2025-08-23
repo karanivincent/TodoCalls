@@ -34,27 +34,32 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       return json({ error: 'Unauthorized - Please log in' }, { status: 401 });
     }
 
-    // Get user's phone number and timezone
-    let userPhoneNumber = phoneNumber;
-    
+    // Get user's verified phone number (primary) and timezone
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('phone_number, timezone')
+      .select('timezone')
       .eq('id', user.id)
       .single();
     
-    if (!userPhoneNumber) {
-      userPhoneNumber = profile?.phone_number;
+    // Get primary verified phone number
+    const { data: primaryPhone, error: phoneError } = await supabase
+      .from('phone_numbers')
+      .select('phone_number, is_verified')
+      .eq('user_id', user.id)
+      .eq('is_primary', true)
+      .eq('is_verified', true)
+      .single();
+    
+    if (phoneError || !primaryPhone) {
+      return json({ 
+        error: 'No verified phone number found. Please add and verify a phone number in settings first.' 
+      }, { status: 400 });
     }
+    
+    const userPhoneNumber = primaryPhone.phone_number;
     
     // Prioritize request timezone, then profile, then default
     const userTimezone = requestTimezone || profile?.timezone || 'Africa/Nairobi';
-
-    if (!userPhoneNumber) {
-      return json({ 
-        error: 'Phone number not found. Please add your phone number in settings.' 
-      }, { status: 400 });
-    }
 
     // Parse the natural language input with timezone
     const parsedTask = await parseTaskFromNaturalLanguage(input, userPhoneNumber, userTimezone);

@@ -5,6 +5,8 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import { toast } from '$lib/stores/toast';
 	import { getUserTimezone, commonTimezones } from '$lib/utils/timezone';
+	import PhoneInput from '$lib/components/PhoneInput.svelte';
+	import VerificationCodeInput from '$lib/components/VerificationCodeInput.svelte';
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
@@ -13,10 +15,26 @@
 	let linking = false;
 	let unlinking = false;
 	
-	// Phone number management
-	let phoneNumber = '';
-	let savedPhoneNumber = '';
+	// Phone number management - new approach with verification
+	type PhoneNumberRecord = {
+		id: string;
+		phone_number: string;
+		label?: string;
+		is_primary: boolean;
+		is_verified: boolean;
+		created_at: string;
+	};
+	
+	let phoneNumbers: PhoneNumberRecord[] = [];
+	let newPhoneNumber = '';
+	let newPhoneLabel = '';
+	let isPhoneValid = false;
 	let savingPhone = false;
+	let verifyingPhone = false;
+	let pendingVerification: { phoneId: string; phoneNumber: string } | null = null;
+	let verificationCode = '';
+	let resendCooldown = 0;
+	let resendTimer: NodeJS.Timeout | null = null;
 	
 	// Timezone management
 	let userTimezone = 'Africa/Nairobi';
@@ -50,17 +68,37 @@
 		hasPassword = identities.some((id: any) => id.provider === 'email');
 		hasGoogle = identities.some((id: any) => id.provider === 'google');
 		
-		// Load existing phone number and timezone
+		// Load phone numbers and timezone
+		await Promise.all([
+			loadPhoneNumbers(),
+			loadTimezone()
+		]);
+		
+		loading = false;
+	});
+	
+	async function loadPhoneNumbers() {
+		const { data, error } = await supabase
+			.from('phone_numbers')
+			.select('*')
+			.eq('user_id', user.id)
+			.order('is_primary', { ascending: false })
+			.order('created_at', { ascending: true });
+		
+		if (error) {
+			console.error('Error loading phone numbers:', error);
+			toast.add('Failed to load phone numbers', 'error');
+		} else {
+			phoneNumbers = data || [];
+		}
+	}
+	
+	async function loadTimezone() {
 		const { data: profile } = await supabase
 			.from('user_profiles')
-			.select('phone_number, timezone')
+			.select('timezone')
 			.eq('id', user.id)
 			.single();
-		
-		if (profile?.phone_number) {
-			phoneNumber = profile.phone_number;
-			savedPhoneNumber = profile.phone_number;
-		}
 		
 		if (profile?.timezone) {
 			userTimezone = profile.timezone;
@@ -70,9 +108,7 @@
 			const detectedTimezone = getUserTimezone();
 			userTimezone = detectedTimezone;
 		}
-		
-		loading = false;
-	});
+	}
 	
 	async function linkGoogleAccount() {
 		linking = true;
@@ -185,58 +221,55 @@
 		}
 	}
 	
-	async function savePhoneNumber() {
-		if (!phoneNumber) {
-			toast.add('Please enter a phone number', 'error');
+	async function addPhoneNumber() {
+		if (!newPhoneNumber || !isPhoneValid) {
+			toast.add('Please enter a valid phone number', 'error');
 			return;
 		}
 		
-		// Allow any format, but ensure it starts with + for international format
-		let formattedPhone = phoneNumber.trim();
-		
-		// If it doesn't start with +, add it
-		if (!formattedPhone.startsWith('+')) {
-			// If it's just digits and looks like a US number, add +1
-			const cleanPhone = formattedPhone.replace(/\D/g, '');
-			if (cleanPhone.length === 10) {
-				// Likely US number without country code
-				formattedPhone = `+1${cleanPhone}`;
-			} else {
-				// Keep as is but add +
-				formattedPhone = `+${cleanPhone}`;
-			}
-		}
-		
-		// Basic validation - must have at least 10 digits
-		const digitCount = formattedPhone.replace(/\D/g, '').length;
-		if (digitCount < 10) {
-			toast.add('Please enter a valid phone number with country code (e.g., +1234567890)', 'error');
+		// Check if number already exists
+		const existingNumber = phoneNumbers.find(p => p.phone_number === newPhoneNumber);
+		if (existingNumber) {
+			toast.add('This phone number is already added', 'error');
 			return;
 		}
 		
 		savingPhone = true;
 		
 		try {
-			// Save or update phone number
-			const { error } = await supabase
-				.from('user_profiles')
-				.upsert({
-					id: user.id,
-					phone_number: formattedPhone,
-					updated_at: new Date().toISOString()
-				});
+			// Determine if this should be primary (first number)
+			const isPrimary = phoneNumbers.length === 0;
+			
+			// Add phone number to database
+			const { data, error } = await supabase
+				.from('phone_numbers')
+				.insert({
+					user_id: user.id,
+					phone_number: newPhoneNumber,
+					label: newPhoneLabel.trim() || (isPrimary ? 'Primary' : 'Mobile'),
+					is_primary: isPrimary,
+					is_verified: false
+				})
+				.select()
+				.single();
 			
 			if (error) {
 				console.error('Error saving phone number:', error);
 				toast.add('Failed to save phone number', 'error');
-			} else {
-				phoneNumber = formattedPhone;
-				savedPhoneNumber = formattedPhone;
-				toast.add('Phone number saved successfully!', 'success');
-				
-				// Test the phone with a welcome call
-				await testWelcomeCall();
+				return;
 			}
+			
+			// Reload phone numbers
+			await loadPhoneNumbers();
+			
+			// Immediately start verification process
+			await sendVerificationCode(data.id, newPhoneNumber);
+			
+			// Clear form
+			newPhoneNumber = '';
+			newPhoneLabel = '';
+			isPhoneValid = false;
+			
 		} catch (error) {
 			console.error('Error:', error);
 			toast.add('Failed to save phone number', 'error');
@@ -245,13 +278,102 @@
 		}
 	}
 	
-	async function testWelcomeCall() {
+	async function sendVerificationCode(phoneId: string, phoneNumber: string) {
+		verifyingPhone = true;
+		
+		try {
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session) {
+				toast.add('Please sign in again', 'error');
+				return;
+			}
+			
+			const response = await fetch('/api/verify/send', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${session.access_token}`
+				},
+				body: JSON.stringify({ phoneNumber, phoneId })
+			});
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				pendingVerification = { phoneId, phoneNumber };
+				verificationCode = '';
+				startResendCooldown();
+				toast.add(`Verification code sent to ${phoneNumber}`, 'success');
+			} else {
+				toast.add(result.error || 'Failed to send verification code', 'error');
+			}
+		} catch (error) {
+			console.error('Error sending verification:', error);
+			toast.add('Failed to send verification code', 'error');
+		} finally {
+			verifyingPhone = false;
+		}
+	}
+	
+	async function verifyPhoneNumber(code: string) {
+		if (!pendingVerification) return;
+		
+		verifyingPhone = true;
+		
+		try {
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session) {
+				toast.add('Please sign in again', 'error');
+				return;
+			}
+			
+			const response = await fetch('/api/verify/check', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${session.access_token}`
+				},
+				body: JSON.stringify({
+					phoneNumber: pendingVerification.phoneNumber,
+					phoneId: pendingVerification.phoneId,
+					code
+				})
+			});
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				toast.add('Phone number verified successfully! 🎉', 'success');
+				pendingVerification = null;
+				verificationCode = '';
+				await loadPhoneNumbers();
+				
+				// Send test call to verified number
+				await testPhoneNumber(pendingVerification.phoneId);
+			} else {
+				toast.add(result.message || 'Invalid verification code', 'error');
+			}
+		} catch (error) {
+			console.error('Error verifying code:', error);
+			toast.add('Failed to verify code', 'error');
+		} finally {
+			verifyingPhone = false;
+		}
+	}
+	
+	async function testPhoneNumber(phoneId: string) {
+		const phone = phoneNumbers.find(p => p.id === phoneId);
+		if (!phone || !phone.is_verified) {
+			toast.add('Phone number must be verified first', 'error');
+			return;
+		}
+		
 		try {
 			const response = await fetch('/api/call', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					phoneNumber: savedPhoneNumber,
+					phoneNumber: phone.phone_number,
 					isTestCall: true
 				})
 			});
@@ -259,10 +381,114 @@
 			const result = await response.json();
 			if (result.success) {
 				toast.add('Test call initiated! Your phone should ring shortly.', 'info');
+			} else {
+				toast.add('Failed to initiate test call', 'error');
 			}
 		} catch (error) {
-			console.error('Welcome call error:', error);
+			console.error('Test call error:', error);
+			toast.add('Failed to initiate test call', 'error');
 		}
+	}
+	
+	async function setPrimaryPhone(phoneId: string) {
+		try {
+			// Update all numbers to not primary, then set the selected one as primary
+			const { error } = await supabase
+				.from('phone_numbers')
+				.update({ is_primary: false })
+				.eq('user_id', user.id);
+			
+			if (error) throw error;
+			
+			const { error: primaryError } = await supabase
+				.from('phone_numbers')
+				.update({ is_primary: true })
+				.eq('id', phoneId);
+			
+			if (primaryError) throw primaryError;
+			
+			await loadPhoneNumbers();
+			toast.add('Primary phone number updated', 'success');
+		} catch (error) {
+			console.error('Error setting primary phone:', error);
+			toast.add('Failed to update primary phone', 'error');
+		}
+	}
+	
+	async function removePhoneNumber(phoneId: string) {
+		const phone = phoneNumbers.find(p => p.id === phoneId);
+		if (!phone) return;
+		
+		if (phone.is_primary && phoneNumbers.length > 1) {
+			toast.add('Cannot remove primary phone number. Set another as primary first.', 'error');
+			return;
+		}
+		
+		if (!confirm(`Remove ${phone.phone_number}?`)) return;
+		
+		try {
+			const { error } = await supabase
+				.from('phone_numbers')
+				.delete()
+				.eq('id', phoneId);
+			
+			if (error) throw error;
+			
+			await loadPhoneNumbers();
+			toast.add('Phone number removed', 'success');
+			
+			// Clear pending verification if it was for this number
+			if (pendingVerification?.phoneId === phoneId) {
+				pendingVerification = null;
+				verificationCode = '';
+			}
+		} catch (error) {
+			console.error('Error removing phone number:', error);
+			toast.add('Failed to remove phone number', 'error');
+		}
+	}
+	
+	function startResendCooldown() {
+		resendCooldown = 30; // 30 seconds
+		resendTimer = setInterval(() => {
+			resendCooldown--;
+			if (resendCooldown <= 0) {
+				clearInterval(resendTimer!);
+				resendTimer = null;
+			}
+		}, 1000);
+	}
+	
+	function cancelVerification() {
+		pendingVerification = null;
+		verificationCode = '';
+		if (resendTimer) {
+			clearInterval(resendTimer);
+			resendTimer = null;
+			resendCooldown = 0;
+		}
+	}
+	
+	// Phone input handlers
+	function handlePhoneChange({ detail }: { detail: { value: string; isValid: boolean } }) {
+		newPhoneNumber = detail.value;
+		isPhoneValid = detail.isValid;
+	}
+	
+	function handlePhoneSubmit() {
+		if (isPhoneValid) {
+			addPhoneNumber();
+		}
+	}
+	
+	// Verification handlers
+	function handleVerificationComplete({ detail }: { detail: { code: string } }) {
+		verifyPhoneNumber(detail.code);
+	}
+	
+	async function resendCode() {
+		if (!pendingVerification || resendCooldown > 0) return;
+		await sendVerificationCode(pendingVerification.phoneId, pendingVerification.phoneNumber);
 	}
 	
 	async function saveTimezone() {
@@ -333,66 +559,222 @@
 				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
 			</div>
 		{:else if user}
-			<!-- Phone Number Section -->
-			<div class="bg-white rounded-lg shadow p-6 mb-6">
-				<h2 class="text-lg font-medium mb-4">Phone Number for Reminders</h2>
-				<p class="text-sm text-gray-600 mb-4">
-					We'll call this number for your task reminders. Standard calling rates may apply.
-					<br />
-					<span class="text-xs">Include country code (e.g., +1 for US, +44 for UK, +254 for Kenya)</span>
+			<!-- Phone Numbers Section -->
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+						<svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+						</svg>
+					</div>
+					<h2 class="text-xl font-semibold text-gray-900">Phone Numbers</h2>
+				</div>
+				<p class="text-sm text-gray-600 mb-6">
+					Manage your phone numbers for task reminders. All numbers must be verified before receiving calls.
 				</p>
 				
-				<div class="space-y-4">
-					<div>
-						<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
-							Phone Number
-						</label>
-						<div class="flex gap-2">
-							<input
-								id="phone"
-								type="tel"
-								bind:value={phoneNumber}
-								placeholder="+1234567890 or +44123456789"
-								class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-								disabled={savingPhone}
-							/>
-							<button
-								on:click={savePhoneNumber}
-								disabled={savingPhone || phoneNumber === savedPhoneNumber}
-								class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{savingPhone ? 'Saving...' : 'Save'}
-							</button>
-						</div>
-						{#if savedPhoneNumber && phoneNumber === savedPhoneNumber}
-							<p class="mt-2 text-sm text-green-600 flex items-center gap-1">
-								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-								</svg>
-								Phone number saved
-							</p>
-						{/if}
+				<!-- Existing Phone Numbers -->
+				{#if phoneNumbers.length > 0}
+					<div class="space-y-3 mb-6">
+						<h3 class="text-sm font-medium text-gray-700">Your Numbers</h3>
+						{#each phoneNumbers as phone}
+							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border transition-all hover:shadow-sm">
+								<div class="flex items-center gap-3">
+									<!-- Status indicator -->
+									<div class="relative">
+										{#if phone.is_verified}
+											<div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+												<svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+												</svg>
+											</div>
+											{#if phone.is_primary}
+												<div class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+													<svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+														<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+													</svg>
+												</div>
+											{/if}
+										{:else}
+											<div class="w-8 h-8 bg-amber-100 border-2 border-amber-300 rounded-full flex items-center justify-center animate-pulse">
+												<svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+												</svg>
+											</div>
+										{/if}
+									</div>
+									
+									<div class="flex-1">
+										<div class="flex items-center gap-2">
+											<span class="font-medium text-gray-900">{phone.phone_number}</span>
+											{#if phone.is_primary}
+												<span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Primary</span>
+											{/if}
+											{#if phone.is_verified}
+												<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Verified</span>
+											{:else}
+												<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full animate-pulse">Pending Verification</span>
+											{/if}
+										</div>
+										{#if phone.label}
+											<p class="text-sm text-gray-500">{phone.label}</p>
+										{/if}
+									</div>
+								</div>
+								
+								<div class="flex items-center gap-2">
+									{#if !phone.is_verified}
+										<button
+											on:click={() => sendVerificationCode(phone.id, phone.phone_number)}
+											disabled={verifyingPhone}
+											class="px-3 py-1.5 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-all"
+										>
+											Verify
+										</button>
+									{:else}
+										<button
+											on:click={() => testPhoneNumber(phone.id)}
+											class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-all"
+										>
+											Test Call
+										</button>
+										{#if !phone.is_primary}
+											<button
+												on:click={() => setPrimaryPhone(phone.id)}
+												class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-all"
+											>
+												Make Primary
+											</button>
+										{/if}
+									{/if}
+									<button
+										on:click={() => removePhoneNumber(phone.id)}
+										class="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+										title="Remove number"
+									>
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+										</svg>
+									</button>
+								</div>
+							</div>
+						{/each}
 					</div>
-					
-					{#if savedPhoneNumber}
-						<div class="border-t pt-4">
+				{/if}
+				
+				<!-- Add New Phone Number -->
+				{#if !pendingVerification}
+					<div class="border-2 border-dashed border-gray-200 rounded-xl p-6 hover:border-orange-300 transition-all">
+						<h3 class="text-sm font-medium text-gray-700 mb-4">Add New Phone Number</h3>
+						
+						<div class="space-y-4">
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									Phone Number
+								</label>
+								<PhoneInput
+									value={newPhoneNumber}
+									disabled={savingPhone}
+									loading={savingPhone}
+									placeholder="+1 (555) 123-4567"
+									on:change={handlePhoneChange}
+									on:submit={handlePhoneSubmit}
+								/>
+							</div>
+							
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									Label (optional)
+								</label>
+								<input
+									type="text"
+									bind:value={newPhoneLabel}
+									placeholder="Mobile, Work, Home..."
+									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+									disabled={savingPhone}
+								/>
+							</div>
+							
 							<button
-								on:click={testWelcomeCall}
-								class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+								on:click={addPhoneNumber}
+								disabled={!isPhoneValid || savingPhone}
+								class="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
 							>
-								📞 Send Test Call
+								{#if savingPhone}
+									<div class="flex items-center justify-center gap-2">
+										<div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+										Adding...
+									</div>
+								{:else}
+									Add & Verify Number
+								{/if}
 							</button>
-							<p class="mt-2 text-sm text-gray-500">
-								Test that your phone number is working correctly
-							</p>
 						</div>
-					{/if}
-				</div>
+					</div>
+				{/if}
+				
+				<!-- Verification Modal -->
+				{#if pendingVerification}
+					<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+						<div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+							<div class="text-center mb-6">
+								<div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+									<svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+									</svg>
+								</div>
+								<h3 class="text-lg font-semibold text-gray-900 mb-2">Verify Your Number</h3>
+								<p class="text-sm text-gray-600">
+									We sent a 6-digit code to<br>
+									<span class="font-medium text-gray-900">{pendingVerification.phoneNumber}</span>
+								</p>
+							</div>
+							
+							<div class="mb-6">
+								<VerificationCodeInput
+									length={6}
+									disabled={verifyingPhone}
+									loading={verifyingPhone}
+									autoFocus={true}
+									on:complete={handleVerificationComplete}
+								/>
+							</div>
+							
+							<div class="flex flex-col gap-3">
+								<button
+									on:click={resendCode}
+									disabled={resendCooldown > 0 || verifyingPhone}
+									class="text-sm text-orange-600 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{#if resendCooldown > 0}
+										Resend code in {resendCooldown}s
+									{:else}
+										Resend code
+									{/if}
+								</button>
+								
+								<button
+									on:click={cancelVerification}
+									class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
+								>
+									Cancel
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 			
 			<!-- Timezone Settings -->
-			<div class="bg-white rounded-lg shadow p-6 mb-6">
-				<h2 class="text-lg font-medium mb-4">Timezone Settings</h2>
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+						<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+					</div>
+					<h2 class="text-xl font-semibold text-gray-900">Timezone Settings</h2>
+				</div>
 				<p class="text-sm text-gray-600 mb-4">
 					Set your timezone to ensure reminders are scheduled at the correct time for your location.
 				</p>
@@ -437,8 +819,15 @@
 			</div>
 			
 			<!-- Account Information -->
-			<div class="bg-white rounded-lg shadow p-6 mb-6">
-				<h2 class="text-lg font-medium mb-4">Account Information</h2>
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+						<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+						</svg>
+					</div>
+					<h2 class="text-xl font-semibold text-gray-900">Account Information</h2>
+				</div>
 				<div class="space-y-3">
 					<div>
 						<label class="block text-sm font-medium text-gray-700">Email</label>
@@ -458,8 +847,15 @@
 			</div>
 			
 			<!-- Authentication Methods -->
-			<div class="bg-white rounded-lg shadow p-6 mb-6">
-				<h2 class="text-lg font-medium mb-4">Authentication Methods</h2>
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+						<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+						</svg>
+					</div>
+					<h2 class="text-xl font-semibold text-gray-900">Authentication Methods</h2>
+				</div>
 				
 				<div class="space-y-4">
 					<!-- Current Methods -->
