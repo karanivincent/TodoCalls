@@ -79,8 +79,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				const { error: updateError } = await supabase
 					.from('phone_numbers')
 					.update({ 
-						is_verified: true,
-						verified_at: new Date().toISOString()
+						is_verified: true
 					})
 					.eq('id', phoneId)
 					.eq('user_id', user.id);
