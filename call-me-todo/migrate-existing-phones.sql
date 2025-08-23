@@ -17,8 +17,7 @@ INSERT INTO phone_numbers (
   label, 
   is_primary, 
   is_verified,
-  created_at,
-  verified_at
+  created_at
 )
 SELECT 
   id as user_id,
@@ -26,8 +25,7 @@ SELECT
   'Primary' as label,
   true as is_primary,
   true as is_verified,  -- Mark existing numbers as verified
-  created_at,
-  NOW() as verified_at
+  created_at
 FROM user_profiles 
 WHERE phone_number IS NOT NULL 
   AND phone_number != ''
