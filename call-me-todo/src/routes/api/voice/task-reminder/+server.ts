@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import OpenAI from 'openai';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceSupabaseClient } from '$lib/supabase-service';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
@@ -46,42 +46,40 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	});
 	
 	try {
-		// Initialize clients inside the handler to ensure env vars are available
-		const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
-		const supabaseKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY || publicEnv.PUBLIC_SUPABASE_ANON_KEY;
+		// Initialize clients using service client for proper RLS bypass (same as cron job)
+		console.log(`[${requestId}] Initializing service clients...`);
+		
 		const openaiKey = privateEnv.OPENAI_API_KEY;
-	
-		// Log environment status for debugging
-		console.log(`[${requestId}] Environment check:`, {
-			hasSupabaseUrl: !!supabaseUrl,
-			hasSupabaseKey: !!supabaseKey,
-			hasServiceKey: !!privateEnv.SUPABASE_SERVICE_ROLE_KEY,
-			hasOpenAIKey: !!openaiKey,
-			supabaseUrl: supabaseUrl || 'MISSING'
-		});
-	
-		// Validate required environment variables
-		if (!supabaseUrl || !supabaseKey) {
-			logError(`[${requestId}] Missing Supabase credentials`, new Error('Configuration error'), {
-				url: supabaseUrl || 'MISSING',
-				key: supabaseKey ? 'Present' : 'MISSING'
-			});
-			return new Response(errorTwiML('Configuration error', true), {
+		
+		// Use service client to ensure proper database access
+		let supabase;
+		try {
+			supabase = createServiceSupabaseClient();
+			console.log(`[${requestId}] ✅ Service Supabase client created successfully`);
+		} catch (supabaseError: any) {
+			logError(`[${requestId}] Failed to create Supabase service client`, supabaseError);
+			return new Response(errorTwiML('Database configuration error', true), {
 				headers: {
 					'Content-Type': 'text/xml',
 					'Cache-Control': 'no-cache',
 					'X-Request-ID': requestId,
-					'X-Error-Type': 'configuration'
+					'X-Error-Type': 'supabase-client-creation'
 				}
 			});
 		}
-	
+
+		// Log environment status for debugging
+		console.log(`[${requestId}] Environment check:`, {
+			hasServiceKey: !!privateEnv.SUPABASE_SERVICE_ROLE_KEY,
+			hasOpenAIKey: !!openaiKey,
+			publicSupabaseUrl: publicEnv.PUBLIC_SUPABASE_URL || 'MISSING'
+		});
+
 		if (!openaiKey) {
 			console.warn(`[${requestId}] Missing OpenAI API key - will use fallback voice`);
 		}
-	
-		// Create clients with validated credentials
-		const supabase = createClient(supabaseUrl, supabaseKey);
+
+		// Create OpenAI client
 		const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
 		
 		// Safely parse request body from Twilio
@@ -118,15 +116,34 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			});
 		}
 		
-		// Fetch task details from Supabase
+		// Fetch task details from Supabase with enhanced debugging
 		console.log(`[${requestId}] Fetching task with ID:`, taskId);
-		console.log(`[${requestId}] Using service key:`, !!privateEnv.SUPABASE_SERVICE_ROLE_KEY);
+		console.log(`[${requestId}] Using service client with service key:`, !!privateEnv.SUPABASE_SERVICE_ROLE_KEY);
 		
-		const { data: task, error } = await supabase
-			.from('tasks')
-			.select('*')
-			.eq('id', taskId)
-			.single();
+		let task, error;
+		try {
+			const result = await supabase
+				.from('tasks')
+				.select('*')
+				.eq('id', taskId)
+				.single();
+			
+			task = result.data;
+			error = result.error;
+			
+			console.log(`[${requestId}] Database query result:`, {
+				success: !error,
+				hasTask: !!task,
+				taskId: task?.id,
+				taskTitle: task?.title?.substring(0, 50),
+				taskStatus: task?.status,
+				errorCode: error?.code,
+				errorMessage: error?.message
+			});
+		} catch (queryError: any) {
+			console.error(`[${requestId}] Database query exception:`, queryError);
+			error = queryError;
+		}
 		
 		if (error) {
 			logError(`[${requestId}] Supabase error fetching task`, error, {
@@ -215,7 +232,13 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 		try {
-			console.log(`[${requestId}] Generating audio with OpenAI TTS...`);
+			console.log(`[${requestId}] Generating audio with OpenAI TTS...`, {
+				model: 'tts-1-hd',
+				voice: 'nova',
+				scriptLength: reminderScript.length,
+				scriptPreview: reminderScript.substring(0, 100)
+			});
+			
 			const mp3Response = await openai.audio.speech.create({
 				model: 'tts-1-hd',
 				voice: 'nova',
@@ -224,19 +247,44 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				speed: 1.0
 			});
 			
+			console.log(`[${requestId}] OpenAI TTS response received, converting to buffer...`);
+			
 			// Convert to buffer and cache
 			const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
 			const audioId = `audio_${taskId}_${Date.now()}`;
 			addAudioToCache(audioId, audioBuffer);
 			
-			// Use the dedicated audio serving route
+			// Use the dedicated audio serving route with fallback protection
 			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
 			console.log(`[${requestId}] Audio generated and cached:`, { audioId, audioUrl, size: audioBuffer.length });
+			
+			// Test audio URL accessibility before using it
+			let useAudioUrl = true;
+			try {
+				const testResponse = await fetch(audioUrl, { method: 'HEAD' });
+				if (!testResponse.ok) {
+					console.warn(`[${requestId}] Audio URL not accessible (${testResponse.status}), using fallback`);
+					useAudioUrl = false;
+				}
+			} catch (testError) {
+				console.warn(`[${requestId}] Audio URL test failed, using fallback:`, testError);
+				useAudioUrl = false;
+			}
 		
-			// Return TwiML with audio and enhanced gather for user response
-			const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+			// Return TwiML with audio and enhanced gather for user response (with fallback)
+			const twiml = useAudioUrl ? 
+				`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Play>${audioUrl}</Play>
+  <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="8" speechTimeout="3" input="dtmf speech">
+    <Say voice="alice">You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule, or just tell me what you'd like to do.</Say>
+    <Pause length="3"/>
+  </Gather>
+  <Say voice="alice">No response received. Your task remains scheduled. Have a productive day!</Say>
+</Response>` :
+				`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">${reminderScript}</Say>
   <Gather action="/api/voice/task-reminder?taskId=${taskId}" method="POST" numDigits="1" timeout="8" speechTimeout="3" input="dtmf speech">
     <Say voice="alice">You can press 1 to mark it complete, 2 to snooze for 10 minutes, 3 to reschedule, or just tell me what you'd like to do.</Say>
     <Pause length="3"/>
@@ -284,9 +332,29 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		
 	} catch (error: any) {
 		const taskIdForError = url.searchParams.get('taskId');
+		
+		// Enhanced error logging with more context
 		logError(`[${requestId}] Critical error in task reminder webhook`, error, {
 			taskId: taskIdForError,
-			url: url.toString()
+			url: url.toString(),
+			errorType: error?.constructor?.name,
+			errorCode: error?.code,
+			errorStack: error?.stack?.split('\n').slice(0, 3).join('\n'), // First 3 lines of stack
+			hasOpenAI: !!privateEnv.OPENAI_API_KEY,
+			hasServiceKey: !!privateEnv.SUPABASE_SERVICE_ROLE_KEY
+		});
+		
+		console.error(`[${requestId}] 🚨 WEBHOOK FAILURE ANALYSIS:`, {
+			step: 'Unknown - caught in outer catch',
+			taskId: taskIdForError,
+			errorMessage: error?.message,
+			possibleCauses: [
+				'Database client creation failed',
+				'Task query failed (RLS/permissions)',
+				'OpenAI script generation failed', 
+				'Audio generation/caching failed',
+				'TwiML generation failed'
+			]
 		});
 		
 		// Always return valid TwiML on any error
