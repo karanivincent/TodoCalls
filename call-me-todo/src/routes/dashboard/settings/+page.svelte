@@ -35,6 +35,7 @@
 	let verificationCode = '';
 	let resendCooldown = 0;
 	let resendTimer: NodeJS.Timeout | null = null;
+	let verificationError = '';
 	
 	// Timezone management
 	let userTimezone = 'Africa/Nairobi';
@@ -319,13 +320,18 @@
 		if (!pendingVerification) return;
 		
 		verifyingPhone = true;
+		verificationError = '';
 		
 		try {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!session) {
-				toast.add('Please sign in again', 'error');
+				verificationError = 'Please sign in again';
 				return;
 			}
+			
+			// Add timeout to prevent hanging
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 			
 			const response = await fetch('/api/verify/check', {
 				method: 'POST',
@@ -337,25 +343,39 @@
 					phoneNumber: pendingVerification.phoneNumber,
 					phoneId: pendingVerification.phoneId,
 					code
-				})
+				}),
+				signal: controller.signal
 			});
+			
+			clearTimeout(timeoutId);
+			
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
 			
 			const result = await response.json();
 			
 			if (result.success) {
 				toast.add('Phone number verified successfully! 🎉', 'success');
+				const phoneId = pendingVerification.phoneId;
 				pendingVerification = null;
 				verificationCode = '';
 				await loadPhoneNumbers();
 				
 				// Send test call to verified number
-				await testPhoneNumber(pendingVerification.phoneId);
+				await testPhoneNumber(phoneId);
 			} else {
-				toast.add(result.message || 'Invalid verification code', 'error');
+				verificationError = result.message || 'Invalid verification code';
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error verifying code:', error);
-			toast.add('Failed to verify code', 'error');
+			if (error.name === 'AbortError') {
+				verificationError = 'Request timed out. Please try again.';
+			} else if (error.message?.includes('Failed to fetch')) {
+				verificationError = 'Network error. Please check your connection.';
+			} else {
+				verificationError = 'Failed to verify code. Please try again.';
+			}
 		} finally {
 			verifyingPhone = false;
 		}
@@ -736,6 +756,7 @@
 									disabled={verifyingPhone}
 									loading={verifyingPhone}
 									autoFocus={true}
+									error={verificationError}
 									on:complete={handleVerificationComplete}
 								/>
 							</div>
