@@ -231,20 +231,30 @@
 		}
 	}
 	
-	// Manual cron trigger for testing in preview deployments
+	// Manual check for due reminders - useful for troubleshooting
 	async function triggerCron() {
 		try {
-			const response = await fetch('/api/test-cron');
+			toast.show('Checking for overdue reminders...', 'info');
+			
+			const response = await fetch('/api/test-cron?call=true');
 			const result = await response.json();
 			
-			if (result.cronResult?.tasksProcessed > 0) {
-				toast.show(`Processed ${result.cronResult.tasksProcessed} due tasks`, 'success');
+			if (result.cronExecution?.tasksProcessed > 0) {
+				toast.success(`Found and triggered ${result.cronExecution.tasksProcessed} overdue reminder(s)`);
+				// Reload tasks to show updates
+				await loadTasks();
+			} else if (result.cronExecution?.tasksProcessed === 0) {
+				toast.info('No overdue reminders found - all caught up! 🎉');
+			} else if (result.cronExecution) {
+				toast.info('Reminder check completed');
+				// Still reload in case status changed
+				await loadTasks();
 			} else {
-				toast.show('No tasks are currently due', 'info');
+				toast.info('System check completed');
 			}
 		} catch (error) {
-			console.error('Error triggering cron:', error);
-			toast.show('Failed to check for due tasks', 'error');
+			console.error('Error checking reminders:', error);
+			toast.error('Failed to check for overdue reminders');
 		}
 	}
 </script>
@@ -294,16 +304,16 @@
 						Today • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
 					</h2>
 					<div class="flex items-center gap-2">
-						<!-- Manual cron trigger for preview deployments -->
+						<!-- Manual reminder check - useful for troubleshooting -->
 						<button 
 							on:click={triggerCron}
-							class="px-3 py-1 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md transition-colors flex items-center gap-1"
-							title="Check for due tasks (for testing in preview)"
+							class="px-3 py-1 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-1 border border-gray-200"
+							title="Manually check for overdue reminders"
 						>
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
 							</svg>
-							Check Due
+							Refresh
 						</button>
 						<button class="p-1 hover:bg-gray-50 rounded transition-colors">
 							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
