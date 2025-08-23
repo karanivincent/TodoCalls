@@ -4,7 +4,6 @@ import { createServiceSupabaseClient } from '$lib/supabase-service';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
-import { addAudioToCache } from '$lib/audio-cache';
 import { parseTwilioRequest, errorTwiML, logError } from '$lib/twilio-utils';
 
 // Handle GET requests from Twilio (for initial webhook validation or fallback)
@@ -232,36 +231,11 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 		try {
-			console.log(`🎵 [AUDIO] [${requestId}] Calling OpenAI TTS API...`, {
-				model: 'tts-1-hd',
-				voice: 'nova',
-				scriptLength: reminderScript.length,
-				scriptPreview: reminderScript.substring(0, 100)
-			});
-			
-			const mp3Response = await openai.audio.speech.create({
-				model: 'tts-1-hd',
-				voice: 'nova',
-				input: reminderScript,
-				response_format: 'mp3',
-				speed: 1.0
-			});
-			
-			console.log(`🎵 [AUDIO] [${requestId}] ✅ OpenAI TTS response received, converting to buffer...`);
-			
-			// Convert to buffer and cache
-			const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
+			// Generate audio URL without pre-caching (audio endpoint will generate on-demand)
 			const audioId = `audio_${taskId}_${Date.now()}`;
-			console.log(`🎵 [AUDIO] [${requestId}] Converting to buffer (${audioBuffer.length} bytes)...`);
-			
-			addAudioToCache(audioId, audioBuffer);
-			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio cached with ID: ${audioId}`);
-			
-			// Use the simple audio serving route with query parameter
 			const audioUrl = `${url.origin}/api/voice/audio?id=${audioId}`;
-			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio URL generated:`, audioUrl);
+			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio URL generated (on-demand):`, audioUrl);
 			
-			// Audio URL should be accessible since we just cached it
 			const useAudioUrl = true;
 		
 			// Return TwiML with audio and enhanced gather for user response (with fallback)
