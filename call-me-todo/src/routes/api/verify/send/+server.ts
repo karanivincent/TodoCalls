@@ -11,6 +11,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 		// Create or get Verify Service (you might want to store this service SID in env vars)
 		const VERIFY_SERVICE_SID = env.TWILIO_VERIFY_SERVICE_SID || 'VA' + 'x'.repeat(30); // placeholder
+		
+		console.log('Sending verification to:', phoneNumber);
+		console.log('Using service SID:', VERIFY_SERVICE_SID);
 		// Get the authorization header
 		const authHeader = request.headers.get('authorization');
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {

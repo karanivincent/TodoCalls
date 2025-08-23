@@ -365,7 +365,8 @@
 				// Send test call to verified number
 				await testPhoneNumber(phoneId);
 			} else {
-				verificationError = result.message || 'Invalid verification code';
+				verificationError = result.error || result.message || 'Invalid verification code';
+				console.error('Verification failed:', result);
 			}
 		} catch (error: any) {
 			console.error('Error verifying code:', error);

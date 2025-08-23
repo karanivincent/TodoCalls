@@ -52,6 +52,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		try {
+			console.log('Checking verification for:', phoneNumber, 'with code:', code);
 			// Get the service SID (try from env first)
 			let serviceSid = VERIFY_SERVICE_SID;
 			
@@ -107,11 +108,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		} catch (twilioError: any) {
 			console.error('Twilio Verify check error:', twilioError);
+			console.error('Full error details:', JSON.stringify(twilioError, null, 2));
 			
 			if (twilioError.code === 20404) {
 				return json({ 
-					error: 'Verification not found or expired. Please request a new code.' 
+					error: 'Verification code expired or not found. Please request a new code.',
+					details: 'This usually happens if the code was entered too late or has already been used.'
 				}, { status: 404 });
+			}
+			
+			if (twilioError.code === 20003) {
+				return json({ 
+					error: 'Authentication failed. Please try again.',
+					details: 'There was an issue with the Twilio service authentication.'
+				}, { status: 401 });
 			}
 			
 			throw twilioError;
