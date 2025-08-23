@@ -258,18 +258,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
 			console.log(`[${requestId}] Audio generated and cached:`, { audioId, audioUrl, size: audioBuffer.length });
 			
-			// Test audio URL accessibility before using it
-			let useAudioUrl = true;
-			try {
-				const testResponse = await fetch(audioUrl, { method: 'HEAD' });
-				if (!testResponse.ok) {
-					console.warn(`[${requestId}] Audio URL not accessible (${testResponse.status}), using fallback`);
-					useAudioUrl = false;
-				}
-			} catch (testError) {
-				console.warn(`[${requestId}] Audio URL test failed, using fallback:`, testError);
-				useAudioUrl = false;
-			}
+			// Audio URL should be accessible since we just cached it
+			const useAudioUrl = true;
 		
 			// Return TwiML with audio and enhanced gather for user response (with fallback)
 			const twiml = useAudioUrl ? 
