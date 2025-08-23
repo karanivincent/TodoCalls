@@ -224,14 +224,14 @@
 	
 	async function addPhoneNumber() {
 		if (!newPhoneNumber || !isPhoneValid) {
-			toast.add('Please enter a valid phone number', 'error');
+			toast.error('Please enter a valid phone number');
 			return;
 		}
 		
 		// Check if number already exists
 		const existingNumber = phoneNumbers.find(p => p.phone_number === newPhoneNumber);
 		if (existingNumber) {
-			toast.add('This phone number is already added', 'error');
+			toast.error('This phone number is already added');
 			return;
 		}
 		
@@ -264,13 +264,13 @@
 			
 			if (error) {
 				console.error('Error saving phone number:', error);
-				toast.add('Failed to save phone number', 'error');
+				toast.error('Failed to save phone number');
 				return;
 			}
 			
 			if (!data || !data.id) {
 				console.error('Phone number inserted but no data returned');
-				toast.add('Failed to save phone number - no ID returned', 'error');
+				toast.error('Failed to save phone number - no ID returned');
 				return;
 			}
 			
@@ -287,7 +287,7 @@
 			
 		} catch (error) {
 			console.error('Error:', error);
-			toast.add('Failed to save phone number', 'error');
+			toast.error('Failed to save phone number');
 		} finally {
 			savingPhone = false;
 		}
@@ -299,7 +299,7 @@
 		try {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!session) {
-				toast.add('Please sign in again', 'error');
+				toast.error('Please sign in again');
 				return;
 			}
 			
@@ -318,13 +318,13 @@
 				pendingVerification = { phoneId, phoneNumber };
 				verificationCode = '';
 				startResendCooldown();
-				toast.add(`Verification code sent to ${phoneNumber}`, 'success');
+				toast.success(`Verification code sent to ${phoneNumber}`);
 			} else {
-				toast.add(result.error || 'Failed to send verification code', 'error');
+				toast.error(result.error || 'Failed to send verification code');
 			}
 		} catch (error) {
 			console.error('Error sending verification:', error);
-			toast.add('Failed to send verification code', 'error');
+			toast.error('Failed to send verification code');
 		} finally {
 			verifyingPhone = false;
 		}
@@ -370,7 +370,7 @@
 			const result = await response.json();
 			
 			if (result.success) {
-				toast.add('Phone number verified successfully! 🎉', 'success');
+				toast.success('Phone number verified successfully! 🎉');
 				const phoneId = pendingVerification.phoneId;
 				pendingVerification = null;
 				verificationCode = '';
