@@ -22,7 +22,7 @@ export async function initiateTaskCall(
 	options: CallOptions = {}
 ): Promise<CallResult> {
 	const requestId = options.requestId || Math.random().toString(36).substring(7);
-	const baseUrl = options.baseUrl || 'https://telitask.com';
+	const baseUrl = (options.baseUrl || 'https://telitask.com').replace(/\/+$/, ''); // Remove trailing slashes
 	const timeout = options.timeout || 60;
 	
 	console.log(`📞 [CALL-INIT] [${requestId}] Initiating call for task: ${taskId}`);
@@ -75,6 +75,7 @@ export async function initiateTaskCall(
 		}
 		
 		const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+		const fromPhoneNumber = env.TWILIO_PHONE_NUMBER.trim(); // Remove newlines/whitespace
 		
 		// Create webhook URLs
 		const webhookUrl = `${baseUrl}/api/voice/task-reminder?taskId=${task.id}`;
@@ -82,7 +83,7 @@ export async function initiateTaskCall(
 		
 		console.log(`📞 [CALL-INIT] [${requestId}] Creating Twilio call:`, {
 			to: task.phone_number,
-			from: env.TWILIO_PHONE_NUMBER,
+			from: fromPhoneNumber,
 			webhookUrl,
 			timeout
 		});
@@ -90,7 +91,7 @@ export async function initiateTaskCall(
 		// Create the call
 		const call = await twilioClient.calls.create({
 			to: task.phone_number,
-			from: env.TWILIO_PHONE_NUMBER,
+			from: fromPhoneNumber,
 			url: webhookUrl,
 			method: 'POST',
 			statusCallback: statusCallbackUrl,
