@@ -69,6 +69,10 @@
 			}
 		});
 		
+		// Ensure we have a valid range and don't go below 0 or above 23
+		earliestHour = Math.max(0, Math.min(earliestHour, DEFAULT_START_HOUR));
+		latestHour = Math.min(23, Math.max(latestHour, DEFAULT_END_HOUR));
+		
 		console.log('Hour range calculation:', {
 			tasksCount: tasks.length,
 			earliestHour,
