@@ -203,9 +203,9 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 		// Generate personalized reminder message
-		console.log(`[${requestId}] Generating reminder script...`);
+		console.log(`🎵 [SCRIPT] [${requestId}] Generating reminder script with OpenAI...`);
 		const reminderScript = await generateReminderScript(task, openai);
-		console.log(`[${requestId}] Generated script:`, reminderScript);
+		console.log(`🎵 [SCRIPT] [${requestId}] ✅ Generated script (${reminderScript.length} chars):`, reminderScript.substring(0, 100) + '...');
 		
 		// Generate high-quality audio if OpenAI is available
 		if (!openai) {
@@ -232,7 +232,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 		try {
-			console.log(`[${requestId}] Generating audio with OpenAI TTS...`, {
+			console.log(`🎵 [AUDIO] [${requestId}] Calling OpenAI TTS API...`, {
 				model: 'tts-1-hd',
 				voice: 'nova',
 				scriptLength: reminderScript.length,
@@ -247,16 +247,19 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				speed: 1.0
 			});
 			
-			console.log(`[${requestId}] OpenAI TTS response received, converting to buffer...`);
+			console.log(`🎵 [AUDIO] [${requestId}] ✅ OpenAI TTS response received, converting to buffer...`);
 			
 			// Convert to buffer and cache
 			const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
 			const audioId = `audio_${taskId}_${Date.now()}`;
+			console.log(`🎵 [AUDIO] [${requestId}] Converting to buffer (${audioBuffer.length} bytes)...`);
+			
 			addAudioToCache(audioId, audioBuffer);
+			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio cached with ID: ${audioId}`);
 			
 			// Use the dedicated audio serving route with fallback protection
 			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
-			console.log(`[${requestId}] Audio generated and cached:`, { audioId, audioUrl, size: audioBuffer.length });
+			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio URL generated:`, audioUrl);
 			
 			// Audio URL should be accessible since we just cached it
 			const useAudioUrl = true;
@@ -282,7 +285,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
   <Say voice="alice">No response received. Your task remains scheduled. Have a productive day!</Say>
 </Response>`;
 			
-			console.log(`[${requestId}] ✅ Success! Returning TwiML with audio. Processing time: ${Date.now() - startTime}ms`);
+			console.log(`📋 [TWIML] [${requestId}] ✅ Success! Returning TwiML with audio. Processing time: ${Date.now() - startTime}ms`);
+			console.log(`📋 [TWIML] [${requestId}] TwiML content:`, twiml.substring(0, 200) + '...');
 			
 			return new Response(twiml, {
 				headers: {

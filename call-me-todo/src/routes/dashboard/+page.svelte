@@ -139,21 +139,28 @@
 	};
 	
 	async function testReminder(taskId: string) {
+		console.log('🎯 [FRONTEND] Starting test reminder for task:', taskId);
 		try {
+			console.log('🎯 [FRONTEND] Sending POST to /api/tasks/test-reminder...');
 			const response = await fetch('/api/tasks/test-reminder', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ taskId })
 			});
 			
+			console.log('🎯 [FRONTEND] Response status:', response.status);
 			const result = await response.json();
+			console.log('🎯 [FRONTEND] Response data:', result);
+			
 			if (result.success) {
+				console.log('🎯 [FRONTEND] ✅ Test call initiated successfully, SID:', result.callSid);
 				toast.show('Test call initiated! Your phone should ring shortly.', 'success');
 			} else {
+				console.error('🎯 [FRONTEND] ❌ Test call failed:', result.error);
 				toast.show(result.error || 'Failed to initiate test call', 'error');
 			}
 		} catch (error) {
-			console.error('Error testing reminder:', error);
+			console.error('🎯 [FRONTEND] ❌ Exception in testReminder:', error);
 			toast.show('Failed to initiate test call', 'error');
 		}
 	}
