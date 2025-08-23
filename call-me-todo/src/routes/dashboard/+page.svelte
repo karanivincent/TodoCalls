@@ -15,14 +15,70 @@
 	let tasks: Task[] = [];
 	let loading = true;
 	
-	// Timeline hours
-	const hours = Array.from({ length: 13 }, (_, i) => {
-		const hour = i + 7; // Start at 7 AM
-		return {
-			time: hour <= 12 ? `${hour} AM` : `${hour - 12} PM`,
-			hour: hour
-		};
-	});
+	// Timeline hours - dynamically calculated based on tasks
+	let hours: Array<{ time: string; hour: number; isExtended?: boolean }> = [];
+	
+	// Default time range: 5 AM to 11 PM (18 hours)
+	const DEFAULT_START_HOUR = 5;  // 5 AM
+	const DEFAULT_END_HOUR = 23;   // 11 PM
+	
+	function generateHours(startHour: number, endHour: number) {
+		const hourArray = [];
+		
+		for (let hour = startHour; hour <= endHour; hour++) {
+			// Handle AM/PM formatting properly
+			let timeLabel;
+			if (hour === 0) {
+				timeLabel = '12 AM';
+			} else if (hour === 12) {
+				timeLabel = '12 PM';
+			} else if (hour < 12) {
+				timeLabel = `${hour} AM`;
+			} else {
+				timeLabel = `${hour - 12} PM`;
+			}
+			
+			hourArray.push({
+				time: timeLabel,
+				hour: hour,
+				isExtended: hour < DEFAULT_START_HOUR || hour > DEFAULT_END_HOUR
+			});
+		}
+		
+		return hourArray;
+	}
+	
+	function updateHoursBasedOnTasks() {
+		if (tasks.length === 0) {
+			// No tasks, show default range
+			hours = generateHours(DEFAULT_START_HOUR, DEFAULT_END_HOUR);
+			return;
+		}
+		
+		// Find the earliest and latest task times
+		let earliestHour = DEFAULT_START_HOUR;
+		let latestHour = DEFAULT_END_HOUR;
+		
+		tasks.forEach(task => {
+			const taskHour = getHourInTimezone(task.scheduled_at, userTimezone);
+			if (taskHour < earliestHour) {
+				earliestHour = taskHour;
+			}
+			if (taskHour > latestHour) {
+				latestHour = taskHour;
+			}
+		});
+		
+		console.log('Hour range calculation:', {
+			tasksCount: tasks.length,
+			earliestHour,
+			latestHour,
+			defaultStart: DEFAULT_START_HOUR,
+			defaultEnd: DEFAULT_END_HOUR
+		});
+		
+		hours = generateHours(earliestHour, latestHour);
+	}
 	
 	// Get current hour for timeline indicator
 	let currentHour = new Date().getHours();
@@ -60,13 +116,16 @@
 				.eq('id', user.id);
 		}
 		
+		// Initialize default hours before loading tasks
+		hours = generateHours(DEFAULT_START_HOUR, DEFAULT_END_HOUR);
+		
 		// Load tasks
 		await loadTasks();
 		loading = false;
 		
 		// Listen for task updates from QuickAddBar
 		const handleTaskUpdate = () => {
-			loadTasks();
+			loadTasks(); // This will automatically call updateHoursBasedOnTasks()
 		};
 		window.addEventListener('taskListUpdate', handleTaskUpdate);
 		
@@ -108,6 +167,9 @@
 		} else {
 			tasks = data || [];
 			console.log(`Loaded ${tasks.length} tasks for today`);
+			
+			// Update timeline hours based on loaded tasks
+			updateHoursBasedOnTasks();
 		}
 	}
 	
@@ -273,10 +335,17 @@
 					{:else}
 						<!-- Timeline -->
 						<div class="relative">
-							{#each hours as { time, hour }}
-								<div class="flex items-start mb-6 relative">
+							{#each hours as { time, hour, isExtended }}
+								<div class="flex items-start mb-6 relative" class:opacity-75={isExtended}>
 									<!-- Time Label -->
-									<div class="w-20 text-sm text-gray-500 font-medium">{time}</div>
+									<div class="w-20 text-sm font-medium" 
+										class:text-gray-400={isExtended}
+										class:text-gray-500={!isExtended}>
+										{time}
+										{#if isExtended}
+											<span class="text-xs text-gray-400 ml-1" title="Extended hours">•</span>
+										{/if}
+									</div>
 									
 									<!-- Timeline Line -->
 									<div class="relative flex-1">
