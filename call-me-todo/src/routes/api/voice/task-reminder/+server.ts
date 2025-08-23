@@ -257,8 +257,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			addAudioToCache(audioId, audioBuffer);
 			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio cached with ID: ${audioId}`);
 			
-			// Use the dedicated audio serving route with fallback protection
-			const audioUrl = `${url.origin}/api/voice/task-reminder-audio/${audioId}`;
+			// Use the simple audio serving route with query parameter
+			const audioUrl = `${url.origin}/api/voice/audio?id=${audioId}`;
 			console.log(`🎵 [AUDIO] [${requestId}] ✅ Audio URL generated:`, audioUrl);
 			
 			// Audio URL should be accessible since we just cached it
