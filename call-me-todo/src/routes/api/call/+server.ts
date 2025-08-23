@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Always use the production URL for consistency
-		const baseUrl = 'https://telitask.com';
+		const baseUrl = 'https://call-me-todo.vercel.app';
 		
 		// Determine the endpoint based on whether it's a test call or task reminder
 		let url = `${baseUrl}/api/voice/`;

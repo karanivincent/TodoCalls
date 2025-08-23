@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
     
     // Initiate test call
-    const baseUrl = 'https://telitask.com';
+    const baseUrl = 'https://call-me-todo.vercel.app';
     
     const call = await twilioClient.calls.create({
       to: task.phone_number,
