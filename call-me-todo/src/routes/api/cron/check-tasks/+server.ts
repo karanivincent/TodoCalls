@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServiceSupabaseClient } from '$lib/supabase-service';
-import twilio from 'twilio';
+import { initiateTaskCall } from '$lib/call-initiation';
 import { env } from '$env/dynamic/private';
 
 // Vercel cron jobs use GET requests
@@ -17,8 +17,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 			url: url.toString()
 		});
 		
-		// Initialize Twilio client inside the function
-		const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+		// Twilio client now handled by shared function
 		
 		// Vercel cron jobs include a special header
 		const isVercelCron = request.headers.get('x-vercel-cron') === '1';
@@ -144,32 +143,29 @@ export const GET: RequestHandler = async ({ request, url }) => {
 				
 				console.log(`Initiating call for task ${task.id} to ${task.phone_number}`);
 				
-				const call = await twilioClient.calls.create({
-					to: task.phone_number,
-					from: env.TWILIO_PHONE_NUMBER,
-					url: `${baseUrl}/api/voice/task-reminder?taskId=${task.id}`,
-					method: 'POST',
-					statusCallback: `${baseUrl}/api/voice/status?taskId=${task.id}`,
-					statusCallbackMethod: 'POST',
-					statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed', 'failed', 'busy', 'no-answer'],
-					timeout: 30, // Ring for 30 seconds before timing out
-					record: false
+				// Use shared call initiation function
+				const callResult = await initiateTaskCall(task.id, supabase, {
+					baseUrl,
+					timeout: 30,
+					requestId: `cron-${requestId}-${task.id}`
 				});
 
-				console.log(`Call initiated successfully:`, {
-					taskId: task.id,
-					callSid: call.sid,
-					status: call.status,
-					to: call.to,
-					from: call.from
-				});
+				if (callResult.success) {
+					console.log(`Call initiated successfully:`, {
+						taskId: task.id,
+						callSid: callResult.callSid,
+						phoneNumber: callResult.phoneNumber
+					});
 
-				results.push({
-					taskId: task.id,
-					callSid: call.sid,
-					status: 'initiated',
-					phoneNumber: task.phone_number
-				});
+					results.push({
+						taskId: task.id,
+						callSid: callResult.callSid,
+						status: 'initiated',
+						phoneNumber: callResult.phoneNumber
+					});
+				} else {
+					throw new Error(callResult.error || 'Call initiation failed');
+				}
 				
 			} catch (callError: any) {
 				console.error(`Failed to call for task ${task.id}:`, {

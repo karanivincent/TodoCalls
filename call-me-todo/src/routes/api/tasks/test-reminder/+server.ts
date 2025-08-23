@@ -2,18 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServerClient } from '@supabase/ssr';
 import { env as publicEnv } from '$env/dynamic/public';
-import twilio from 'twilio';
-import { env } from '$env/dynamic/private';
+import { initiateTaskCall } from '$lib/call-initiation';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
   const requestId = Math.random().toString(36).substring(7);
   console.log(`📞 [TEST-REMINDER] [${requestId}] ===== Starting test reminder API =====`);
   
   try {
-    // Initialize Twilio client inside the function
-    console.log(`📞 [TEST-REMINDER] [${requestId}] Initializing Twilio client...`);
-    const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-    
     const { taskId } = await request.json();
     console.log(`📞 [TEST-REMINDER] [${requestId}] Received taskId:`, taskId);
     
@@ -65,38 +60,30 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     
     console.log(`📞 [TEST-REMINDER] [${requestId}] ✅ User authorized:`, user.id);
     
-    // Initiate test call
-    const baseUrl = 'https://telitask.com';
-    const webhookUrl = `${baseUrl}/api/voice/task-reminder?taskId=${task.id}`;
-    
-    console.log(`📞 [TEST-REMINDER] [${requestId}] Creating Twilio call:`, {
-      to: task.phone_number,
-      from: env.TWILIO_PHONE_NUMBER,
-      webhookUrl
-    });
-    
-    const call = await twilioClient.calls.create({
-      to: task.phone_number,
-      from: env.TWILIO_PHONE_NUMBER,
-      url: webhookUrl,
-      method: 'POST',
-      statusCallback: `${baseUrl}/api/voice/status`,
-      statusCallbackMethod: 'POST',
-      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
+    // Use shared call initiation function
+    const callResult = await initiateTaskCall(task.id, supabase, {
+      baseUrl: 'https://telitask.com',
       timeout: 60,
-      record: false
+      requestId
     });
     
-    console.log(`📞 [TEST-REMINDER] [${requestId}] ✅ Twilio call created successfully:`, {
-      callSid: call.sid,
-      status: call.status,
-      to: call.to,
-      from: call.from
+    if (!callResult.success) {
+      console.error(`📞 [TEST-REMINDER] [${requestId}] ❌ Call initiation failed:`, callResult.error);
+      return json({ 
+        error: callResult.error || 'Failed to initiate test reminder',
+        code: callResult.code
+      }, { status: 500 });
+    }
+    
+    console.log(`📞 [TEST-REMINDER] [${requestId}] ✅ Test call initiated successfully:`, {
+      callSid: callResult.callSid,
+      taskId: callResult.taskId,
+      phoneNumber: callResult.phoneNumber
     });
     
     return json({
       success: true,
-      callSid: call.sid,
+      callSid: callResult.callSid,
       message: `Test reminder call initiated for task: ${task.title}`
     });
     
