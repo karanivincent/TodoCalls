@@ -8,6 +8,7 @@ import { env } from '$env/dynamic/private';
 export const GET: RequestHandler = async ({ request, url }) => {
 	const startTime = Date.now();
 	const now = new Date();
+	const requestId = Math.random().toString(36).substring(7);
 	
 	try {
 		console.log('========================================');
