@@ -4,7 +4,7 @@
 	import type { Database } from '$lib/database.types';
 	import { toast } from '$lib/stores/toast';
 	import { fade } from 'svelte/transition';
-	import { getUserTimezone, formatTimeInTimezone, getHourInTimezone } from '$lib/utils/timezone';
+	import { getUserTimezone, formatTimeInTimezone, getHourInTimezone, isSameDayInTimezone, getStartOfDayInTimezone, getEndOfDayInTimezone } from '$lib/utils/timezone';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
@@ -82,10 +82,24 @@
 	});
 	
 	async function loadTasks() {
+		// Get today's date range in user's timezone (converted to UTC for database query)
+		const startOfToday = getStartOfDayInTimezone(userTimezone);
+		const endOfToday = getEndOfDayInTimezone(userTimezone);
+		
+		console.log('Loading tasks for today:', {
+			userTimezone,
+			startOfToday: startOfToday.toISOString(),
+			endOfToday: endOfToday.toISOString(),
+			localStart: startOfToday.toLocaleString('en-US', { timeZone: userTimezone }),
+			localEnd: endOfToday.toLocaleString('en-US', { timeZone: userTimezone })
+		});
+		
 		const { data, error } = await supabase
 			.from('tasks')
 			.select('*')
 			.eq('user_id', user.id)
+			.gte('scheduled_at', startOfToday.toISOString())
+			.lte('scheduled_at', endOfToday.toISOString())
 			.order('scheduled_at', { ascending: true });
 		
 		if (error) {
@@ -93,14 +107,21 @@
 			toast.show('Failed to load tasks', 'error');
 		} else {
 			tasks = data || [];
+			console.log(`Loaded ${tasks.length} tasks for today`);
 		}
 	}
 	
 	function getTasksForHour(hour: number) {
+		const today = new Date();
+		
 		return tasks.filter(task => {
 			// Convert UTC time to user's timezone for display
 			const taskHour = getHourInTimezone(task.scheduled_at, userTimezone);
-			return taskHour === hour;
+			
+			// Double-check that task is actually from today (additional safety check)
+			const isToday = isSameDayInTimezone(task.scheduled_at, today, userTimezone);
+			
+			return taskHour === hour && isToday;
 		});
 	}
 	

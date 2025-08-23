@@ -283,9 +283,9 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 		
 	} catch (error: any) {
-		const taskId = url.searchParams.get('taskId');
+		const taskIdForError = url.searchParams.get('taskId');
 		logError(`[${requestId}] Critical error in task reminder webhook`, error, {
-			taskId,
+			taskId: taskIdForError,
 			url: url.toString()
 		});
 		

@@ -46,6 +46,40 @@ export function getHourInTimezone(date: string | Date, timezone: string): number
   return parseInt(formatted);
 }
 
+export function isSameDayInTimezone(date1: string | Date, date2: string | Date, timezone: string): boolean {
+  const dateObj1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const dateObj2 = typeof date2 === 'string' ? new Date(date2) : date2;
+  
+  const date1Str = dateObj1.toLocaleDateString('en-CA', { timeZone: timezone });
+  const date2Str = dateObj2.toLocaleDateString('en-CA', { timeZone: timezone });
+  
+  return date1Str === date2Str;
+}
+
+export function getStartOfDayInTimezone(timezone: string): Date {
+  const now = new Date();
+  const today = now.toLocaleDateString('en-CA', { timeZone: timezone }); // YYYY-MM-DD format
+  
+  // Create start of day in the user's timezone
+  const startOfDay = new Date(`${today}T00:00:00`);
+  
+  // Convert to UTC by adjusting for timezone offset
+  const offsetMs = getTimezoneOffsetMs(timezone);
+  return new Date(startOfDay.getTime() - offsetMs);
+}
+
+export function getEndOfDayInTimezone(timezone: string): Date {
+  const startOfDay = getStartOfDayInTimezone(timezone);
+  return new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1); // 23:59:59.999
+}
+
+function getTimezoneOffsetMs(timezone: string): number {
+  const now = new Date();
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const targetTime = new Date(utcTime + (getTimezoneOffsetHours(timezone) * 3600000));
+  return targetTime.getTime() - now.getTime();
+}
+
 // Get timezone offset in hours from UTC (more reliable method)
 export function getTimezoneOffsetHours(timezone: string): number {
   // Create two dates: one in UTC and one in the target timezone
