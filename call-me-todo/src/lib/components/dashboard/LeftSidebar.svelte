@@ -81,7 +81,7 @@
 
 <div class="h-full flex flex-col bg-white border-r border-gray-200 transition-all duration-300" class:w-64={!collapsed} class:w-16={collapsed}>
 	<!-- Collapse Toggle Button -->
-	<div class="flex items-center justify-between p-4 border-b border-gray-200">
+	<div class="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
 		{#if !collapsed}
 			<h2 class="text-lg font-semibold text-gray-800">Menu</h2>
 		{/if}
@@ -97,8 +97,10 @@
 		</button>
 	</div>
 	
-	<!-- Primary Views -->
-	<div class="p-4">
+	<!-- Scrollable Middle Section -->
+	<div class="flex-1 overflow-y-auto">
+		<!-- Primary Views -->
+		<div class="p-4">
 		<nav class="space-y-1">
 			<a
 				href="/dashboard"
@@ -264,9 +266,10 @@
 			{/if}
 		</div>
 	</div>
+	</div> <!-- End of scrollable middle section -->
 	
-	<!-- Bottom Section -->
-	<div class="mt-auto">
+	<!-- Bottom Section (fixed at bottom) -->
+	<div class="flex-shrink-0">
 		<!-- Settings & Help -->
 		<div class="p-4 border-t border-gray-200">
 			<nav class="space-y-1">

@@ -19,20 +19,20 @@
 	<!-- Main 2-column layout (sidebar is now in the parent layout) -->
 	<div class="flex-1 flex overflow-hidden">		
 		<!-- Center Panel -->
-		<main class="flex-1 flex flex-col min-w-0">
+		<main class="flex-1 flex flex-col min-w-0 h-full">
 			<!-- Focus Bar -->
-			<div class="bg-white border-b border-gray-200 px-6 py-4">
+			<div class="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
 				<slot name="focus-bar" />
 			</div>
 			
-			<!-- Main Content Area -->
-			<div class="flex-1 overflow-auto">
+			<!-- Main Content Area - Scrollable -->
+			<div class="flex-1 overflow-y-auto">
 				<slot name="main-content" {currentView} {tasks} {loading} {userTimezone} {testReminder} {triggerCron} />
 			</div>
 		</main>
 		
-		<!-- Right Panel -->
-		<aside class="w-80 bg-white border-l border-gray-200 flex-shrink-0 hidden lg:block">
+		<!-- Right Panel - Scrollable -->
+		<aside class="w-80 bg-white border-l border-gray-200 flex-shrink-0 hidden lg:block h-full overflow-y-auto">
 			<slot name="right-panel" />
 		</aside>
 	</div>

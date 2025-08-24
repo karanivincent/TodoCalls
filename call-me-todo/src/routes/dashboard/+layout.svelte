@@ -61,9 +61,9 @@
 		</div>
 	</div>
 {:else}
-	<div class="min-h-screen bg-gray-50 flex">
+	<div class="h-screen bg-gray-50 flex overflow-hidden">
 		<!-- Sidebar -->
-		<div class="flex-shrink-0">
+		<div class="flex-shrink-0 h-full">
 			<LeftSidebar 
 				{taskCounts}
 				collapsed={sidebarCollapsed}
@@ -72,12 +72,12 @@
 		</div>
 		
 		<!-- Main Content Area -->
-		<div class="flex-1 flex flex-col min-w-0">
+		<div class="flex-1 flex flex-col min-w-0 h-full">
 			<!-- Quick Add Bar -->
 			<QuickAddBar on:taskCreated={handleTaskCreated} />
 			
 			<!-- Page Content -->
-			<main class="flex-1 overflow-y-auto">
+			<main class="flex-1 overflow-hidden">
 				<slot />
 			</main>
 		</div>
