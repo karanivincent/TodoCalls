@@ -27,3 +27,12 @@ screenshots/
 *.png
 *.jpg
 *.jpeg
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.auth/
+
+# Legacy/backup files
+*.backup*
+screenshot-dashboard*.js
