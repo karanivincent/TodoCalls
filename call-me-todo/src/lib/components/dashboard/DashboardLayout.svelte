@@ -16,13 +16,8 @@
 </script>
 
 <div class="h-full flex flex-col bg-gray-50">
-	<!-- Main 3-column layout -->
-	<div class="flex-1 flex overflow-hidden">
-		<!-- Left Sidebar -->
-		<aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0">
-			<slot name="left-sidebar" />
-		</aside>
-		
+	<!-- Main 2-column layout (sidebar is now in the parent layout) -->
+	<div class="flex-1 flex overflow-hidden">		
 		<!-- Center Panel -->
 		<main class="flex-1 flex flex-col min-w-0">
 			<!-- Focus Bar -->

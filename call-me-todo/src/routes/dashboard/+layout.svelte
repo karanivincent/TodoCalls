@@ -2,14 +2,22 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { createSupabaseClient } from '$lib/supabase';
-	import DashboardSidebar from '$lib/components/DashboardSidebar.svelte';
+	import LeftSidebar from '$lib/components/dashboard/LeftSidebar.svelte';
 	import QuickAddBar from '$lib/components/QuickAddBar.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	
 	let supabase = createSupabaseClient();
 	let user: any = null;
 	let loading = true;
-	let sidebarCollapsed = false;
+	let currentView: 'today' | 'timeline' | 'list' = 'today';
+	
+	// Task counts for sidebar - will be updated from child pages
+	let taskCounts = {
+		today: 0,
+		upcoming: 0,
+		completed: 0,
+		overdue: 0
+	};
 	
 	onMount(async () => {
 		// Check if user is authenticated
@@ -22,12 +30,12 @@
 		
 		user = currentUser;
 		loading = false;
-		
-		// Check for mobile and auto-collapse sidebar
-		if (window.innerWidth < 768) {
-			sidebarCollapsed = true;
-		}
 	});
+	
+	function handleViewChange(view: 'today' | 'timeline' | 'list') {
+		currentView = view;
+		// Navigation will be handled by the sidebar links
+	}
 	
 	async function handleTaskCreated(event: CustomEvent) {
 		const { task, parsed, message } = event.detail;
@@ -49,7 +57,11 @@
 	<div class="min-h-screen bg-gray-50 flex">
 		<!-- Sidebar -->
 		<div class="flex-shrink-0">
-			<DashboardSidebar bind:isCollapsed={sidebarCollapsed} />
+			<LeftSidebar 
+				{currentView}
+				{taskCounts}
+				onViewChange={handleViewChange}
+			/>
 		</div>
 		
 		<!-- Main Content Area -->

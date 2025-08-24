@@ -7,7 +7,6 @@
 	
 	// New dashboard components
 	import DashboardLayout from '$lib/components/dashboard/DashboardLayout.svelte';
-	import LeftSidebar from '$lib/components/dashboard/LeftSidebar.svelte';
 	import RightPanel from '$lib/components/dashboard/RightPanel.svelte';
 	import FocusBar from '$lib/components/dashboard/FocusBar.svelte';
 	import MainContent from '$lib/components/dashboard/MainContent.svelte';
@@ -21,26 +20,6 @@
 	let tasks: Task[] = [];
 	let loading = true;
 	let currentView: 'today' | 'timeline' | 'list' = 'today';
-	
-	// Task counts for sidebar
-	$: taskCounts = {
-		today: tasks.filter(task => {
-			const today = new Date();
-			const taskDate = new Date(task.scheduled_at);
-			return task.status === 'pending' && taskDate.toDateString() === today.toDateString();
-		}).length,
-		upcoming: tasks.filter(task => {
-			const today = new Date();
-			const taskDate = new Date(task.scheduled_at);
-			return task.status === 'pending' && taskDate > today;
-		}).length,
-		completed: tasks.filter(task => task.status === 'completed').length,
-		overdue: tasks.filter(task => {
-			const now = new Date();
-			const taskDate = new Date(task.scheduled_at);
-			return task.status === 'pending' && taskDate < now;
-		}).length
-	};
 	
 	onMount(async () => {
 		// Get user data (already checked in layout)
@@ -188,15 +167,7 @@
 	{loadTasks} 
 	{testReminder} 
 	{triggerCron}
->
-	<!-- Left Sidebar -->
-	<LeftSidebar 
-		slot="left-sidebar" 
-		{currentView}
-		{taskCounts}
-		onViewChange={handleViewChange}
-	/>
-	
+>	
 	<!-- Focus Bar -->
 	<FocusBar 
 		slot="focus-bar" 
