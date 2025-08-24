@@ -2,6 +2,7 @@
 	import type { Database } from '$lib/database.types';
 	import { formatTimeInTimezone } from '$lib/utils/timezone';
 	import Icon from '@iconify/svelte';
+	import TaskItem from './TaskItem.svelte';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
@@ -9,47 +10,6 @@
 	export let loading: boolean = false;
 	export let userTimezone: string = 'UTC';
 	export let testReminder: (taskId: string) => Promise<void>;
-	
-	// Priority colors and icons
-	function getPriorityStyle(priority: string | null) {
-		switch (priority) {
-			case 'urgent':
-				return {
-					bg: 'bg-red-100',
-					text: 'text-red-700',
-					border: 'border-red-300',
-					icon: 'heroicons:fire'
-				};
-			case 'high':
-				return {
-					bg: 'bg-orange-100',
-					text: 'text-orange-700', 
-					border: 'border-orange-300',
-					icon: 'heroicons:bolt'
-				};
-			case 'medium':
-				return {
-					bg: 'bg-blue-100',
-					text: 'text-blue-700',
-					border: 'border-blue-300', 
-					icon: 'heroicons:clipboard-document-list'
-				};
-			case 'low':
-				return {
-					bg: 'bg-gray-100',
-					text: 'text-gray-600',
-					border: 'border-gray-300',
-					icon: 'heroicons:pencil'
-				};
-			default:
-				return {
-					bg: 'bg-gray-100',
-					text: 'text-gray-600',
-					border: 'border-gray-300',
-					icon: 'heroicons:clipboard-document-list'
-				};
-		}
-	}
 	
 	// Group tasks by status and time
 	$: groupedTasks = {
@@ -174,60 +134,19 @@
 						<div class="w-3 h-3 bg-red-500 rounded-full"></div>
 						<h3 class="font-semibold text-red-900">Overdue ({groupedTasks.overdue.length})</h3>
 					</div>
-					<div class="relative pl-6">
-						<!-- Timeline line -->
-						<div class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-red-200"></div>
-						
+					<div class="border-t border-b border-gray-200">
 						{#each groupedTasks.overdue.sort((a, b) => {
 							const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3, null: 4 };
 							return (priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4);
 						}) as task, index}
-							{@const priorityStyle = getPriorityStyle(task.priority)}
-							<div class="relative flex items-center gap-4 pb-4 group hover:bg-red-50/50 -mx-2 px-2 rounded border-l-4 {task.priority === 'urgent' ? 'border-red-500' : task.priority === 'high' ? 'border-orange-500' : task.priority === 'medium' ? 'border-blue-500' : 'border-gray-300'}">
-								<!-- Timeline dot -->
-								<div class="absolute -left-6 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
-								
-								<!-- Avatar -->
-								<div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-semibold ml-2">
-									{task.title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-								</div>
-								
-								<!-- Content -->
-								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-1.5">
-										<Icon icon="heroicons:phone" class="w-4 h-4 text-gray-500" />
-										<span class="font-semibold text-gray-900">{task.title}</span>
-										{#if task.priority === 'urgent' || task.priority === 'high'}
-											<Icon icon={priorityStyle.icon} class="w-4 h-4 {priorityStyle.text}" />
-										{/if}
-									</div>
-									<div class="flex items-center gap-2 mt-1 ml-5">
-										{#if task.tags && task.tags.length > 0}
-											<div class="flex gap-1">
-												{#each task.tags as tag}
-													<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">#{tag}</span>
-												{/each}
-											</div>
-										{/if}
-										{#if task.due_date}
-											<span class="text-xs text-red-600 font-medium">Due: {new Date(task.due_date).toLocaleDateString()}</span>
-										{/if}
-									</div>
-								</div>
-								
-								<!-- Time -->
-								<div class="text-sm text-red-600 font-medium">
-									{formatRelativeTime(task.scheduled_at)}
-								</div>
-								
-								<!-- Action -->
-								<button 
-									on:click={() => testReminder(task.id)}
-									class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-								>
-									Call Now
-								</button>
-							</div>
+							<TaskItem 
+								{task} 
+								{index}
+								isOverdue={true}
+								{testReminder}
+								{formatTime}
+								{formatRelativeTime}
+							/>
 						{/each}
 					</div>
 				</div>
@@ -240,10 +159,7 @@
 						<div class="w-3 h-3 bg-blue-500 rounded-full"></div>
 						<h3 class="font-semibold text-gray-900">Upcoming ({upcomingTasks.length})</h3>
 					</div>
-					<div class="relative pl-6">
-						<!-- Timeline line -->
-						<div class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-						
+					<div class="border-t border-b border-gray-200">
 						{#each upcomingTasks.sort((a, b) => {
 							const timeA = new Date(a.scheduled_at).getTime();
 							const timeB = new Date(b.scheduled_at).getTime();
@@ -253,52 +169,13 @@
 							}
 							return timeA - timeB;
 						}) as task, index}
-							{@const priorityStyle = getPriorityStyle(task.priority)}
-							<div class="relative flex items-center gap-4 pb-4 group hover:bg-gray-50 -mx-2 px-2 rounded border-l-4 {task.priority === 'urgent' ? 'border-red-500' : task.priority === 'high' ? 'border-orange-500' : task.priority === 'medium' ? 'border-blue-500' : 'border-gray-300'}">
-								<!-- Timeline dot -->
-								<div class="absolute -left-6 w-3 h-3 bg-gray-400 rounded-full border-2 border-white"></div>
-								
-								<!-- Avatar -->
-								<div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold ml-2">
-									{task.title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-								</div>
-								
-								<!-- Content -->
-								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-1.5">
-										<Icon icon="heroicons:phone" class="w-4 h-4 text-gray-500" />
-										<span class="font-semibold text-gray-900">{task.title}</span>
-										{#if task.priority === 'urgent' || task.priority === 'high'}
-											<Icon icon={priorityStyle.icon} class="w-4 h-4 {priorityStyle.text}" />
-										{/if}
-									</div>
-									<div class="flex items-center gap-2 mt-1 ml-5">
-										{#if task.tags && task.tags.length > 0}
-											<div class="flex gap-1">
-												{#each task.tags as tag}
-													<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">#{tag}</span>
-												{/each}
-											</div>
-										{/if}
-										{#if task.due_date}
-											<span class="text-xs text-gray-500">Due: {new Date(task.due_date).toLocaleDateString()}</span>
-										{/if}
-									</div>
-								</div>
-								
-								<!-- Time -->
-								<div class="text-sm text-gray-500">
-									{formatTime(task.scheduled_at)}
-								</div>
-								
-								<!-- Action -->
-								<button 
-									on:click={() => testReminder(task.id)}
-									class="opacity-0 group-hover:opacity-100 px-2 py-1 text-gray-600 hover:bg-gray-100 text-xs rounded transition-all"
-								>
-									Call
-								</button>
-							</div>
+							<TaskItem 
+								{task} 
+								{index}
+								isOverdue={false}
+								{testReminder}
+								{formatTime}
+							/>
 						{/each}
 					</div>
 				</div>
