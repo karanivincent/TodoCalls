@@ -18,8 +18,11 @@
 	let userName = '';
 	let userTimezone = 'Africa/Nairobi';
 	let tasks: Task[] = [];
+	let selectedDateTasks: Task[] = [];
 	let loading = true;
+	let loadingSelectedDate = false;
 	let currentView: 'today' | 'timeline' | 'list' = 'today';
+	let selectedDate = new Date();
 	
 	onMount(async () => {
 		// Get user data (already checked in layout)
@@ -95,7 +98,52 @@
 			toast.show('Failed to load tasks', 'error');
 		} else {
 			tasks = data || [];
+			selectedDateTasks = tasks; // Initially, selected date is today
 			console.log(`Loaded ${tasks.length} tasks for today`);
+		}
+	}
+	
+	async function loadTasksForDate(date: Date) {
+		loadingSelectedDate = true;
+		
+		// Create date range for the selected date
+		const startOfDay = new Date(date);
+		startOfDay.setHours(0, 0, 0, 0);
+		
+		const endOfDay = new Date(date);
+		endOfDay.setHours(23, 59, 59, 999);
+		
+		console.log('Loading tasks for selected date:', {
+			date: date.toLocaleDateString(),
+			startOfDay: startOfDay.toISOString(),
+			endOfDay: endOfDay.toISOString()
+		});
+		
+		try {
+			const { data, error } = await supabase
+				.from('tasks')
+				.select('*')
+				.eq('user_id', user.id)
+				.gte('scheduled_at', startOfDay.toISOString())
+				.lte('scheduled_at', endOfDay.toISOString())
+				.order('scheduled_at', { ascending: true });
+			
+			if (error) {
+				console.error('Error loading tasks for date:', error);
+				toast.show('Failed to load tasks for selected date', 'error');
+			} else {
+				selectedDateTasks = data || [];
+				console.log(`Loaded ${selectedDateTasks.length} tasks for ${date.toLocaleDateString()}`);
+				
+				// Check if the selected date is today
+				const today = new Date();
+				if (date.toDateString() === today.toDateString()) {
+					// If it's today, update the main tasks array too
+					tasks = selectedDateTasks;
+				}
+			}
+		} finally {
+			loadingSelectedDate = false;
 		}
 	}
 	
@@ -156,6 +204,15 @@
 	function handleViewChange(newView: 'today' | 'timeline' | 'list') {
 		currentView = newView;
 	}
+	
+	async function handleDateSelect(date: Date) {
+		selectedDate = date;
+		console.log('Date selected:', date);
+		
+		if (user) {
+			await loadTasksForDate(date);
+		}
+	}
 </script>
 
 <DashboardLayout 
@@ -190,5 +247,10 @@
 	<RightPanel 
 		slot="right-panel" 
 		{triggerCron}
+		onDateSelect={handleDateSelect}
+		tasks={selectedDateTasks}
+		{selectedDate}
+		{userTimezone}
+		loading={loadingSelectedDate}
 	/>
 </DashboardLayout>
