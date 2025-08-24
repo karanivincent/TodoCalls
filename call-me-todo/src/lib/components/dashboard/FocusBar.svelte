@@ -34,13 +34,13 @@
 	}
 </script>
 
-<div class="flex gap-4 text-sm">
+<div class="flex gap-3">
 	<!-- Overdue -->
 	{#if overdueTasks.length > 0}
-		<div class="flex items-center gap-2 text-red-600">
-			<div class="w-2 h-2 bg-red-500 rounded-full"></div>
-			<span class="font-medium">Overdue</span>
-			<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">
+		<div class="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
+			<div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+			<span class="text-sm font-medium text-red-900">Overdue</span>
+			<span class="text-sm font-bold text-red-700">
 				{overdueTasks.length}
 			</span>
 		</div>
@@ -48,10 +48,10 @@
 	
 	<!-- Due Today -->
 	{#if todayTasks.length > 0}
-		<div class="flex items-center gap-2 text-orange-600">
+		<div class="flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg">
 			<div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-			<span class="font-medium">Due Today</span>
-			<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs">
+			<span class="text-sm font-medium text-orange-900">Due Today</span>
+			<span class="text-sm font-bold text-orange-700">
 				{todayTasks.length}
 			</span>
 		</div>
@@ -59,10 +59,10 @@
 	
 	<!-- Calls Pending -->
 	{#if callsPending.length > 0}
-		<div class="flex items-center gap-2 text-blue-600">
+		<div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
 			<div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-			<span class="font-medium">Calls Pending</span>
-			<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">
+			<span class="text-sm font-medium text-blue-900">Calls Pending</span>
+			<span class="text-sm font-bold text-blue-700">
 				{callsPending.length}
 			</span>
 		</div>
@@ -70,17 +70,17 @@
 	
 	<!-- All Clear State -->
 	{#if overdueTasks.length === 0 && todayTasks.length === 0 && callsPending.length === 0 && tasks.length > 0}
-		<div class="flex items-center gap-2 text-green-600">
-			<div class="w-2 h-2 bg-green-500 rounded-full"></div>
-			<span class="font-medium">All caught up!</span>
+		<div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
+			<Icon icon="heroicons:check-circle" class="w-4 h-4 text-green-600" />
+			<span class="text-sm font-medium text-green-900">All caught up!</span>
 		</div>
 	{/if}
 	
 	<!-- Empty State -->
 	{#if tasks.length === 0}
-		<div class="flex items-center gap-2 text-gray-500">
-			<div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-			<span class="font-medium">Ready to get organized!</span>
+		<div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+			<Icon icon="heroicons:sparkles" class="w-4 h-4 text-gray-600" />
+			<span class="text-sm font-medium text-gray-700">Ready to get organized!</span>
 		</div>
 	{/if}
 </div>
