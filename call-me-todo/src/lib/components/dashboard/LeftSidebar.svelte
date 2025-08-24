@@ -180,7 +180,10 @@
 				</div>
 			{:else}
 				{#each projects as project}
-					<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+					<a 
+						href="/dashboard/projects/{project.id}"
+						class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+					>
 						<div 
 							class="w-3 h-3 rounded-full mr-3"
 							style="background-color: {project.color}"
@@ -191,16 +194,9 @@
 								{project.total_tasks}
 							</span>
 						{/if}
-					</button>
+					</a>
 				{/each}
 			{/if}
-			
-			<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
-				<svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-				</svg>
-				Add Project
-			</button>
 		</div>
 	</div>
 	
