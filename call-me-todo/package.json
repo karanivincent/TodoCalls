@@ -12,13 +12,18 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"voice-server": "node src/server/voice-server.js",
 		"dev:all": "npm run dev & npm run voice-server",
-		"vercel-build": "vite build"
+		"vercel-build": "vite build",
+		"test": "playwright test",
+		"test:ui": "playwright test --ui",
+		"test:setup": "playwright test tests/auth.setup.js",
+		"screenshot": "node screenshot.js"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.54.2",
+		"@playwright/test": "^1.55.0",
 		"@sveltejs/adapter-auto": "^6.0.0",
 		"@tailwindcss/forms": "^0.5.10",
 		"autoprefixer": "^10.4.21",
+		"playwright": "^1.55.0",
 		"postcss": "^8.5.6",
 		"svelte-check": "^4.0.0",
 		"tailwindcss": "^4.1.12"
