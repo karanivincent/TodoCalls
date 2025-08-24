@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServerClient } from '@supabase/ssr';
 import { env as publicEnv } from '$env/dynamic/public';
-import { parseTaskFromNaturalLanguage } from '$lib/ai/parser';
+import { parseTaskFromNaturalLanguage } from '$lib/ai/parser.enhanced';
 import { formatInTimezone } from '$lib/utils/timezone';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -34,20 +34,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       return json({ error: 'Unauthorized - Please log in' }, { status: 401 });
     }
 
-    // Get user's verified phone number (primary) and timezone
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('timezone')
-      .eq('id', user.id)
-      .single();
-    
-    // Get primary verified phone number
+    // Get primary verified phone number using Supabase
     const { data: primaryPhone, error: phoneError } = await supabase
       .from('phone_numbers')
       .select('phone_number, is_verified')
       .eq('user_id', user.id)
       .eq('is_primary', true)
       .eq('is_verified', true)
+      .limit(1)
       .single();
     
     if (phoneError || !primaryPhone) {
@@ -58,38 +52,58 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     
     const userPhoneNumber = primaryPhone.phone_number;
     
-    // Prioritize request timezone, then profile, then default
-    const userTimezone = requestTimezone || profile?.timezone || 'Africa/Nairobi';
+    // Use request timezone or default
+    const userTimezone = requestTimezone || 'Africa/Nairobi';
 
-    // Parse the natural language input with timezone
+    // Parse the natural language input with timezone and enhanced features
     const parsedTask = await parseTaskFromNaturalLanguage(input, userPhoneNumber, userTimezone);
 
     // Handle recipient phone numbers (for MVP, we'll use the user's phone for all)
-    // In the future, this would look up family members' phone numbers
     let taskPhoneNumber = parsedTask.phoneNumber || userPhoneNumber;
     
-    // For non-self recipients, we'd normally look up their number
-    // For MVP, we'll just use the user's number with a note about the recipient
+    // For non-self recipients, add recipient to task title for clarity
     if (parsedTask.recipient !== 'me' && !parsedTask.phoneNumber) {
-      // Add recipient to task title for clarity
       parsedTask.title = `For ${parsedTask.recipient}: ${parsedTask.title}`;
       taskPhoneNumber = userPhoneNumber;
     }
 
-    // Create the task in Supabase
+    // Find project ID if project name was parsed
+    let projectId: string | null = null;
+    if (parsedTask.projectName) {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', parsedTask.projectName)
+        .eq('is_archived', false)
+        .limit(1)
+        .single();
+      
+      projectId = project?.id || null;
+    }
+
+    // Create the enhanced task using Supabase
+    const taskData = {
+      user_id: user.id,
+      title: parsedTask.title,
+      phone_number: taskPhoneNumber,
+      scheduled_at: parsedTask.scheduledAt.toISOString(),
+      status: 'pending',
+      description: parsedTask.description || null,
+      priority: parsedTask.priority,
+      tags: parsedTask.tags,
+      project_id: projectId,
+      estimated_duration: parsedTask.estimatedDuration || null,
+      retry_count: 0
+    };
+
     const { data: task, error: taskError } = await supabase
       .from('tasks')
-      .insert({
-        user_id: user.id,
-        title: parsedTask.title,
-        phone_number: taskPhoneNumber,
-        scheduled_at: parsedTask.scheduledAt.toISOString(),
-        status: 'pending'
-      })
+      .insert(taskData)
       .select()
       .single();
 
-    if (taskError) {
+    if (taskError || !task) {
       console.error('Error creating task:', taskError);
       return json({ error: 'Failed to create task' }, { status: 500 });
     }
@@ -102,7 +116,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       task,
       parsed: {
         ...parsedTask,
-        phoneNumber: taskPhoneNumber
+        phoneNumber: taskPhoneNumber,
+        projectId
       },
       message: `Task scheduled for ${formattedTime}`
     });

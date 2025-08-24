@@ -13,7 +13,10 @@
 	let parsedData = {
 		recipient: '',
 		task: '',
-		time: ''
+		time: '',
+		project: '',
+		priority: '',
+		tags: [] as string[]
 	};
 	
 	// Recent recipients for quick selection
@@ -24,9 +27,8 @@
 		{ id: 'dad', name: 'Dad', type: 'family' }
 	];
 	
-	// Parse natural language input
+	// Parse natural language input for preview (simplified - real parsing happens in backend)
 	function parseInput(text: string) {
-		// Simple parsing logic (would be replaced with actual NLP)
 		const lowerText = text.toLowerCase();
 		
 		// Detect recipient
@@ -38,27 +40,60 @@
 		});
 		
 		// Detect time patterns
-		const timeMatch = text.match(/at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
+		const timeMatch = text.match(/(?:at|by|for)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?|tomorrow|today)/i);
 		const time = timeMatch ? timeMatch[1] : '';
 		
-		// Extract task (remove recipient and time)
+		// Detect priority keywords
+		let priority = '';
+		if (lowerText.includes('urgent') || lowerText.includes('asap') || lowerText.includes('immediately')) {
+			priority = 'urgent';
+		} else if (lowerText.includes('high priority') || lowerText.includes('important')) {
+			priority = 'high';
+		} else if (lowerText.includes('low priority') || lowerText.includes('when you can')) {
+			priority = 'low';
+		}
+		
+		// Detect project keywords (with @ symbol or common project names)
+		let project = '';
+		const projectMatch = text.match(/@(\w+)/);
+		if (projectMatch) {
+			project = projectMatch[1];
+		} else {
+			// Look for common project keywords
+			if (lowerText.includes('work') || lowerText.includes('office') || lowerText.includes('meeting')) {
+				project = 'work';
+			} else if (lowerText.includes('personal') || lowerText.includes('home')) {
+				project = 'personal';
+			} else if (lowerText.includes('family')) {
+				project = 'family';
+			}
+		}
+		
+		// Detect tags (with # symbol)
+		const tagMatches = text.match(/#(\w+)/g);
+		const tags = tagMatches ? tagMatches.map(tag => tag.substring(1)) : [];
+		
+		// Extract task (remove recipient, time, project markers, etc.)
 		let task = text;
 		if (recipient !== 'Me') {
 			task = task.replace(new RegExp(recipient, 'gi'), '');
 		}
 		if (time) {
-			task = task.replace(new RegExp(`at\\s+${time}`, 'gi'), '');
+			task = task.replace(new RegExp(`(?:at|by|for)\\s+${time}`, 'gi'), '');
 		}
+		task = task.replace(/@\w+/g, ''); // Remove @project
+		task = task.replace(/#\w+/g, ''); // Remove #tags
 		task = task.replace(/^\s*(remind|tell|call)\s+/i, '').trim();
+		task = task.replace(/\s+(urgent|asap|immediately|high priority|important|low priority|when you can)/gi, '').trim();
 		
-		parsedData = { recipient, task, time };
+		parsedData = { recipient, task, time, project, priority, tags };
 	}
 	
 	function handleInputChange() {
 		if (input.length > 0) {
 			parseInput(input);
 		} else {
-			parsedData = { recipient: '', task: '', time: '' };
+			parsedData = { recipient: '', task: '', time: '', project: '', priority: '', tags: [] };
 		}
 	}
 	
@@ -112,7 +147,7 @@
 			isLoading = false;
 		}
 		
-		parsedData = { recipient: '', task: '', time: '' };
+		parsedData = { recipient: '', task: '', time: '', project: '', priority: '', tags: [] };
 		isExpanded = false;
 	}
 	
@@ -166,7 +201,7 @@
 							on:keydown={handleKeyDown}
 							on:focus={() => isExpanded = true}
 							on:blur={() => setTimeout(() => isExpanded = false, 200)}
-							placeholder='Try: "Remind Mom to take medication at 9am" or "Tell John to submit report by 5pm"'
+							placeholder='Try: "Urgent: Review client proposal by tomorrow @work #client" or "Remind Mom to take medication at 9am"'
 							class="flex-1 py-2 pr-3 text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
 							autocomplete="off"
 						/>
@@ -193,9 +228,9 @@
 				</div>
 				
 				<!-- AI Parsing Visualization -->
-				{#if parsedData.recipient || parsedData.task || parsedData.time}
-					<div class="absolute left-0 right-0 top-full mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
-						<div class="flex items-center gap-3 text-xs">
+				{#if parsedData.recipient || parsedData.task || parsedData.time || parsedData.project || parsedData.priority || parsedData.tags.length > 0}
+					<div class="absolute left-0 right-0 top-full mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+						<div class="flex flex-wrap items-center gap-2 text-xs">
 							{#if parsedData.recipient}
 								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
 									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,6 +239,7 @@
 									{parsedData.recipient}
 								</span>
 							{/if}
+							
 							{#if parsedData.task}
 								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
 									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,6 +248,7 @@
 									{parsedData.task}
 								</span>
 							{/if}
+							
 							{#if parsedData.time}
 								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
 									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,6 +257,37 @@
 									{parsedData.time}
 								</span>
 							{/if}
+							
+							{#if parsedData.project}
+								<span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-full text-blue-700 border border-blue-200">
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+									</svg>
+									@{parsedData.project}
+								</span>
+							{/if}
+							
+							{#if parsedData.priority}
+								<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full border
+									{parsedData.priority === 'urgent' ? 'bg-red-50 text-red-700 border-red-200' : ''}
+									{parsedData.priority === 'high' ? 'bg-orange-50 text-orange-700 border-orange-200' : ''}
+									{parsedData.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : ''}
+									{parsedData.priority === 'low' ? 'bg-gray-50 text-gray-700 border-gray-200' : ''}">
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+									</svg>
+									{parsedData.priority}
+								</span>
+							{/if}
+							
+							{#each parsedData.tags as tag}
+								<span class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full text-green-700 border border-green-200">
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+									</svg>
+									#{tag}
+								</span>
+							{/each}
 						</div>
 					</div>
 				{/if}
@@ -266,7 +334,7 @@
 								<svg class="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
 								</svg>
-								<span>Just start typing naturally. Our AI will understand who to call and when.</span>
+								<span>Just start typing naturally. Our AI understands who to call, when, priorities (urgent/high/low), projects (@work), and tags (#client).</span>
 							</div>
 						</div>
 					</div>

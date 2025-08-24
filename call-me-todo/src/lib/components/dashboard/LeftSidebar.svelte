@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import type { ProjectWithStats } from '$lib/database.types.enhanced';
+
 	export let currentView: 'today' | 'timeline' | 'list' = 'today';
 	export let onViewChange: (view: 'today' | 'timeline' | 'list') => void = () => {};
 	export let taskCounts: {
@@ -8,16 +11,74 @@
 		overdue: number;
 	} = { today: 0, upcoming: 0, completed: 0, overdue: 0 };
 	
-	// Mock projects for now - will be real data later
-	const projects = [
-		{ id: '1', name: 'Personal', color: '#8b5cf6', taskCount: 5 },
-		{ id: '2', name: 'Work', color: '#3b82f6', taskCount: 3 },
-		{ id: '3', name: 'Family', color: '#ec4899', taskCount: 2 }
-	];
+	let projects: ProjectWithStats[] = [];
+	let loading = true;
+	let error = '';
+	let showCreateModal = false;
+	let newProject = {
+		name: '',
+		description: '',
+		color: '#6366f1'
+	};
+	let creating = false;
+	async function fetchProjects() {
+		try {
+			loading = true;
+			error = '';
+			
+			const response = await fetch('/api/projects');
+			const result = await response.json();
+			
+			if (result.success) {
+				projects = result.projects;
+			} else {
+				error = result.error || 'Failed to load projects';
+			}
+		} catch (err) {
+			console.error('Error fetching projects:', err);
+			error = 'Failed to load projects';
+		} finally {
+			loading = false;
+		}
+	}
+	
+	onMount(() => {
+		fetchProjects();
+	});
 	
 	function handleViewChange(view: 'today' | 'timeline' | 'list') {
 		currentView = view;
 		onViewChange(view);
+	}
+
+	async function createProject() {
+		if (!newProject.name.trim()) return;
+		
+		try {
+			creating = true;
+			const response = await fetch('/api/projects', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(newProject)
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				await fetchProjects(); // Refresh the projects list
+				showCreateModal = false;
+				newProject = { name: '', description: '', color: '#6366f1' };
+			} else {
+				error = result.error || 'Failed to create project';
+			}
+		} catch (err) {
+			console.error('Error creating project:', err);
+			error = 'Failed to create project';
+		} finally {
+			creating = false;
+		}
 	}
 </script>
 
@@ -96,7 +157,11 @@
 	<div class="px-4 py-2 border-t border-gray-200">
 		<div class="flex items-center justify-between mb-3">
 			<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Projects</h3>
-			<button class="text-gray-400 hover:text-gray-600">
+			<button 
+				class="text-gray-400 hover:text-gray-600" 
+				aria-label="Add new project"
+				on:click={() => showCreateModal = true}
+			>
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
 				</svg>
@@ -104,20 +169,31 @@
 		</div>
 		
 		<div class="space-y-1">
-			{#each projects as project}
-				<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-					<div 
-						class="w-3 h-3 rounded-full mr-3"
-						style="background-color: {project.color}"
-					></div>
-					{project.name}
-					{#if project.taskCount > 0}
-						<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-							{project.taskCount}
-						</span>
-					{/if}
-				</button>
-			{/each}
+			{#if loading}
+				<div class="flex items-center px-3 py-2 text-sm text-gray-500">
+					<div class="w-3 h-3 bg-gray-200 rounded-full mr-3 animate-pulse"></div>
+					Loading projects...
+				</div>
+			{:else if error}
+				<div class="px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg">
+					{error}
+				</div>
+			{:else}
+				{#each projects as project}
+					<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+						<div 
+							class="w-3 h-3 rounded-full mr-3"
+							style="background-color: {project.color}"
+						></div>
+						{project.name}
+						{#if project.total_tasks > 0}
+							<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+								{project.total_tasks}
+							</span>
+						{/if}
+					</button>
+				{/each}
+			{/if}
 			
 			<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
 				<svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,3 +220,76 @@
 		</div>
 	</div>
 </div>
+
+<!-- Create Project Modal -->
+{#if showCreateModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+		<div class="fixed inset-0 bg-black bg-opacity-30" role="button" tabindex="0" on:click={() => showCreateModal = false} on:keydown={(e) => e.key === 'Escape' && (showCreateModal = false)} aria-label="Close modal"></div>
+		
+		<div class="relative bg-white rounded-xl max-w-md w-full p-6">
+			<h2 class="text-xl font-semibold text-gray-900 mb-4">Create New Project</h2>
+			
+			<form on:submit|preventDefault={createProject} class="space-y-4">
+				<div>
+					<label for="project-name" class="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+					<input
+						id="project-name"
+						type="text"
+						bind:value={newProject.name}
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+						placeholder="Enter project name"
+						required
+						maxlength="50"
+					/>
+				</div>
+				
+				<div>
+					<label for="project-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+					<textarea
+						id="project-description"
+						bind:value={newProject.description}
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+						placeholder="Optional project description"
+						rows="3"
+					></textarea>
+				</div>
+				
+				<div>
+					<label for="project-color" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+					<div class="flex items-center gap-3">
+						<input
+							id="project-color"
+							type="color"
+							bind:value={newProject.color}
+							class="w-12 h-8 border border-gray-300 rounded-md cursor-pointer"
+						/>
+						<span class="text-sm text-gray-500">{newProject.color}</span>
+					</div>
+				</div>
+				
+				{#if error}
+					<div class="px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg">
+						{error}
+					</div>
+				{/if}
+				
+				<div class="flex justify-end gap-3 pt-4">
+					<button
+						type="button"
+						on:click={() => showCreateModal = false}
+						class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={creating || !newProject.name.trim()}
+						class="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					>
+						{creating ? 'Creating...' : 'Create Project'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}

@@ -50,8 +50,8 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS estimated_duration INTEGER; -- in min
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS actual_duration INTEGER; -- in minutes
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS energy_level VARCHAR(10) CHECK (energy_level IN ('low', 'medium', 'high'));
 
--- Add new status options to existing enum (if your DB supports it, otherwise we'll handle in app)
--- Note: Supabase/PostgreSQL doesn't easily allow ALTER TYPE, so we'll validate in the application layer
+-- Note: We're keeping the existing status enum and handling new statuses ('in_progress', 'cancelled') in the application layer
+-- The database will continue to use: 'pending', 'completed', 'snoozed', 'failed'
 
 -- Add indexes for better performance
 CREATE INDEX IF NOT EXISTS tasks_project_id_idx ON tasks(project_id);
@@ -126,10 +126,6 @@ GROUP BY p.id, p.user_id, p.name, p.color;
 
 -- Grant access to the view
 GRANT SELECT ON project_task_stats TO authenticated;
-
--- Create RLS policy for the view
-CREATE POLICY "Users can view their own project stats" ON project_task_stats
-  FOR SELECT USING (auth.uid() = user_id);
 
 -- Function to get user's project with task counts
 CREATE OR REPLACE FUNCTION get_user_projects_with_counts(user_uuid UUID)

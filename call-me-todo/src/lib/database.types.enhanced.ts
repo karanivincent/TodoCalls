@@ -1,181 +1,46 @@
-// Enhanced database types for TodoCalls with projects, priorities, and advanced features
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'snoozed' | 'failed';
-export type EnergyLevel = 'low' | 'medium' | 'high';
+// Enhanced database types using Drizzle ORM
+import type { 
+  Task, 
+  NewTask, 
+  Project, 
+  NewProject, 
+  UserProfile, 
+  PhoneNumber,
+  Priority,
+  TaskStatus,
+  EnergyLevel,
+  RecurrencePattern 
+} from '$lib/db';
 
-export type RecurrencePattern = {
-  type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
-  interval: number;  // every N days/weeks/months
-  days_of_week?: number[];  // for weekly [0=Sunday, 1=Monday, etc.]
-  day_of_month?: number;    // for monthly
-  end_date?: string;
-  max_occurrences?: number;
-};
-
-export type PhoneReminderSettings = {
-  enabled: boolean;
-  phone_number?: string;
-  voice_enabled?: boolean;
-  text_enabled?: boolean;
-  email_enabled?: boolean;
-};
-
-export type Database = {
-  public: {
-    Tables: {
-      projects: {
-        Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          description: string | null;
-          color: string;
-          is_archived: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          name: string;
-          description?: string | null;
-          color?: string;
-          is_archived?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          name?: string;
-          description?: string | null;
-          color?: string;
-          is_archived?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      tasks: {
-        Row: {
-          id: string;
-          user_id: string;
-          title: string;
-          description: string | null;
-          phone_number: string;
-          scheduled_at: string;
-          due_date: string | null;
-          status: TaskStatus;
-          priority: Priority;
-          tags: string[];
-          project_id: string | null;
-          parent_task_id: string | null;
-          recurrence_pattern: RecurrencePattern | null;
-          estimated_duration: number | null; // minutes
-          actual_duration: number | null; // minutes
-          energy_level: EnergyLevel | null;
-          completed_at: string | null;
-          created_at: string;
-          updated_at: string;
-          // Legacy phone reminder fields (maintained for compatibility)
-          notify_by_phone?: boolean;
-          notify_by_text?: boolean;
-          notify_by_email?: boolean;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          title: string;
-          description?: string | null;
-          phone_number: string;
-          scheduled_at: string;
-          due_date?: string | null;
-          status?: TaskStatus;
-          priority?: Priority;
-          tags?: string[];
-          project_id?: string | null;
-          parent_task_id?: string | null;
-          recurrence_pattern?: RecurrencePattern | null;
-          estimated_duration?: number | null;
-          actual_duration?: number | null;
-          energy_level?: EnergyLevel | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          notify_by_phone?: boolean;
-          notify_by_text?: boolean;
-          notify_by_email?: boolean;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          title?: string;
-          description?: string | null;
-          phone_number?: string;
-          scheduled_at?: string;
-          due_date?: string | null;
-          status?: TaskStatus;
-          priority?: Priority;
-          tags?: string[];
-          project_id?: string | null;
-          parent_task_id?: string | null;
-          recurrence_pattern?: RecurrencePattern | null;
-          estimated_duration?: number | null;
-          actual_duration?: number | null;
-          energy_level?: EnergyLevel | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          notify_by_phone?: boolean;
-          notify_by_text?: boolean;
-          notify_by_email?: boolean;
-        };
-      };
-    };
-    Views: {
-      project_task_stats: {
-        Row: {
-          project_id: string;
-          user_id: string;
-          project_name: string;
-          project_color: string;
-          total_tasks: number;
-          pending_tasks: number;
-          completed_tasks: number;
-          overdue_tasks: number;
-        };
-      };
-    };
-    Functions: {
-      get_user_projects_with_counts: {
-        Args: {
-          user_uuid: string;
-        };
-        Returns: {
-          id: string;
-          name: string;
-          description: string | null;
-          color: string;
-          is_archived: boolean;
-          total_tasks: number;
-          pending_tasks: number;
-          completed_tasks: number;
-          overdue_tasks: number;
-          created_at: string;
-        }[];
-      };
-    };
-    Enums: {
-      task_status: TaskStatus;
-      priority_level: Priority;
-      energy_level: EnergyLevel;
-    };
-  };
+// Re-export Drizzle types for consistency
+export type { 
+  Task, 
+  NewTask, 
+  Project, 
+  NewProject, 
+  UserProfile, 
+  PhoneNumber,
+  Priority,
+  TaskStatus,
+  EnergyLevel,
+  RecurrencePattern 
 };
 
 // Enhanced types for application use
-export type EnhancedTask = Database['public']['Tables']['tasks']['Row'];
-export type Project = Database['public']['Tables']['projects']['Row'];
-export type ProjectWithStats = Database['public']['Functions']['get_user_projects_with_counts']['Returns'][0];
+export type EnhancedTask = Task;
+
+export type ProjectWithStats = {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  is_archived: boolean;
+  total_tasks: number;
+  pending_tasks: number;
+  completed_tasks: number;
+  overdue_tasks: number;
+  created_at: Date;
+};
 
 // Helper types for UI components
 export type TaskWithProject = EnhancedTask & {
@@ -193,11 +58,11 @@ export type ProjectWithTasks = Project & {
   };
 };
 
-// Task creation/update helpers
-export type TaskCreate = Database['public']['Tables']['tasks']['Insert'];
-export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
-export type ProjectCreate = Database['public']['Tables']['projects']['Insert'];
-export type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+// Task creation/update helpers (using Drizzle types)
+export type TaskCreate = NewTask;
+export type TaskUpdate = Partial<Task>;
+export type ProjectCreate = NewProject;
+export type ProjectUpdate = Partial<Project>;
 
 // Common filter and sort types
 export type TaskFilter = {

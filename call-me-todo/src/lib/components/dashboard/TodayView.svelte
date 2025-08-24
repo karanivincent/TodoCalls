@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Database } from '$lib/database.types';
 	import { formatTimeInTimezone } from '$lib/utils/timezone';
+	import Icon from '@iconify/svelte';
 	
 	type Task = Database['public']['Tables']['tasks']['Row'];
 	
@@ -8,6 +9,47 @@
 	export let loading: boolean = false;
 	export let userTimezone: string = 'UTC';
 	export let testReminder: (taskId: string) => Promise<void>;
+	
+	// Priority colors and icons
+	function getPriorityStyle(priority: string | null) {
+		switch (priority) {
+			case 'urgent':
+				return {
+					bg: 'bg-red-100',
+					text: 'text-red-700',
+					border: 'border-red-300',
+					icon: 'heroicons:fire'
+				};
+			case 'high':
+				return {
+					bg: 'bg-orange-100',
+					text: 'text-orange-700', 
+					border: 'border-orange-300',
+					icon: 'heroicons:bolt'
+				};
+			case 'medium':
+				return {
+					bg: 'bg-blue-100',
+					text: 'text-blue-700',
+					border: 'border-blue-300', 
+					icon: 'heroicons:clipboard-document-list'
+				};
+			case 'low':
+				return {
+					bg: 'bg-gray-100',
+					text: 'text-gray-600',
+					border: 'border-gray-300',
+					icon: 'heroicons:pencil'
+				};
+			default:
+				return {
+					bg: 'bg-gray-100',
+					text: 'text-gray-600',
+					border: 'border-gray-300',
+					icon: 'heroicons:clipboard-document-list'
+				};
+		}
+	}
 	
 	// Group tasks by status and time
 	$: groupedTasks = {
@@ -48,10 +90,10 @@
 	}
 </script>
 
-<div class="p-6">
+<div class="p-4">
 	{#if loading}
-		<div class="flex justify-center py-12">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+		<div class="flex justify-center py-8">
+			<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
 		</div>
 	{:else if tasks.length === 0}
 		<!-- Empty State -->
@@ -69,182 +111,43 @@
 			<p class="text-sm text-gray-400">Try: "Remind me to call mom at 3pm"</p>
 		</div>
 	{:else}
-		<div class="space-y-6">
-			<!-- Overdue Tasks (Highest Priority) -->
-			{#if groupedTasks.overdue.length > 0}
-				<div class="bg-red-50 rounded-lg border border-red-200 p-4">
-					<div class="flex items-center mb-3">
-						<span class="text-red-600 text-xl mr-2">🔥</span>
-						<h3 class="text-lg font-semibold text-red-800">
-							Overdue ({groupedTasks.overdue.length})
-						</h3>
-					</div>
-					<div class="space-y-3">
-						{#each groupedTasks.overdue as task}
-							<div class="bg-white rounded-lg p-3 border border-red-200">
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h4 class="font-medium text-gray-900 mb-1">{task.title}</h4>
-										<p class="text-sm text-red-600">Due {formatTime(task.scheduled_at)}</p>
-									</div>
-									<div class="flex items-center gap-2">
-										<button 
-											on:click={() => testReminder(task.id)}
-											class="px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors"
-											title="Test reminder call now"
-										>
-											📞 Call Now
-										</button>
-										<button class="text-gray-400 hover:text-gray-600">
-											<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-											</svg>
-										</button>
-									</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-			
-			<!-- Morning Tasks -->
-			{#if groupedTasks.morning.length > 0}
-				<div class="bg-orange-50 rounded-lg border border-orange-200 p-4">
-					<div class="flex items-center mb-3">
-						<span class="text-orange-600 text-xl mr-2">🌅</span>
-						<h3 class="text-lg font-semibold text-orange-800">
-							Morning ({groupedTasks.morning.length})
-						</h3>
-					</div>
-					<div class="space-y-3">
-						{#each groupedTasks.morning as task}
-							<div class="bg-white rounded-lg p-3 border border-orange-200">
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h4 class="font-medium text-gray-900 mb-1">{task.title}</h4>
-										<p class="text-sm text-orange-600">{formatTime(task.scheduled_at)}</p>
-									</div>
-									<div class="flex items-center gap-2">
-										<button 
-											on:click={() => testReminder(task.id)}
-											class="px-3 py-1 bg-orange-100 text-orange-700 text-xs rounded-md hover:bg-orange-200 transition-colors"
-											title="Test reminder call now"
-										>
-											📞 Test Call
-										</button>
-										<button class="text-gray-400 hover:text-gray-600">
-											<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-											</svg>
-										</button>
-									</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-			
-			<!-- Afternoon Tasks -->
-			{#if groupedTasks.afternoon.length > 0}
-				<div class="bg-blue-50 rounded-lg border border-blue-200 p-4">
-					<div class="flex items-center mb-3">
-						<span class="text-blue-600 text-xl mr-2">☀️</span>
-						<h3 class="text-lg font-semibold text-blue-800">
-							Afternoon ({groupedTasks.afternoon.length})
-						</h3>
-					</div>
-					<div class="space-y-3">
-						{#each groupedTasks.afternoon as task}
-							<div class="bg-white rounded-lg p-3 border border-blue-200">
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h4 class="font-medium text-gray-900 mb-1">{task.title}</h4>
-										<p class="text-sm text-blue-600">{formatTime(task.scheduled_at)}</p>
-									</div>
-									<div class="flex items-center gap-2">
-										<button 
-											on:click={() => testReminder(task.id)}
-											class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-md hover:bg-blue-200 transition-colors"
-											title="Test reminder call now"
-										>
-											📞 Test Call
-										</button>
-										<button class="text-gray-400 hover:text-gray-600">
-											<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-											</svg>
-										</button>
-									</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-			
-			<!-- Evening Tasks -->
-			{#if groupedTasks.evening.length > 0}
-				<div class="bg-indigo-50 rounded-lg border border-indigo-200 p-4">
-					<div class="flex items-center mb-3">
-						<span class="text-indigo-600 text-xl mr-2">🌆</span>
-						<h3 class="text-lg font-semibold text-indigo-800">
-							Evening ({groupedTasks.evening.length})
-						</h3>
-					</div>
-					<div class="space-y-3">
-						{#each groupedTasks.evening as task}
-							<div class="bg-white rounded-lg p-3 border border-indigo-200">
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h4 class="font-medium text-gray-900 mb-1">{task.title}</h4>
-										<p class="text-sm text-indigo-600">{formatTime(task.scheduled_at)}</p>
-									</div>
-									<div class="flex items-center gap-2">
-										<button 
-											on:click={() => testReminder(task.id)}
-											class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-md hover:bg-indigo-200 transition-colors"
-											title="Test reminder call now"
-										>
-											📞 Test Call
-										</button>
-										<button class="text-gray-400 hover:text-gray-600">
-											<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-											</svg>
-										</button>
-									</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-			
-			<!-- Completed Tasks (Collapsible) -->
-			{#if groupedTasks.completed.length > 0}
-				<details class="bg-green-50 rounded-lg border border-green-200">
-					<summary class="p-4 cursor-pointer">
-						<div class="flex items-center">
-							<span class="text-green-600 text-xl mr-2">✅</span>
-							<h3 class="text-lg font-semibold text-green-800">
-								Completed Today ({groupedTasks.completed.length})
-							</h3>
+		<div class="space-y-1">
+			<!-- Simple unified task list -->
+			{#each [...groupedTasks.overdue, ...groupedTasks.morning, ...groupedTasks.afternoon, ...groupedTasks.evening] as task}
+				{@const isOverdue = groupedTasks.overdue.includes(task)}
+				{@const isUrgent = task.priority === 'urgent'}
+				<div class="flex items-center gap-3 py-3 px-4 hover:bg-gray-50 border-b border-gray-100 group">
+					<!-- Status indicator -->
+					<div class="w-2 h-2 rounded-full flex-shrink-0 {isOverdue ? 'bg-red-500' : isUrgent ? 'bg-orange-500' : 'bg-gray-300'}"></div>
+					
+					<!-- Task content -->
+					<div class="flex-1 min-w-0">
+						<div class="flex items-baseline gap-2">
+							<h4 class="font-medium text-gray-900 truncate">{task.title}</h4>
+							<span class="text-sm text-gray-500 flex-shrink-0">{formatTime(task.scheduled_at)}</span>
 						</div>
-					</summary>
-					<div class="px-4 pb-4 space-y-2">
-						{#each groupedTasks.completed as task}
-							<div class="bg-white rounded-lg p-3 border border-green-200 opacity-75">
-								<div class="flex items-center">
-									<span class="text-green-600 mr-2">✓</span>
-									<h4 class="font-medium text-gray-700">{task.title}</h4>
-									<span class="ml-auto text-sm text-green-600">{formatTime(task.scheduled_at)}</span>
-								</div>
-							</div>
-						{/each}
+						{#if isOverdue}
+							<p class="text-xs text-red-600 mt-0.5">Overdue</p>
+						{/if}
 					</div>
-				</details>
+					
+					<!-- Single action -->
+					<button 
+						on:click={() => testReminder(task.id)}
+						class="opacity-0 group-hover:opacity-100 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:border-gray-400 transition-all flex-shrink-0"
+					>
+						Call
+					</button>
+				</div>
+			{/each}
+			<!-- Completed tasks (simple footer) -->
+			{#if groupedTasks.completed.length > 0}
+				<div class="pt-4 mt-6 border-t border-gray-200">
+					<div class="flex items-center justify-between text-sm text-gray-500">
+						<span>{groupedTasks.completed.length} completed today</span>
+						<Icon icon="heroicons:check-circle" class="w-4 h-4" />
+					</div>
+				</div>
 			{/if}
 		</div>
 	{/if}
