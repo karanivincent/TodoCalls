@@ -85,19 +85,18 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-		<!-- Project Header -->
-		<ProjectHeader {project} {stats} />
-		
-		<!-- Kanban Board -->
-		<div class="mt-8">
-			<KanbanBoard 
-				{groupedTasks}
-				{project}
-				on:updateStatus={(e) => updateTaskStatus(e.detail.taskId, e.detail.status)}
-				on:testReminder={(e) => testReminder(e.detail.taskId)}
-			/>
-		</div>
+<!-- Project content without wrapper - layout provided by parent route -->
+<div class="px-4 sm:px-6 lg:px-8 py-6">
+	<!-- Project Header -->
+	<ProjectHeader {project} {stats} />
+	
+	<!-- Kanban Board -->
+	<div class="mt-8">
+		<KanbanBoard 
+			{groupedTasks}
+			{project}
+			on:updateStatus={(e) => updateTaskStatus(e.detail.taskId, e.detail.status)}
+			on:testReminder={(e) => testReminder(e.detail.taskId)}
+		/>
 	</div>
 </div>

@@ -5,6 +5,7 @@
 	import { getUserTimezone, formatInTimezone } from '$lib/utils/timezone';
 	import ProjectSelector from './ProjectSelector.svelte';
 	import type { Project } from '$lib/database.types.enhanced';
+	import { page } from '$app/stores';
 	
 	const dispatch = createEventDispatcher();
 	
@@ -180,7 +181,7 @@
 		alert('Voice input would start here (requires implementation)');
 	}
 	
-	// Load projects on mount
+	// Load projects on mount and check for current project
 	onMount(async () => {
 		loadingProjects = true;
 		try {
@@ -188,6 +189,11 @@
 			if (response.ok) {
 				const data = await response.json();
 				projects = data.projects || [];
+				
+				// Auto-select project if we're on a project page
+				if ($page.route.id?.includes('projects/[id]') && $page.params.id) {
+					selectedProjectId = $page.params.id;
+				}
 			}
 		} catch (error) {
 			console.error('Error loading projects:', error);
@@ -195,6 +201,11 @@
 			loadingProjects = false;
 		}
 	});
+	
+	// Watch for route changes to update selected project
+	$: if ($page.route.id?.includes('projects/[id]') && $page.params.id) {
+		selectedProjectId = $page.params.id;
+	}
 	
 	function handleProjectChange(projectId: string | null) {
 		selectedProjectId = projectId;
