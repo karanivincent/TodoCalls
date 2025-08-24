@@ -178,8 +178,12 @@
 						<!-- Timeline line -->
 						<div class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-red-200"></div>
 						
-						{#each groupedTasks.overdue as task, index}
-							<div class="relative flex items-center gap-4 pb-4 group hover:bg-red-50/50 -mx-2 px-2 rounded">
+						{#each groupedTasks.overdue.sort((a, b) => {
+							const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3, null: 4 };
+							return (priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4);
+						}) as task, index}
+							{@const priorityStyle = getPriorityStyle(task.priority)}
+							<div class="relative flex items-center gap-4 pb-4 group hover:bg-red-50/50 -mx-2 px-2 rounded border-l-4 {task.priority === 'urgent' ? 'border-red-500' : task.priority === 'high' ? 'border-orange-500' : task.priority === 'medium' ? 'border-blue-500' : 'border-gray-300'}">
 								<!-- Timeline dot -->
 								<div class="absolute -left-6 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
 								
@@ -193,6 +197,21 @@
 									<div class="flex items-center gap-1.5">
 										<Icon icon="heroicons:phone" class="w-4 h-4 text-gray-500" />
 										<span class="font-semibold text-gray-900">{task.title}</span>
+										{#if task.priority === 'urgent' || task.priority === 'high'}
+											<Icon icon={priorityStyle.icon} class="w-4 h-4 {priorityStyle.text}" />
+										{/if}
+									</div>
+									<div class="flex items-center gap-2 mt-1 ml-5">
+										{#if task.tags && task.tags.length > 0}
+											<div class="flex gap-1">
+												{#each task.tags as tag}
+													<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">#{tag}</span>
+												{/each}
+											</div>
+										{/if}
+										{#if task.due_date}
+											<span class="text-xs text-red-600 font-medium">Due: {new Date(task.due_date).toLocaleDateString()}</span>
+										{/if}
 									</div>
 								</div>
 								
@@ -225,8 +244,17 @@
 						<!-- Timeline line -->
 						<div class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 						
-						{#each upcomingTasks as task, index}
-							<div class="relative flex items-center gap-4 pb-4 group hover:bg-gray-50 -mx-2 px-2 rounded">
+						{#each upcomingTasks.sort((a, b) => {
+							const timeA = new Date(a.scheduled_at).getTime();
+							const timeB = new Date(b.scheduled_at).getTime();
+							if (Math.abs(timeA - timeB) < 3600000) { // Within same hour, sort by priority
+								const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3, null: 4 };
+								return (priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4);
+							}
+							return timeA - timeB;
+						}) as task, index}
+							{@const priorityStyle = getPriorityStyle(task.priority)}
+							<div class="relative flex items-center gap-4 pb-4 group hover:bg-gray-50 -mx-2 px-2 rounded border-l-4 {task.priority === 'urgent' ? 'border-red-500' : task.priority === 'high' ? 'border-orange-500' : task.priority === 'medium' ? 'border-blue-500' : 'border-gray-300'}">
 								<!-- Timeline dot -->
 								<div class="absolute -left-6 w-3 h-3 bg-gray-400 rounded-full border-2 border-white"></div>
 								
@@ -240,10 +268,22 @@
 									<div class="flex items-center gap-1.5">
 										<Icon icon="heroicons:phone" class="w-4 h-4 text-gray-500" />
 										<span class="font-semibold text-gray-900">{task.title}</span>
+										{#if task.priority === 'urgent' || task.priority === 'high'}
+											<Icon icon={priorityStyle.icon} class="w-4 h-4 {priorityStyle.text}" />
+										{/if}
 									</div>
-									{#if task.priority === 'urgent'}
-										<div class="text-xs text-orange-600 font-medium ml-5">Urgent</div>
-									{/if}
+									<div class="flex items-center gap-2 mt-1 ml-5">
+										{#if task.tags && task.tags.length > 0}
+											<div class="flex gap-1">
+												{#each task.tags as tag}
+													<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">#{tag}</span>
+												{/each}
+											</div>
+										{/if}
+										{#if task.due_date}
+											<span class="text-xs text-gray-500">Due: {new Date(task.due_date).toLocaleDateString()}</span>
+										{/if}
+									</div>
 								</div>
 								
 								<!-- Time -->
