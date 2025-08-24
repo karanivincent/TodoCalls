@@ -9,7 +9,7 @@
 	let supabase = createSupabaseClient();
 	let user: any = null;
 	let loading = true;
-	let currentView: 'today' | 'timeline' | 'list' = 'today';
+	let sidebarCollapsed = false;
 	
 	// Task counts for sidebar - will be updated from child pages
 	let taskCounts = {
@@ -30,11 +30,18 @@
 		
 		user = currentUser;
 		loading = false;
+		
+		// Load sidebar collapsed state from localStorage
+		const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+		if (savedCollapsed !== null) {
+			sidebarCollapsed = savedCollapsed === 'true';
+		}
 	});
 	
-	function handleViewChange(view: 'today' | 'timeline' | 'list') {
-		currentView = view;
-		// Navigation will be handled by the sidebar links
+	function toggleSidebar() {
+		sidebarCollapsed = !sidebarCollapsed;
+		// Save to localStorage
+		localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
 	}
 	
 	async function handleTaskCreated(event: CustomEvent) {
@@ -58,9 +65,9 @@
 		<!-- Sidebar -->
 		<div class="flex-shrink-0">
 			<LeftSidebar 
-				{currentView}
 				{taskCounts}
-				onViewChange={handleViewChange}
+				collapsed={sidebarCollapsed}
+				onToggleCollapse={toggleSidebar}
 			/>
 		</div>
 		

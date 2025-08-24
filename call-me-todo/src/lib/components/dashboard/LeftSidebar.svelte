@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import Icon from '@iconify/svelte';
 	import type { ProjectWithStats } from '$lib/database.types.enhanced';
 
-	export let currentView: 'today' | 'timeline' | 'list' = 'today';
-	export let onViewChange: (view: 'today' | 'timeline' | 'list') => void = () => {};
+	export let collapsed: boolean = false;
+	export let onToggleCollapse: () => void = () => {};
 	export let taskCounts: {
 		today: number;
 		upcoming: number;
@@ -45,11 +47,6 @@
 	onMount(() => {
 		fetchProjects();
 	});
-	
-	function handleViewChange(view: 'today' | 'timeline' | 'list') {
-		currentView = view;
-		onViewChange(view);
-	}
 
 	async function createProject() {
 		if (!newProject.name.trim()) return;
@@ -82,90 +79,150 @@
 	}
 </script>
 
-<div class="h-full flex flex-col">
+<div class="h-full flex flex-col bg-white border-r border-gray-200 transition-all duration-300" class:w-64={!collapsed} class:w-16={collapsed}>
+	<!-- Collapse Toggle Button -->
+	<div class="flex items-center justify-between p-4 border-b border-gray-200">
+		{#if !collapsed}
+			<h2 class="text-lg font-semibold text-gray-800">Menu</h2>
+		{/if}
+		<button 
+			on:click={onToggleCollapse}
+			class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+			aria-label="{collapsed ? 'Expand' : 'Collapse'} sidebar"
+		>
+			<Icon 
+				icon={collapsed ? 'heroicons:chevron-double-right' : 'heroicons:chevron-double-left'} 
+				class="w-5 h-5 text-gray-600" 
+			/>
+		</button>
+	</div>
+	
 	<!-- Primary Views -->
 	<div class="p-4">
 		<nav class="space-y-1">
-			<button
-				class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-				class:bg-orange-50={currentView === 'today'}
-				class:text-orange-700={currentView === 'today'}
-				class:border-orange-200={currentView === 'today'}
-				class:border={currentView === 'today'}
-				class:text-gray-700={currentView !== 'today'}
-				class:hover:bg-gray-50={currentView !== 'today'}
-				on:click={() => handleViewChange('today')}
+			<a
+				href="/dashboard"
+				class="relative group w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+				class:bg-orange-50={$page.url.pathname === '/dashboard'}
+				class:text-orange-700={$page.url.pathname === '/dashboard'}
+				class:border-orange-200={$page.url.pathname === '/dashboard'}
+				class:border={$page.url.pathname === '/dashboard'}
+				class:text-gray-700={$page.url.pathname !== '/dashboard'}
+				class:hover:bg-gray-50={$page.url.pathname !== '/dashboard'}
+				class:justify-center={collapsed}
 			>
-				<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-				</svg>
-				Today
-				{#if taskCounts.today > 0}
-					<span class="ml-auto bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full">
+				<Icon icon="heroicons:star" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+				{#if !collapsed}
+					Today
+					{#if taskCounts.today > 0}
+						<span class="ml-auto bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full">
+							{taskCounts.today}
+						</span>
+					{/if}
+				{:else if taskCounts.today > 0}
+					<span class="absolute -top-1 -right-1 bg-orange-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
 						{taskCounts.today}
 					</span>
 				{/if}
-			</button>
+				{#if collapsed}
+					<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+						Today
+					</div>
+				{/if}
+			</a>
 			
-			<button
-				class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-				class:bg-orange-50={currentView === 'timeline'}
-				class:text-orange-700={currentView === 'timeline'}
-				class:border-orange-200={currentView === 'timeline'}
-				class:border={currentView === 'timeline'}
-				class:text-gray-700={currentView !== 'timeline'}
-				class:hover:bg-gray-50={currentView !== 'timeline'}
-				on:click={() => handleViewChange('timeline')}
+			<a
+				href="/dashboard/timeline"
+				class="relative group w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+				class:justify-center={collapsed}
+				class:bg-orange-50={$page.url.pathname === '/dashboard/timeline'}
+				class:text-orange-700={$page.url.pathname === '/dashboard/timeline'}
+				class:border-orange-200={$page.url.pathname === '/dashboard/timeline'}
+				class:border={$page.url.pathname === '/dashboard/timeline'}
+				class:text-gray-700={$page.url.pathname !== '/dashboard/timeline'}
+				class:hover:bg-gray-50={$page.url.pathname !== '/dashboard/timeline'}
 			>
-				<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-				</svg>
-				Timeline
-			</button>
+				<Icon icon="heroicons:calendar" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+				{#if !collapsed}
+					Timeline
+				{/if}
+				{#if collapsed}
+					<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+						Timeline
+					</div>
+				{/if}
+			</a>
 			
-			<button
-				class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-				class:bg-orange-50={currentView === 'list'}
-				class:text-orange-700={currentView === 'list'}
-				class:border-orange-200={currentView === 'list'}
-				class:border={currentView === 'list'}
-				class:text-gray-700={currentView !== 'list'}
-				class:hover:bg-gray-50={currentView !== 'list'}
-				on:click={() => handleViewChange('list')}
+			<a
+				href="/dashboard/list"
+				class="relative group w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+				class:justify-center={collapsed}
+				class:bg-orange-50={$page.url.pathname === '/dashboard/list'}
+				class:text-orange-700={$page.url.pathname === '/dashboard/list'}
+				class:border-orange-200={$page.url.pathname === '/dashboard/list'}
+				class:border={$page.url.pathname === '/dashboard/list'}
+				class:text-gray-700={$page.url.pathname !== '/dashboard/list'}
+				class:hover:bg-gray-50={$page.url.pathname !== '/dashboard/list'}
 			>
-				<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-				</svg>
-				List
-			</button>
+				<Icon icon="heroicons:list-bullet" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+				{#if !collapsed}
+					List
+				{/if}
+				{#if collapsed}
+					<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+						List
+					</div>
+				{/if}
+			</a>
 			
-			<button class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-				<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0a2 2 0 01-2-2v-5a2 2 0 00-2-2H8z"/>
-				</svg>
-				Upcoming
-				{#if taskCounts.upcoming > 0}
-					<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+			<a 
+				href="/dashboard/upcoming"
+				class="relative group w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+				class:justify-center={collapsed}
+			>
+				<Icon icon="heroicons:document-duplicate" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+				{#if !collapsed}
+					Upcoming
+					{#if taskCounts.upcoming > 0}
+						<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+							{taskCounts.upcoming}
+						</span>
+					{/if}
+				{:else if taskCounts.upcoming > 0}
+					<span class="absolute -top-1 -right-1 bg-gray-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
 						{taskCounts.upcoming}
 					</span>
 				{/if}
-			</button>
+				{#if collapsed}
+					<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+						Upcoming
+					</div>
+				{/if}
+			</a>
 		</nav>
 	</div>
 	
 	<!-- Projects Section -->
 	<div class="px-4 py-2 border-t border-gray-200">
 		<div class="flex items-center justify-between mb-3">
-			<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Projects</h3>
-			<button 
-				class="text-gray-400 hover:text-gray-600" 
-				aria-label="Add new project"
-				on:click={() => showCreateModal = true}
-			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-				</svg>
-			</button>
+			{#if !collapsed}
+				<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Projects</h3>
+				<button 
+					class="text-gray-400 hover:text-gray-600" 
+					aria-label="Add new project"
+					on:click={() => showCreateModal = true}
+				>
+					<Icon icon="heroicons:plus" class="w-4 h-4" />
+				</button>
+			{:else}
+				<button 
+					class="w-full flex justify-center text-gray-400 hover:text-gray-600" 
+					aria-label="Projects"
+					on:click={() => onToggleCollapse()}
+				>
+					<Icon icon="heroicons:folder" class="w-5 h-5" />
+				</button>
+			{/if}
 		</div>
 		
 		<div class="space-y-1">
@@ -179,23 +236,31 @@
 					{error}
 				</div>
 			{:else}
-				{#each projects as project}
-					<a 
-						href="/dashboard/projects/{project.id}"
-						class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-					>
-						<div 
-							class="w-3 h-3 rounded-full mr-3"
-							style="background-color: {project.color}"
-						></div>
-						{project.name}
-						{#if project.total_tasks > 0}
-							<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-								{project.total_tasks}
-							</span>
-						{/if}
-					</a>
-				{/each}
+				{#if !collapsed}
+					{#each projects as project}
+						<a 
+							href="/dashboard/projects/{project.id}"
+							class="relative group w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+							class:bg-orange-50={$page.params.id === project.id}
+							class:text-orange-700={$page.params.id === project.id}
+							class:border-orange-200={$page.params.id === project.id}
+							class:border={$page.params.id === project.id}
+							class:text-gray-700={$page.params.id !== project.id}
+							class:hover:bg-gray-50={$page.params.id !== project.id}
+						>
+							<div 
+								class="w-3 h-3 rounded-full mr-3 flex-shrink-0"
+								style="background-color: {project.color}"
+							></div>
+							{project.name}
+							{#if project.total_tasks > 0}
+								<span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+									{project.total_tasks}
+								</span>
+							{/if}
+						</a>
+					{/each}
+				{/if}
 			{/if}
 		</div>
 	</div>
@@ -207,39 +272,54 @@
 			<nav class="space-y-1">
 				<a 
 					href="/dashboard/settings" 
-					class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+					class="relative group flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+					class:justify-center={collapsed}
 				>
-					<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-					</svg>
-					Settings
+					<Icon icon="heroicons:cog-6-tooth" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+					{#if !collapsed}
+						Settings
+					{/if}
+					{#if collapsed}
+						<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+							Settings
+						</div>
+					{/if}
 				</a>
 				<a 
 					href="/help" 
-					class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+					class="relative group flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+					class:justify-center={collapsed}
 				>
-					<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
-					Help
+					<Icon icon="heroicons:question-mark-circle" class="w-5 h-5 {collapsed ? '' : 'mr-3'} flex-shrink-0" />
+					{#if !collapsed}
+						Help
+					{/if}
+					{#if collapsed}
+						<div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+							Help
+						</div>
+					{/if}
 				</a>
 			</nav>
 		</div>
 		
 		<!-- Voice Status Section -->
 		<div class="p-4 border-t border-gray-200">
-			<div class="bg-orange-50 rounded-lg p-3">
-				<div class="flex items-center text-sm text-orange-700 mb-2">
-					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-					</svg>
-					Voice Status
-				</div>
-				<p class="text-xs text-orange-600 mb-2">Next call in 25 min</p>
-				<button class="w-full px-3 py-1 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors">
-					Test Call Now
-				</button>
+			<div class="bg-orange-50 rounded-lg {collapsed ? 'p-2' : 'p-3'}">
+				{#if !collapsed}
+					<div class="flex items-center text-sm text-orange-700 mb-2">
+						<Icon icon="heroicons:phone" class="w-4 h-4 mr-2" />
+						Voice Status
+					</div>
+					<p class="text-xs text-orange-600 mb-2">Next call in 25 min</p>
+					<button class="w-full px-3 py-1 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors">
+						Test Call Now
+					</button>
+				{:else}
+					<button class="w-full flex justify-center items-center text-orange-600 hover:text-orange-700">
+						<Icon icon="heroicons:phone" class="w-5 h-5" />
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
