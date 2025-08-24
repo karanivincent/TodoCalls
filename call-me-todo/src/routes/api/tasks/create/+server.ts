@@ -7,7 +7,7 @@ import { formatInTimezone } from '$lib/utils/timezone';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
-    const { input, phoneNumber, timezone: requestTimezone } = await request.json();
+    const { input, phoneNumber, timezone: requestTimezone, project_id, priority } = await request.json();
     
     if (!input) {
       return json({ error: 'Input text is required' }, { status: 400 });
@@ -67,9 +67,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       taskPhoneNumber = userPhoneNumber;
     }
 
-    // Find project ID if project name was parsed
-    let projectId: string | null = null;
-    if (parsedTask.projectName) {
+    // Use provided project_id or find by name if parsed
+    let projectId: string | null = project_id || null;
+    if (!projectId && parsedTask.projectName) {
       const { data: project } = await supabase
         .from('projects')
         .select('id')
@@ -90,7 +90,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       scheduled_at: parsedTask.scheduledAt.toISOString(),
       status: 'pending',
       description: parsedTask.description || null,
-      priority: parsedTask.priority,
+      priority: priority || parsedTask.priority, // Use provided priority or parsed one
       tags: parsedTask.tags,
       project_id: projectId,
       estimated_duration: parsedTask.estimatedDuration || null,

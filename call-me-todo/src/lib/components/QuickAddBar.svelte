@@ -3,6 +3,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import { toast } from '$lib/stores/toast';
 	import { getUserTimezone, formatInTimezone } from '$lib/utils/timezone';
+	import ProjectSelector from './ProjectSelector.svelte';
+	import type { Project } from '$lib/database.types.enhanced';
 	
 	const dispatch = createEventDispatcher();
 	
@@ -10,6 +12,9 @@
 	let isExpanded = false;
 	let showRecipients = false;
 	let isLoading = false;
+	let selectedProjectId: string | null = null;
+	let projects: Project[] = [];
+	let loadingProjects = false;
 	let parsedData = {
 		recipient: '',
 		task: '',
@@ -112,7 +117,9 @@
 				credentials: 'same-origin', // Include cookies for authentication
 				body: JSON.stringify({ 
 					input: taskInput,
-					timezone: userTimezone
+					timezone: userTimezone,
+					project_id: selectedProjectId,
+					priority: parsedData.priority || 'medium'
 				})
 			});
 			
@@ -172,6 +179,26 @@
 	function startVoiceInput() {
 		alert('Voice input would start here (requires implementation)');
 	}
+	
+	// Load projects on mount
+	onMount(async () => {
+		loadingProjects = true;
+		try {
+			const response = await fetch('/api/projects');
+			if (response.ok) {
+				const data = await response.json();
+				projects = data.projects || [];
+			}
+		} catch (error) {
+			console.error('Error loading projects:', error);
+		} finally {
+			loadingProjects = false;
+		}
+	});
+	
+	function handleProjectChange(projectId: string | null) {
+		selectedProjectId = projectId;
+	}
 </script>
 
 <div class="bg-white border-b border-gray-200 sticky top-0 z-30">
@@ -180,6 +207,14 @@
 			<div class="relative">
 				<!-- Main Input Container -->
 				<div class="flex items-center gap-2">
+					<!-- Project Selector -->
+					<ProjectSelector 
+						{selectedProjectId}
+						{projects}
+						loading={loadingProjects}
+						onProjectChange={handleProjectChange}
+					/>
+					
 					<!-- Input Field with Voice Button -->
 					<div class="flex-1 flex items-center gap-2 bg-white rounded-lg border border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
 						<!-- Voice Input Button -->
