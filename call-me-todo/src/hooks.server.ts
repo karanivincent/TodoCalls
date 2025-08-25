@@ -28,13 +28,38 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 	
-	// Get Supabase env vars with fallback to process.env for Vercel
-	const supabaseUrl = env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL;
-	const supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
+	// Try multiple ways to get env vars for Vercel compatibility
+	let supabaseUrl = env.PUBLIC_SUPABASE_URL;
+	let supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY;
+	
+	// Fallback to process.env
+	if (!supabaseUrl && typeof process !== 'undefined') {
+		supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+	}
+	if (!supabaseAnonKey && typeof process !== 'undefined') {
+		supabaseAnonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
+	}
+	
+	// Fallback to import.meta.env for Vite
+	if (!supabaseUrl && typeof import.meta !== 'undefined' && import.meta.env) {
+		supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+	}
+	if (!supabaseAnonKey && typeof import.meta !== 'undefined' && import.meta.env) {
+		supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+	}
+	
+	// Log what we found for debugging
+	console.log('Supabase URL found:', !!supabaseUrl);
+	console.log('Supabase Anon Key found:', !!supabaseAnonKey);
 	
 	if (!supabaseUrl || !supabaseAnonKey) {
-		console.error('Supabase environment variables not found');
-		throw new Error('Supabase environment variables not configured');
+		console.error('Supabase environment variables not found in any location');
+		console.error('Checked: env, process.env, import.meta.env');
+		// Return a minimal response instead of crashing
+		return new Response('Service temporarily unavailable - environment not configured', { 
+			status: 503,
+			headers: { 'Content-Type': 'text/plain' }
+		});
 	}
 	
 	// Create Supabase client for all requests
