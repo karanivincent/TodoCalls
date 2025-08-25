@@ -54,10 +54,10 @@ export const phoneNumbers = pgTable('phone_numbers', {
   updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
-// Projects table (new)
+// Projects table (new) - references auth.users directly
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  user_id: uuid('user_id').references(() => userProfiles.id, { onDelete: 'cascade' }).notNull(),
+  user_id: uuid('user_id').notNull(), // References auth.users.id (managed by Supabase)
   name: text('name').notNull(),
   description: text('description'),
   color: text('color').default('#6366f1'),
