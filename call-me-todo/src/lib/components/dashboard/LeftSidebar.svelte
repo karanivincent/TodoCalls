@@ -322,26 +322,6 @@
 				</a>
 			</nav>
 		</div>
-		
-		<!-- Voice Status Section -->
-		<div class="p-4 border-t border-gray-200">
-			<div class="bg-orange-50 rounded-lg {collapsed ? 'p-2' : 'p-3'}">
-				{#if !collapsed}
-					<div class="flex items-center text-sm text-orange-700 mb-2">
-						<Icon icon="heroicons:phone" class="w-4 h-4 mr-2" />
-						Voice Status
-					</div>
-					<p class="text-xs text-orange-600 mb-2">Next call in 25 min</p>
-					<button class="w-full px-3 py-1 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors">
-						Test Call Now
-					</button>
-				{:else}
-					<button class="w-full flex justify-center items-center text-orange-600 hover:text-orange-700">
-						<Icon icon="heroicons:phone" class="w-5 h-5" />
-					</button>
-				{/if}
-			</div>
-		</div>
 	</div>
 </div>
 
