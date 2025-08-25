@@ -28,10 +28,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 	
+	// Get Supabase env vars with fallback to process.env for Vercel
+	const supabaseUrl = env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL;
+	const supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
+	
+	if (!supabaseUrl || !supabaseAnonKey) {
+		console.error('Supabase environment variables not found');
+		throw new Error('Supabase environment variables not configured');
+	}
+	
 	// Create Supabase client for all requests
 	event.locals.supabase = createServerClient(
-		env.PUBLIC_SUPABASE_URL,
-		env.PUBLIC_SUPABASE_ANON_KEY,
+		supabaseUrl,
+		supabaseAnonKey,
 		{
 			cookies: {
 				getAll() {
