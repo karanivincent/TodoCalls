@@ -15,6 +15,10 @@ export type Database = {
           notify_by_phone?: boolean;
           notify_by_text?: boolean;
           notify_by_email?: boolean;
+          priority?: 'low' | 'medium' | 'high' | 'urgent' | null;
+          tags?: string[] | null;
+          project_id?: string | null;
+          due_date?: string | null;
         };
         Insert: {
           id?: string;
@@ -29,6 +33,10 @@ export type Database = {
           notify_by_phone?: boolean;
           notify_by_text?: boolean;
           notify_by_email?: boolean;
+          priority?: 'low' | 'medium' | 'high' | 'urgent' | null;
+          tags?: string[] | null;
+          project_id?: string | null;
+          due_date?: string | null;
         };
         Update: {
           id?: string;
@@ -43,6 +51,10 @@ export type Database = {
           notify_by_phone?: boolean;
           notify_by_text?: boolean;
           notify_by_email?: boolean;
+          priority?: 'low' | 'medium' | 'high' | 'urgent' | null;
+          tags?: string[] | null;
+          project_id?: string | null;
+          due_date?: string | null;
         };
       };
     };

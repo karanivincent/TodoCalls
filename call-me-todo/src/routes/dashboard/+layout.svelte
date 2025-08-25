@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { createSupabaseClient } from '$lib/supabase';
-	import DashboardSidebar from '$lib/components/DashboardSidebar.svelte';
+	import LeftSidebar from '$lib/components/dashboard/LeftSidebar.svelte';
 	import QuickAddBar from '$lib/components/QuickAddBar.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	
@@ -10,6 +10,14 @@
 	let user: any = null;
 	let loading = true;
 	let sidebarCollapsed = false;
+	
+	// Task counts for sidebar - will be updated from child pages
+	let taskCounts = {
+		today: 0,
+		upcoming: 0,
+		completed: 0,
+		overdue: 0
+	};
 	
 	onMount(async () => {
 		// Check if user is authenticated
@@ -23,11 +31,18 @@
 		user = currentUser;
 		loading = false;
 		
-		// Check for mobile and auto-collapse sidebar
-		if (window.innerWidth < 768) {
-			sidebarCollapsed = true;
+		// Load sidebar collapsed state from localStorage
+		const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+		if (savedCollapsed !== null) {
+			sidebarCollapsed = savedCollapsed === 'true';
 		}
 	});
+	
+	function toggleSidebar() {
+		sidebarCollapsed = !sidebarCollapsed;
+		// Save to localStorage
+		localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
+	}
 	
 	async function handleTaskCreated(event: CustomEvent) {
 		const { task, parsed, message } = event.detail;
@@ -46,19 +61,23 @@
 		</div>
 	</div>
 {:else}
-	<div class="min-h-screen bg-gray-50 flex">
+	<div class="h-screen bg-gray-50 flex overflow-hidden">
 		<!-- Sidebar -->
-		<div class="flex-shrink-0">
-			<DashboardSidebar bind:isCollapsed={sidebarCollapsed} />
+		<div class="flex-shrink-0 h-full">
+			<LeftSidebar 
+				{taskCounts}
+				collapsed={sidebarCollapsed}
+				onToggleCollapse={toggleSidebar}
+			/>
 		</div>
 		
 		<!-- Main Content Area -->
-		<div class="flex-1 flex flex-col min-w-0">
+		<div class="flex-1 flex flex-col min-w-0 h-full">
 			<!-- Quick Add Bar -->
 			<QuickAddBar on:taskCreated={handleTaskCreated} />
 			
 			<!-- Page Content -->
-			<main class="flex-1 overflow-y-auto">
+			<main class="flex-1 overflow-hidden">
 				<slot />
 			</main>
 		</div>
