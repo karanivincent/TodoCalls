@@ -1,4 +1,6 @@
+import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
+import { env } from '$env/dynamic/public';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const pathname = event.url.pathname;
@@ -26,6 +28,42 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 	
+	// Create Supabase client for all requests
+	event.locals.supabase = createServerClient(
+		env.PUBLIC_SUPABASE_URL,
+		env.PUBLIC_SUPABASE_ANON_KEY,
+		{
+			cookies: {
+				getAll() {
+					return event.cookies.getAll();
+				},
+				setAll(cookiesToSet) {
+					cookiesToSet.forEach(({ name, value, options }) => {
+						event.cookies.set(name, value, { 
+							...options,
+							path: '/',
+							// Ensure proper cookie settings for production
+							secure: true,
+							sameSite: 'lax',
+							httpOnly: true
+						});
+					});
+				}
+			}
+		}
+	);
+	
+	// Helper to get session
+	event.locals.safeGetSession = async () => {
+		const { data: { session } } = await event.locals.supabase.auth.getSession();
+		return session;
+	};
+	
 	// For all other requests, proceed normally
-	return await resolve(event);
+	return await resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			// Preserve Supabase auth cookies
+			return name === 'content-range' || name === 'x-supabase-api-version';
+		}
+	});
 };

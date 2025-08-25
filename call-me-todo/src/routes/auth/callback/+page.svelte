@@ -17,23 +17,20 @@
 		const type = hashParams.get('type');
 		const provider = hashParams.get('provider_token') || hashParams.get('provider');
 		
+		console.log('[OAuth Client] Callback page mounted', {
+			hasCode: !!queryParams.get('code'),
+			hasError: !!errorParam,
+			type,
+			provider
+		});
+		
 		if (errorParam) {
 			error = errorDescription || errorParam;
 			return;
 		}
 		
-		// For OAuth callbacks, we need to exchange the code for a session
-		if (queryParams.get('code')) {
-			try {
-				const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(queryParams.get('code'));
-				if (exchangeError) {
-					error = exchangeError.message;
-					return;
-				}
-			} catch (e) {
-				// If exchange fails, continue to check session
-			}
-		}
+		// Note: Server-side handler (+server.ts) should have already processed OAuth codes
+		// This client-side code is a fallback for edge cases
 		
 		// Try to get the session
 		const { data: { session }, error: sessionError } = await supabase.auth.getSession();
