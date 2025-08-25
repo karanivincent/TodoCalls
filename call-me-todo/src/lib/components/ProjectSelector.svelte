@@ -30,22 +30,22 @@
 <div class="project-selector relative">
 	<button
 		on:click={() => showDropdown = !showDropdown}
-		class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-gray-300 hover:border-gray-400 transition-colors bg-white"
+		class="flex items-center justify-between gap-2 px-4 py-3 text-sm rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all bg-white group h-[46px] w-[180px]"
 		disabled={loading}
 	>
 		{#if loading}
-			<div class="animate-spin w-4 h-4 border-2 border-gray-300 border-t-orange-600 rounded-full"></div>
+			<div class="animate-spin w-4 h-4 border-2 border-gray-300 border-t-orange-600 rounded-full mx-auto"></div>
 		{:else}
-			<div class="flex items-center gap-1.5">
+			<div class="flex items-center gap-2 flex-1 min-w-0">
 				{#if selectedProject}
-					<span class="w-2 h-2 rounded-full" style="background-color: {selectedProject.color}"></span>
-					<span class="font-medium">{selectedProject.name}</span>
+					<span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {selectedProject.color}"></span>
+					<span class="font-medium text-gray-900 truncate">{selectedProject.name}</span>
 				{:else}
-					<Icon icon="heroicons:folder" class="w-4 h-4 text-gray-500" />
-					<span class="text-gray-600">No project</span>
+					<Icon icon="heroicons:folder" class="w-4 h-4 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+					<span class="text-gray-600 truncate">No project</span>
 				{/if}
 			</div>
-			<Icon icon="heroicons:chevron-down" class="w-4 h-4 text-gray-500" />
+			<Icon icon="heroicons:chevron-down" class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform flex-shrink-0 {showDropdown ? 'rotate-180' : ''}" />
 		{/if}
 	</button>
 	

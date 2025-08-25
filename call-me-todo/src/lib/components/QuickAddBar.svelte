@@ -212,12 +212,12 @@
 	}
 </script>
 
-<div class="bg-white border-b border-gray-200 sticky top-0 z-30">
+<div class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="py-3">
+		<div class="py-4">
 			<div class="relative">
 				<!-- Main Input Container -->
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-3">
 					<!-- Project Selector -->
 					<ProjectSelector 
 						{selectedProjectId}
@@ -226,18 +226,17 @@
 						onProjectChange={handleProjectChange}
 					/>
 					
-					<!-- Input Field with Voice Button -->
-					<div class="flex-1 flex items-center gap-2 bg-white rounded-lg border border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-						<!-- Voice Input Button -->
-						<button
-							on:click={startVoiceInput}
-							class="p-2 ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-							aria-label="Voice input"
-						>
+					<!-- Divider -->
+					<div class="w-px h-8 bg-gray-200"></div>
+					
+					<!-- Input Field with Icons -->
+					<div class="flex-1 flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:bg-white transition-all h-[46px]">
+						<!-- AI Sparkle Icon -->
+						<div class="pl-3 text-purple-500" title="AI-powered smart parsing">
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
 							</svg>
-						</button>
+						</div>
 						
 						<!-- Input Field -->
 						<input
@@ -247,101 +246,96 @@
 							on:keydown={handleKeyDown}
 							on:focus={() => isExpanded = true}
 							on:blur={() => setTimeout(() => isExpanded = false, 200)}
-							placeholder='Try: "Urgent: Review client proposal by tomorrow @work #client" or "Remind Mom to take medication at 9am"'
-							class="flex-1 py-2 pr-3 text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
+							placeholder='Try: "Call John at 2pm" or "Meeting tomorrow @work"'
+							class="flex-1 py-3 text-gray-900 placeholder-gray-500 focus:outline-none bg-transparent text-base"
 							autocomplete="off"
 						/>
+						
+						<!-- Voice Input Button -->
+						<button
+							on:click={startVoiceInput}
+							class="p-2 mr-2 text-gray-400 hover:text-gray-600 transition-colors group relative"
+							aria-label="Voice input"
+							title="Click to use voice input"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+							</svg>
+						</button>
 					</div>
 					
-					<!-- Add Button (Outside) -->
+					<!-- Add Button -->
 					<button
 						on:click={handleSubmit}
 						disabled={!input.trim() || isLoading}
-						class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-sm"
+						class="px-5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg font-medium group h-[46px] w-[140px]"
+						title="Press Enter to add task"
 					>
 						{#if isLoading}
-							<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
 								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 							</svg>
+							<span>Adding...</span>
 						{:else}
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
 							</svg>
+							<span>Add</span>
+							<kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 ml-1 text-xs bg-orange-700/20 rounded opacity-75">⏎</kbd>
 						{/if}
-						<span>{isLoading ? 'Adding...' : 'Add'}</span>
 					</button>
 				</div>
 				
-				<!-- AI Parsing Visualization -->
-				{#if parsedData.recipient || parsedData.task || parsedData.time || parsedData.project || parsedData.priority || parsedData.tags.length > 0}
-					<div class="absolute left-0 right-0 top-full mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-						<div class="flex flex-wrap items-center gap-2 text-xs">
-							{#if parsedData.recipient}
-								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-									</svg>
-									{parsedData.recipient}
-								</span>
-							{/if}
+				<!-- AI Parsing Preview (Simplified) -->
+				{#if input && (parsedData.time || parsedData.priority)}
+					<div class="absolute left-0 right-0 top-full mt-1 px-3 py-2 bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-100 rounded-lg shadow-sm animate-fadeIn">
+						<div class="flex items-center gap-3 text-xs">
+							<div class="flex items-center gap-1 text-purple-600">
+								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+								</svg>
+								<span class="font-medium">AI Understanding:</span>
+							</div>
 							
-							{#if parsedData.task}
-								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-									</svg>
-									{parsedData.task}
-								</span>
-							{/if}
-							
-							{#if parsedData.time}
-								<span class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-purple-700 border border-purple-200">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-									</svg>
-									{parsedData.time}
-								</span>
-							{/if}
-							
-							{#if parsedData.project}
-								<span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-full text-blue-700 border border-blue-200">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-									</svg>
-									@{parsedData.project}
-								</span>
-							{/if}
-							
-							{#if parsedData.priority}
-								<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full border
-									{parsedData.priority === 'urgent' ? 'bg-red-50 text-red-700 border-red-200' : ''}
-									{parsedData.priority === 'high' ? 'bg-orange-50 text-orange-700 border-orange-200' : ''}
-									{parsedData.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : ''}
-									{parsedData.priority === 'low' ? 'bg-gray-50 text-gray-700 border-gray-200' : ''}">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-									</svg>
-									{parsedData.priority}
-								</span>
-							{/if}
-							
-							{#each parsedData.tags as tag}
-								<span class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full text-green-700 border border-green-200">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-									</svg>
-									#{tag}
-								</span>
-							{/each}
+							<div class="flex items-center gap-2">
+								{#if parsedData.time}
+									<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white/80 rounded text-gray-700">
+										<svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+										</svg>
+										{parsedData.time}
+									</span>
+								{/if}
+								
+								{#if parsedData.priority}
+									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded
+										{parsedData.priority === 'urgent' ? 'bg-red-100 text-red-700' : ''}
+										{parsedData.priority === 'high' ? 'bg-orange-100 text-orange-700' : ''}
+										{parsedData.priority === 'low' ? 'bg-gray-100 text-gray-700' : 'bg-yellow-100 text-yellow-700'}">
+										<span class="w-1.5 h-1.5 rounded-full
+											{parsedData.priority === 'urgent' ? 'bg-red-500' : ''}
+											{parsedData.priority === 'high' ? 'bg-orange-500' : ''}
+											{parsedData.priority === 'low' ? 'bg-gray-500' : 'bg-yellow-500'}">
+										</span>
+										{parsedData.priority}
+									</span>
+								{/if}
+								
+								{#if parsedData.recipient && parsedData.recipient !== 'Me'}
+									<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white/80 rounded text-gray-700">
+										→ {parsedData.recipient}
+									</span>
+								{/if}
+							</div>
 						</div>
 					</div>
 				{/if}
 				
 				<!-- Recent Recipients Dropdown -->
 				{#if isExpanded && !input}
-					<div class="absolute left-0 right-0 top-full mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg">
-						<div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Recent Recipients</div>
+					<div class="absolute left-0 right-0 top-full mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl animate-slideDown">
+						<div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</div>
 						<div class="flex flex-wrap gap-2">
 							{#each recentRecipients as recipient}
 								<button
@@ -389,3 +383,35 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	
+	@keyframes slideDown {
+		from {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	
+	.animate-fadeIn {
+		animation: fadeIn 0.2s ease-out;
+	}
+	
+	.animate-slideDown {
+		animation: slideDown 0.3s ease-out;
+	}
+</style>
