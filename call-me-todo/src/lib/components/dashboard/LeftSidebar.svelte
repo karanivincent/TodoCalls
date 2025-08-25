@@ -29,16 +29,27 @@
 			error = '';
 			
 			const response = await fetch('/api/projects');
+			
+			if (!response.ok) {
+				// Only show error for actual server errors, not for empty results
+				if (response.status >= 500) {
+					error = 'Failed to load projects';
+				}
+				return;
+			}
+			
 			const result = await response.json();
 			
 			if (result.success) {
-				projects = result.projects;
-			} else {
-				error = result.error || 'Failed to load projects';
+				projects = result.projects || [];
+			} else if (result.error && result.error !== 'Unauthorized') {
+				// Only show error if it's not just an auth issue (which redirects anyway)
+				error = result.error;
 			}
 		} catch (err) {
 			console.error('Error fetching projects:', err);
-			error = 'Failed to load projects';
+			// Only show error for network/connection issues
+			error = 'Unable to connect to server';
 		} finally {
 			loading = false;
 		}
@@ -237,6 +248,12 @@
 				<div class="px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg">
 					{error}
 				</div>
+			{:else if projects.length === 0}
+				{#if !collapsed}
+					<div class="px-3 py-2 text-sm text-gray-500">
+						No projects yet
+					</div>
+				{/if}
 			{:else}
 				{#if !collapsed}
 					{#each projects as project}

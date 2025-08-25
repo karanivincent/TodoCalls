@@ -48,19 +48,28 @@
 			const isEmailConfirmation = type === 'signup' || type === 'recovery';
 			
 			// Always redirect OAuth sign-ins (including Google) to dashboard
-			if (provider || queryParams.get('code') || (!isEmailConfirmation && !type)) {
-				// This is OAuth or a sign-in without type, go to dashboard
-				goto('/dashboard');
+			// OAuth callbacks will have either a 'code' param or come from a provider
+			const isOAuth = queryParams.get('code') || provider || hashParams.get('provider');
+			
+			if (isOAuth) {
+				// This is definitely OAuth (Google, etc.), go to dashboard
+				await goto('/dashboard');
 			} else if (isEmailConfirmation) {
 				// For email confirmations, redirect to auth page with success message
-				goto('/auth?verified=true');
+				await goto('/auth?verified=true');
 			} else {
 				// Default to dashboard for other sign-ins
-				goto('/dashboard');
+				await goto('/dashboard');
 			}
 		} else {
-			// No session, redirect to auth page
-			goto('/auth');
+			// No session, might need to retry or show error
+			if (queryParams.get('code')) {
+				// Had a code but couldn't create session
+				error = 'Failed to complete sign in. Please try again.';
+			} else {
+				// No session and no code, redirect to auth page
+				await goto('/auth');
+			}
 		}
 	});
 </script>
