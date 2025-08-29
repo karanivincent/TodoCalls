@@ -91,7 +91,9 @@ export class WhatsAppMessageProcessor {
         return await this.handleSignup(session);
       
       default:
-        return await this.aiHandler.generateResponse(message, context);
+        // Get user info from session context
+        const userInfo = context.user || null;
+        return await this.aiHandler.generateResponse(message, context, userInfo);
     }
   }
 
@@ -200,7 +202,10 @@ export class WhatsAppMessageProcessor {
         };
       
       default:
-        return { message: "I didn't understand that command. Send 'help' to see what I can do." };
+        // For unknown commands, use AI to generate a helpful response
+        const context = session.context as SessionContext;
+        const userInfo = context.user || null;
+        return await this.aiHandler.generateResponse(message, context, userInfo);
     }
   }
 

@@ -74,9 +74,36 @@ Return format:
     }
   }
 
-  async generateResponse(message: string, context: SessionContext): Promise<any> {
+  async generateResponse(message: string, context: SessionContext, userInfo?: any): Promise<any> {
     try {
       const conversationHistory = context.conversationHistory.slice(-10); // Last 10 messages
+      
+      // Build user context string
+      let userContext = '';
+      if (userInfo && userInfo.email) {
+        userContext = `
+User Information:
+- Name: ${userInfo.name || 'Not set'}
+- Email: ${userInfo.email}
+- Phone Numbers: ${userInfo.phoneNumbers?.map((p: any) => `${p.phone_number} (${p.label || 'no label'})`).join(', ') || 'None'}
+- Account Type: Registered User
+`;
+      } else if (context.isNewUser) {
+        userContext = `
+User Information:
+- This is a NEW user who hasn't registered yet
+- They're using WhatsApp for the first time
+- Encourage them to sign up for full features
+- Limit: 10 tasks for guest accounts
+`;
+      } else {
+        userContext = `
+User Information:
+- Guest user (not registered)
+- Can create up to 10 tasks
+- Encourage sign up for unlimited tasks
+`;
+      }
       
       const systemPrompt = `You are TeliTask, a friendly and helpful AI assistant for task management via WhatsApp. 
 
@@ -86,11 +113,14 @@ Key capabilities:
 - Set phone call reminders
 - Help users stay organized
 
+${userContext}
+
 Personality:
 - Friendly and conversational (use emojis appropriately)
 - Concise but helpful
 - Proactive with suggestions
 - Encouraging when users complete tasks
+- If asked about user's personal info (name, email, phone), provide it from the context above
 
 Current context:
 - User type: ${context.currentState === 'idle' ? 'Regular user' : 'In conversation'}
@@ -98,6 +128,7 @@ Current context:
 
 Guidelines:
 - Keep responses under 300 characters when possible
+- If user asks "who am I" or similar, tell them their name, email, and registered phone numbers
 - Use WhatsApp formatting: *bold*, _italic_, ~strikethrough~
 - Suggest helpful actions based on context
 - If unsure, ask clarifying questions

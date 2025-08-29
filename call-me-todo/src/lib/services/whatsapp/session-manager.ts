@@ -44,17 +44,43 @@ export class WhatsAppSessionManager {
       .eq('is_whatsapp_primary', true)
       .single();
 
-    // Create new session
+    // If user found, get their full profile for context
+    let userContext = {};
+    if (phoneOwner?.user_id) {
+      const { data: userData } = await this.supabase
+        .from('auth.users')
+        .select('email, raw_user_meta_data')
+        .eq('id', phoneOwner.user_id)
+        .single();
+
+      const { data: phoneNumbers } = await this.supabase
+        .from('phone_numbers')
+        .select('phone_number, label, is_primary')
+        .eq('user_id', phoneOwner.user_id);
+
+      userContext = {
+        email: userData?.email,
+        name: userData?.raw_user_meta_data?.full_name || userData?.email?.split('@')[0],
+        phoneNumbers: phoneNumbers || [],
+        userId: phoneOwner.user_id
+      };
+    }
+
+    // Create new session with user context
     const newSession = {
       phone_number: phoneNumber,
       user_id: phoneOwner?.user_id || null,
       session_type: phoneOwner ? 'registered' : 'guest',
       session_status: 'active',
-      context: this.createDefaultContext(),
+      context: {
+        ...this.createDefaultContext(),
+        user: userContext,
+        isNewUser: !phoneOwner
+      },
       conversation_state: 'idle',
       temp_task_count: 0,
       last_interaction: new Date().toISOString(),
-      expires_at: this.calculateExpiryDate(userProfile ? 'registered' : 'guest'),
+      expires_at: this.calculateExpiryDate(phoneOwner ? 'registered' : 'guest'),
     };
 
     const { data: createdSession, error: createError } = await this.supabase
