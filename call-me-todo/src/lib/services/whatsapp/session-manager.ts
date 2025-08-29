@@ -36,18 +36,19 @@ export class WhatsAppSessionManager {
       }
     }
 
-    // Check if this phone number belongs to an existing user
-    const { data: userProfile } = await this.supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('whatsapp_number', phoneNumber)
+    // Check if this phone number belongs to an existing user (as WhatsApp primary)
+    const { data: phoneOwner } = await this.supabase
+      .from('phone_numbers')
+      .select('user_id, is_verified')
+      .eq('phone_number', phoneNumber)
+      .eq('is_whatsapp_primary', true)
       .single();
 
     // Create new session
     const newSession = {
       phone_number: phoneNumber,
-      user_id: userProfile?.id || null,
-      session_type: userProfile ? 'registered' : 'guest',
+      user_id: phoneOwner?.user_id || null,
+      session_type: phoneOwner ? 'registered' : 'guest',
       session_status: 'active',
       context: this.createDefaultContext(),
       conversation_state: 'idle',
