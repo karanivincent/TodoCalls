@@ -115,7 +115,7 @@ export class WhatsAppMessageProcessor {
 
     // Process the media
     const mediaResult = await this.mediaProcessor.processMedia({
-      userId: session.userId,
+      userId: session.user_id,
       phoneNumber,
       mediaUrl,
       mediaContentType: mediaContentType || 'image/jpeg',
@@ -188,7 +188,7 @@ export class WhatsAppMessageProcessor {
       
       case 'settings':
         return {
-          message: `⚙️ Your Settings:\n\n📱 Phone: ${session.phoneNumber}\n👤 Account: ${session.sessionType}\n🔔 Reminders: Enabled\n🗣️ Language: English\n\nWhat would you like to change?`,
+          message: `⚙️ Your Settings:\n\n📱 Phone: ${session.phone_number}\n👤 Account: ${session.session_type}\n🔔 Reminders: Enabled\n🗣️ Language: English\n\nWhat would you like to change?`,
         };
       
       case 'delete_all':
@@ -225,13 +225,13 @@ export class WhatsAppMessageProcessor {
       default:
         // Reset to idle if unknown state
         await this.sessionManager.updateContext(session.id, { currentState: 'idle' });
-        return await this.processTextMessage({ sessionId: session.id, phoneNumber: session.phoneNumber, message });
+        return await this.processTextMessage({ sessionId: session.id, phoneNumber: session.phone_number, message });
     }
   }
 
   private async handleCreateTask(session: any, message: string, intent: any): Promise<MessageResponse> {
     // Parse the task from natural language
-    const userPhone = session.phoneNumber;
+    const userPhone = session.phone_number;
     const parsedTask = await parseTaskFromNaturalLanguageEnhanced(
       message,
       userPhone,
@@ -239,7 +239,7 @@ export class WhatsAppMessageProcessor {
     );
 
     // For guest users, check task limit
-    if (session.sessionType === 'guest') {
+    if (session.session_type === 'guest') {
       const taskCount = session.tempTaskCount || 0;
       if (taskCount >= 10) {
         return {
@@ -252,7 +252,7 @@ export class WhatsAppMessageProcessor {
     const { data: task, error } = await this.supabase
       .from('tasks')
       .insert({
-        user_id: session.userId || session.id, // Use session ID for guests
+        user_id: session.user_id || session.id, // Use session ID for guests  
         title: parsedTask.title,
         description: parsedTask.description,
         phone_number: parsedTask.phoneNumber || userPhone,
@@ -273,7 +273,7 @@ export class WhatsAppMessageProcessor {
     }
 
     // Update task count for guest users
-    if (session.sessionType === 'guest') {
+    if (session.session_type === 'guest') {
       await this.sessionManager.updateSession(session.id, {
         tempTaskCount: (session.tempTaskCount || 0) + 1,
       });
@@ -294,7 +294,7 @@ export class WhatsAppMessageProcessor {
   }
 
   private async handleListTasks(session: any, intent: any): Promise<MessageResponse> {
-    const userId = session.userId || session.id;
+    const userId = session.user_id || session.id;
     
     // Get today's tasks
     const today = new Date();
@@ -349,7 +349,7 @@ export class WhatsAppMessageProcessor {
       };
     }
 
-    const userId = session.userId || session.id;
+    const userId = session.user_id || session.id;
     
     // Find and update the task
     const { data: task, error } = await this.supabase
@@ -382,7 +382,7 @@ export class WhatsAppMessageProcessor {
   }
 
   private async handleGreeting(session: any): Promise<MessageResponse> {
-    const greeting = session.sessionType === 'guest' 
+    const greeting = session.session_type === 'guest' 
       ? `👋 Hello! I'm your AI task assistant from TeliTask.\n\nI can help you:\n• Create task reminders\n• Process photos of receipts or todo lists\n• Manage your schedule\n\nSend me a task or photo to get started!`
       : `👋 Welcome back! How can I help you today?\n\nYou can:\n• Send a task\n• View today's tasks (say 'list')\n• Send a photo to process\n• Get help (say 'help')`;
 
@@ -396,7 +396,7 @@ export class WhatsAppMessageProcessor {
   }
 
   private async handleSignup(session: any): Promise<MessageResponse> {
-    if (session.sessionType !== 'guest') {
+    if (session.session_type !== 'guest') {
       return {
         message: "You already have an account! You're all set to use TeliTask.",
       };
@@ -449,7 +449,7 @@ export class WhatsAppMessageProcessor {
     });
 
     return {
-      message: `✅ Account created!\n\n📧 Email: ${email}\n📱 Phone: ${session.phoneNumber}\n\nYou now have:\n• Unlimited tasks\n• Call reminders\n• Photo storage\n• Web dashboard access\n\nAll your guest tasks have been saved. Welcome to TeliTask! 🎉`,
+      message: `✅ Account created!\n\n📧 Email: ${email}\n📱 Phone: ${session.phone_number}\n\nYou now have:\n• Unlimited tasks\n• Call reminders\n• Photo storage\n• Web dashboard access\n\nAll your guest tasks have been saved. Welcome to TeliTask! 🎉`,
     };
   }
 
@@ -465,7 +465,7 @@ export class WhatsAppMessageProcessor {
     if (response === 'yes' || response === 'y') {
       // Execute the pending action
       if (pendingAction.type === 'delete_all') {
-        const userId = session.userId || session.id;
+        const userId = session.user_id || session.id;
         await this.supabase
           .from('tasks')
           .delete()
