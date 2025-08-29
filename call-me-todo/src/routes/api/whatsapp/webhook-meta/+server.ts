@@ -201,7 +201,8 @@ async function getMediaUrl(mediaId: string): Promise<string> {
 // Helper function to send WhatsApp messages via Meta API
 async function sendWhatsAppMessage(to: string, message: string, phoneNumberId: string) {
   try {
-    const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+    // Get the latest access token
+    const accessToken = env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
     const apiVersion = env.GRAPH_API_VERSION || 'v22.0';
     
     if (!accessToken) {
