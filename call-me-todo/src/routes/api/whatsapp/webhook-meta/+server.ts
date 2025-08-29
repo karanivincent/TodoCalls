@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
-import { createSupabaseClient } from '$lib/supabase';
+import { createServiceSupabaseClient } from '$lib/supabase-service';
 import { WhatsAppMessageProcessor } from '$lib/services/whatsapp/message-processor';
 import { WhatsAppSessionManager } from '$lib/services/whatsapp/session-manager';
 
@@ -66,8 +66,8 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ status: 'ok' });
     }
     
-    // Initialize services
-    const supabase = createSupabaseClient();
+    // Initialize services with service role client (bypasses RLS)
+    const supabase = createServiceSupabaseClient();
     const sessionManager = new WhatsAppSessionManager(supabase);
     const messageProcessor = new WhatsAppMessageProcessor(supabase, sessionManager);
     
