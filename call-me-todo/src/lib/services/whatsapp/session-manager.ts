@@ -9,6 +9,10 @@ export class WhatsAppSessionManager {
     this.supabase = supabase;
   }
 
+  clearCache(phoneNumber: string) {
+    this.sessionCache.delete(phoneNumber);
+  }
+
   async getOrCreateSession(phoneNumber: string): Promise<WhatsAppSession> {
     // Check cache first
     const cached = this.sessionCache.get(phoneNumber);

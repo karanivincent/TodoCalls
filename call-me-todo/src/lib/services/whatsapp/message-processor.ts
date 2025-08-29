@@ -201,6 +201,21 @@ export class WhatsAppMessageProcessor {
           message: `⚠️ Are you sure you want to delete ALL your tasks? This cannot be undone.\n\nReply 'yes' to confirm or 'no' to cancel.`,
         };
       
+      case 'reset':
+      case 'reset session':
+        // Force clear session and cache
+        await this.supabase
+          .from('whatsapp_sessions')
+          .delete()
+          .eq('phone_number', session.phone_number);
+        
+        // Clear from cache
+        this.sessionManager.clearCache(session.phone_number);
+        
+        return {
+          message: `🔄 Session reset! Send another message to start fresh with your updated profile.`,
+        };
+      
       default:
         // For unknown commands, use AI to generate a helpful response
         const context = session.context as SessionContext;
@@ -267,8 +282,13 @@ export class WhatsAppMessageProcessor {
 
     if (error) {
       console.error('Failed to create task:', error);
+      console.error('Task data attempted:', {
+        user_id: session.user_id || session.id,
+        title: parsedTask.title,
+        phone_number: parsedTask.phoneNumber || userPhone,
+      });
       return {
-        message: "Sorry, I couldn't create that task. Please try again or contact support if the issue persists.",
+        message: `Sorry, I couldn't create that task. Error: ${error.message || 'Unknown error'}. Please try again.`,
       };
     }
 
