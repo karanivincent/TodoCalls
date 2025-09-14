@@ -164,6 +164,7 @@ export class WhatsAppMessageProcessor {
       'signup': ['sign up', 'signup', 'register', 'create account'],
       'settings': ['settings', 'preferences', 'config'],
       'delete_all': ['delete all', 'clear all', 'remove everything'],
+      'reset': ['reset', 'reset session', 'clear session', 'restart', 'start over'],
     };
 
     for (const [command, triggers] of Object.entries(commands)) {
