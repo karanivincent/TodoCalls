@@ -74,6 +74,15 @@
 	};
 	let settingPassword = false;
 	
+	// Password change form
+	let showChangePasswordForm = false;
+	let changePasswordForm = {
+		currentPassword: '',
+		newPassword: '',
+		confirmNewPassword: ''
+	};
+	let changingPassword = false;
+	
 	// Check if user has password
 	let hasPassword = false;
 	let hasGoogle = false;
@@ -198,6 +207,59 @@
 			toast.add(err.message, 'error');
 		} finally {
 			settingPassword = false;
+		}
+	}
+	
+	async function changePassword() {
+		if (changePasswordForm.newPassword !== changePasswordForm.confirmNewPassword) {
+			toast.add('New passwords do not match', 'error');
+			return;
+		}
+		
+		if (changePasswordForm.newPassword.length < 8) {
+			toast.add('Password must be at least 8 characters', 'error');
+			return;
+		}
+		
+		if (changePasswordForm.currentPassword === changePasswordForm.newPassword) {
+			toast.add('New password must be different from current password', 'error');
+			return;
+		}
+		
+		changingPassword = true;
+		
+		try {
+			// First, verify current password by re-authenticating
+			const { error: signInError } = await supabase.auth.signInWithPassword({
+				email: user.email,
+				password: changePasswordForm.currentPassword
+			});
+			
+			if (signInError) {
+				toast.add('Current password is incorrect', 'error');
+				return;
+			}
+			
+			// Now update to new password
+			const { error } = await supabase.auth.updateUser({
+				password: changePasswordForm.newPassword
+			});
+			
+			if (error) {
+				toast.add(error.message, 'error');
+			} else {
+				toast.add('Password changed successfully', 'success');
+				showChangePasswordForm = false;
+				changePasswordForm = { 
+					currentPassword: '', 
+					newPassword: '', 
+					confirmNewPassword: '' 
+				};
+			}
+		} catch (err: any) {
+			toast.add(err.message, 'error');
+		} finally {
+			changingPassword = false;
 		}
 	}
 	
@@ -880,6 +942,102 @@
 				{/if}
 			</div>
 			
+			<!-- Password Change Section (for users with password auth) -->
+			{#if hasPassword}
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+					<div class="flex items-center gap-3 mb-4">
+						<div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+							<svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+							</svg>
+						</div>
+						<h2 class="text-xl font-semibold text-gray-900">Password Security</h2>
+					</div>
+					
+					{#if !showChangePasswordForm}
+						<p class="text-sm text-gray-600 mb-4">
+							Keep your account secure by regularly updating your password.
+						</p>
+						<button
+							on:click={() => showChangePasswordForm = true}
+							class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+						>
+							Change Password
+						</button>
+					{:else}
+						<form on:submit|preventDefault={changePassword} class="space-y-4">
+							<div>
+								<label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">
+									Current Password
+								</label>
+								<input
+									type="password"
+									id="currentPassword"
+									bind:value={changePasswordForm.currentPassword}
+									required
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+									placeholder="Enter your current password"
+								/>
+							</div>
+							
+							<div>
+								<label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">
+									New Password
+								</label>
+								<input
+									type="password"
+									id="newPassword"
+									bind:value={changePasswordForm.newPassword}
+									required
+									minlength="8"
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+									placeholder="Enter new password (min 8 characters)"
+								/>
+							</div>
+							
+							<div>
+								<label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">
+									Confirm New Password
+								</label>
+								<input
+									type="password"
+									id="confirmNewPassword"
+									bind:value={changePasswordForm.confirmNewPassword}
+									required
+									minlength="8"
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+									placeholder="Confirm new password"
+								/>
+							</div>
+							
+							<div class="flex gap-3">
+								<button
+									type="submit"
+									disabled={changingPassword}
+									class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+								>
+									{changingPassword ? 'Updating...' : 'Update Password'}
+								</button>
+								<button
+									type="button"
+									on:click={() => {
+										showChangePasswordForm = false;
+										changePasswordForm = { 
+											currentPassword: '', 
+											newPassword: '', 
+											confirmNewPassword: '' 
+										};
+									}}
+									class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+								>
+									Cancel
+								</button>
+							</div>
+						</form>
+					{/if}
+				</div>
+			{/if}
+			
 			<!-- Timezone Settings -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
 				<div class="flex items-center gap-3 mb-4">
@@ -1101,27 +1259,10 @@
 								{/if}
 							</div>
 						{:else}
-							<!-- Change Password for users with passwords -->
-							<div class="space-y-3">
-								<p class="text-sm text-gray-600">
-									You already have password authentication enabled.
-								</p>
-								<button
-									on:click={async () => {
-										const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-											redirectTo: `${window.location.origin}/auth/reset-password`
-										});
-										if (error) {
-											toast.add('Failed to send reset email: ' + error.message, 'error');
-										} else {
-											toast.add('Password reset link sent to your email!', 'success');
-										}
-									}}
-									class="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
-								>
-									Change Password
-								</button>
-							</div>
+							<!-- Password already set -->
+							<p class="text-sm text-gray-500">
+								✅ Password authentication is enabled. Use the Password Security section above to change your password.
+							</p>
 						{/if}
 						
 						{#if hasGoogle && hasPassword}
