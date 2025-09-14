@@ -1035,8 +1035,9 @@
 							</div>
 						{/if}
 						
-						<!-- Add Password -->
+						<!-- Password Management -->
 						{#if !hasPassword}
+							<!-- Add Password for OAuth users -->
 							<div>
 								{#if !showPasswordForm}
 									<button
@@ -1098,6 +1099,28 @@
 										</div>
 									</form>
 								{/if}
+							</div>
+						{:else}
+							<!-- Change Password for users with passwords -->
+							<div class="space-y-3">
+								<p class="text-sm text-gray-600">
+									You already have password authentication enabled.
+								</p>
+								<button
+									on:click={async () => {
+										const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+											redirectTo: `${window.location.origin}/auth/reset-password`
+										});
+										if (error) {
+											toast.add('Failed to send reset email: ' + error.message, 'error');
+										} else {
+											toast.add('Password reset link sent to your email!', 'success');
+										}
+									}}
+									class="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+								>
+									Change Password
+								</button>
 							</div>
 						{/if}
 						
