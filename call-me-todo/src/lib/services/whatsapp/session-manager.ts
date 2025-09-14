@@ -87,21 +87,43 @@ export class WhatsAppSessionManager {
       expires_at: this.calculateExpiryDate(phoneOwner ? 'registered' : 'guest'),
     };
 
+    // Use upsert to handle existing sessions
     const { data: createdSession, error: createError } = await this.supabase
       .from('whatsapp_sessions')
-      .insert(newSession)
+      .upsert(newSession, { 
+        onConflict: 'phone_number',
+        ignoreDuplicates: false 
+      })
       .select()
       .single();
 
     if (createError) {
-      console.error('Failed to create session:', createError);
-      throw new Error('Failed to create WhatsApp session');
+      console.error('Failed to create/update session:', createError);
+      
+      // If upsert fails, try to update existing session
+      const { data: updatedSession, error: updateError } = await this.supabase
+        .from('whatsapp_sessions')
+        .update({
+          ...newSession,
+          created_at: undefined // Don't update created_at
+        })
+        .eq('phone_number', phoneNumber)
+        .select()
+        .single();
+      
+      if (updateError) {
+        console.error('Failed to update session:', updateError);
+        throw new Error('Failed to create or update WhatsApp session');
+      }
+      
+      this.sessionCache.set(phoneNumber, updatedSession);
+      return updatedSession;
     }
 
     this.sessionCache.set(phoneNumber, createdSession);
 
     // Send welcome message for new sessions
-    if (!userProfile) {
+    if (!phoneOwner) {
       await this.sendWelcomeMessage(phoneNumber);
     }
 
