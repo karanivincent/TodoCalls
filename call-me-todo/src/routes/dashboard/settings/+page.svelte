@@ -82,6 +82,7 @@
 		confirmNewPassword: ''
 	};
 	let changingPassword = false;
+	let passwordChangeSuccess = false;
 	
 	// Check if user has password
 	let hasPassword = false;
@@ -230,34 +231,48 @@
 		
 		try {
 			// First, verify current password by re-authenticating
-			const { error: signInError } = await supabase.auth.signInWithPassword({
+			console.log('Verifying current password...');
+			const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
 				email: user.email,
 				password: changePasswordForm.currentPassword
 			});
 			
 			if (signInError) {
+				console.log('Current password verification failed:', signInError);
 				toast.add('Current password is incorrect', 'error');
+				changingPassword = false;
 				return;
 			}
 			
+			console.log('Current password verified, updating to new password...');
+			
 			// Now update to new password
-			const { error } = await supabase.auth.updateUser({
+			const { data: updateData, error: updateError } = await supabase.auth.updateUser({
 				password: changePasswordForm.newPassword
 			});
 			
-			if (error) {
-				toast.add(error.message, 'error');
+			if (updateError) {
+				console.error('Password update failed:', updateError);
+				toast.add(`Failed to update password: ${updateError.message}`, 'error');
 			} else {
-				toast.add('Password changed successfully', 'success');
-				showChangePasswordForm = false;
-				changePasswordForm = { 
-					currentPassword: '', 
-					newPassword: '', 
-					confirmNewPassword: '' 
-				};
+				console.log('Password updated successfully:', updateData);
+				toast.add('✅ Password changed successfully!', 'success');
+				passwordChangeSuccess = true;
+				
+				// Show success state for 3 seconds then close form
+				setTimeout(() => {
+					showChangePasswordForm = false;
+					passwordChangeSuccess = false;
+					changePasswordForm = { 
+						currentPassword: '', 
+						newPassword: '', 
+						confirmNewPassword: '' 
+					};
+				}, 3000);
 			}
 		} catch (err: any) {
-			toast.add(err.message, 'error');
+			console.error('Unexpected error during password change:', err);
+			toast.add(`Unexpected error: ${err.message}`, 'error');
 		} finally {
 			changingPassword = false;
 		}
@@ -965,7 +980,24 @@
 							Change Password
 						</button>
 					{:else}
-						<form on:submit|preventDefault={changePassword} class="space-y-4">
+						{#if changingPassword}
+							<div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mb-4">
+								<div class="flex items-center">
+									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+									Updating your password...
+								</div>
+							</div>
+						{:else if passwordChangeSuccess}
+							<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4">
+								<div class="flex items-center">
+									<svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+									</svg>
+									Password changed successfully! Form will close in 3 seconds...
+								</div>
+							</div>
+						{/if}
+						<form on:submit|preventDefault={changePassword} class="space-y-4" class:opacity-50={passwordChangeSuccess}>
 							<div>
 								<label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">
 									Current Password
@@ -1013,10 +1045,10 @@
 							<div class="flex gap-3">
 								<button
 									type="submit"
-									disabled={changingPassword}
+									disabled={changingPassword || passwordChangeSuccess}
 									class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
 								>
-									{changingPassword ? 'Updating...' : 'Update Password'}
+									{changingPassword ? 'Updating...' : passwordChangeSuccess ? 'Success!' : 'Update Password'}
 								</button>
 								<button
 									type="button"
